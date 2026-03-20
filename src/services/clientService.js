@@ -58,7 +58,7 @@ const updateClientData = async (nroDocumento, data) => {
     ...(Apellido       !== undefined && { Apellido }),
     ...(Direccion      !== undefined && { Direccion }),
     ...(Email          !== undefined && { Email }),
-    ...(Telefono       !== undefined && { Telefono }),
+    ...(celular       !== undefined && { celular }),
     ...(TipoDocumento  !== undefined && { TipoDocumento }),
     ...(Estado         !== undefined && { Estado }),
   });
