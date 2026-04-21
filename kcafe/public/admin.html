@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Admin — Kcafé Ancestral</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f1;--white:#fff;--stone:#f0ece4;--border:#e0d8cc;--ink:#1a1410;--text:#2a1f14;--muted:#7a6e62;--faint:#b0a898;--gold:#c49a3c;--earth:#6b5a3e;--deep:#3d2e1e;--sage:#7a9e7e;--rust:#b85c38;}
+*{box-sizing:border-box;margin:0;padding:0;}html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;display:flex;flex-direction:column;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 1.5rem;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-icon{width:30px;height:30px;background:var(--deep);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;}
+.brand-name{font-family:'Playfair Display',serif;font-size:16px;color:var(--ink);}
+.brand-name span{color:var(--gold);font-style:italic;}
+.brand-sub{font-size:10px;color:var(--faint);margin-left:2px;}
+.tb-right{display:flex;align-items:center;gap:12px;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--sage);animation:blink 2.5s infinite;display:inline-block;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.srv{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--faint);}
+.vista-a{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:50px;border:1px solid var(--border);color:var(--muted);font-size:11px;text-decoration:none;transition:all .2s;}
+.vista-a:hover{border-color:var(--gold);color:var(--earth);}
+.layout{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:210px;background:var(--white);border-right:1px solid var(--border);padding:1rem;display:flex;flex-direction:column;gap:2px;flex-shrink:0;}
+.nl{font-size:9px;font-weight:600;letter-spacing:.18em;color:var(--faint);padding:0 8px;margin:10px 0 4px;text-transform:uppercase;}
+.ni{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:4px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .15s;border:1px solid transparent;}
+.ni:hover{background:var(--stone);color:var(--text);}
+.ni.active{background:var(--stone);color:var(--ink);border-color:var(--border);}
+.ni svg{width:14px;height:14px;flex-shrink:0;opacity:.5;}
+.ni.active svg{opacity:.8;}
+.sf{margin-top:auto;padding-top:.8rem;border-top:1px solid var(--border);font-size:10px;color:var(--faint);display:flex;align-items:center;gap:5px;}
+.main{flex:1;overflow-y:auto;padding:2rem;display:flex;flex-direction:column;gap:1.5rem;}
+.ph{display:flex;align-items:flex-end;justify-content:space-between;}
+.pt{font-family:'Playfair Display',serif;font-size:28px;font-weight:400;color:var(--ink);line-height:1;}
+.pt em{font-style:italic;color:var(--earth);}
+.ps{font-size:10px;color:var(--faint);letter-spacing:.08em;margin-top:3px;text-transform:uppercase;}
+.dc{font-size:10px;color:var(--faint);border:1px solid var(--border);padding:5px 12px;border-radius:50px;}
+.sec{display:none;}.sec.active{display:flex;flex-direction:column;gap:1.4rem;animation:fu .3s ease both;}
+@keyframes fu{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.mc{background:var(--white);border:1px solid var(--border);border-radius:4px;padding:1.2rem 1.4rem;position:relative;overflow:hidden;}
+.mc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;}
+.mc.cg::after{background:var(--sage);}
+.mc.cd::after{background:var(--earth);}
+.mc.co::after{background:var(--gold);}
+.mc.cr::after{background:var(--rust);}
+.ml{font-size:9px;font-weight:600;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;margin-bottom:8px;}
+.mv{font-family:'Playfair Display',serif;font-size:42px;font-weight:400;color:var(--ink);line-height:1;}
+.ms{font-size:10px;color:var(--muted);margin-top:4px;}
+.panel{background:var(--white);border:1px solid var(--border);border-radius:4px;padding:1.3rem 1.5rem;}
+.ph2{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding-bottom:.9rem;border-bottom:1px solid var(--border);}
+.ptit{font-size:10px;font-weight:600;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;}
+.badge{font-size:10px;padding:3px 10px;border-radius:50px;background:var(--stone);color:var(--muted);border:1px solid var(--border);}
+.fp{background:var(--stone);border:1px solid var(--border);border-radius:4px;padding:1.3rem 1.5rem;}
+.ftit{font-family:'Playfair Display',serif;font-size:18px;color:var(--ink);margin-bottom:1rem;}
+.fg{display:grid;gap:10px;}
+.c2{grid-template-columns:1fr 1fr;}.c3{grid-template-columns:1fr 1fr 1fr;}.c4{grid-template-columns:1fr 1fr 1fr 1fr;}.c5{grid-template-columns:1fr 1fr 1fr 1fr 1fr;}
+.fld{display:flex;flex-direction:column;gap:4px;}
+.fld label{font-size:9px;font-weight:600;letter-spacing:.12em;color:var(--faint);text-transform:uppercase;}
+.fld input,.fld select,.fld textarea{background:var(--white);border:1.5px solid var(--border);border-radius:3px;padding:8px 12px;font-size:12px;color:var(--text);font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;width:100%;}
+.fld input:focus,.fld select:focus{border-color:var(--gold);}
+.fld input::placeholder{color:var(--faint);}
+.fld select option{background:var(--white);}
+.req{color:var(--rust);}
+.fa{display:flex;gap:8px;margin-top:12px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:3px;font-size:11px;font-family:'Inter',sans-serif;font-weight:500;cursor:pointer;transition:all .15s;border:1.5px solid;letter-spacing:.04em;}
+.bp{background:var(--deep);border-color:var(--deep);color:var(--bg);}.bp:hover{background:var(--earth);}
+.bd{background:transparent;border-color:#ffcdd2;color:var(--rust);}.bd:hover{background:#fff5f5;}
+.be{background:transparent;border-color:var(--border);color:var(--muted);}.be:hover{background:var(--stone);}
+.bg2{background:transparent;border-color:var(--border);color:var(--faint);}.bg2:hover{background:var(--stone);}
+.bsm{padding:5px 12px;font-size:10px;}
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{font-size:9px;font-weight:600;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;padding:8px 12px;text-align:left;border-bottom:1.5px solid var(--border);}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}tbody tr:last-child{border-bottom:none;}tbody tr:hover{background:var(--stone);}
+tbody td{padding:10px 12px;font-size:12px;color:var(--text);vertical-align:middle;}
+.tid{color:var(--faint);font-size:10px;font-weight:600;}.tac{display:flex;gap:5px;justify-content:flex-end;}
+.es{text-align:center;padding:2.5rem;color:var(--faint);font-size:12px;}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:50px;font-size:9px;font-weight:600;letter-spacing:.08em;cursor:pointer;}
+.chip::before{content:'';width:5px;height:5px;border-radius:50%;}
+.ca{background:#e8f5e9;color:#2e7d32;}.ca::before{background:#4caf50;}
+.co{background:#fff5f5;color:#c62828;}.co::before{background:#ef5350;}
+.cag{background:#fff8e1;color:#f57f17;}.cag::before{background:#ffc107;}
+.cn{background:#f5f5f5;color:#757575;}.cn::before{background:#bbb;}
+.cm{background:#f5f5f5;color:#757575;}.cm::before{background:#bbb;}
+.disp-c{background:#e8f5e9;color:#2e7d32;display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:50px;font-size:9px;font-weight:600;}
+.tb{background:#e8f5e9;color:#2e7d32;display:inline-flex;padding:2px 8px;border-radius:50px;font-size:9px;font-weight:600;}
+.tp{background:#e3f2fd;color:#1565c0;display:inline-flex;padding:2px 8px;border-radius:50px;font-size:9px;font-weight:600;}
+.tv{background:#fff8e1;color:#e65100;display:inline-flex;padding:2px 8px;border-radius:50px;font-size:9px;font-weight:600;}
+.cabanas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+.cc{background:var(--white);border:1px solid var(--border);border-radius:4px;overflow:hidden;transition:all .2s;}
+.cc:hover{border-color:var(--gold);box-shadow:0 4px 20px rgba(0,0,0,.06);}
+.ciw{position:relative;height:140px;overflow:hidden;}
+.ci{width:100%;height:100%;object-fit:cover;cursor:pointer;transition:transform .4s;}.cc:hover .ci{transform:scale(1.04);}
+.cip{width:100%;height:100%;background:var(--stone);display:flex;align-items:center;justify-content:center;font-size:32px;}
+.ced{position:absolute;top:8px;right:8px;padding:3px 9px;border-radius:50px;font-size:8px;font-weight:600;letter-spacing:.08em;backdrop-filter:blur(8px);}
+.cb{padding:12px 14px;}
+.cn2{font-family:'Playfair Display',serif;font-size:16px;color:var(--ink);margin-bottom:3px;}
+.cd2{font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5;}
+.cf{display:flex;align-items:center;justify-content:space-between;}
+.cpr{font-size:13px;color:var(--gold);font-family:'Playfair Display',serif;}
+.ccap{font-size:10px;color:var(--faint);}
+.cac{display:flex;gap:5px;margin-top:8px;}
+.dg{display:grid;grid-template-columns:1fr 1.3fr;gap:14px;}
+.sl{display:flex;flex-direction:column;gap:6px;margin-top:.5rem;}
+.sr{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--stone);border-radius:3px;border:1px solid var(--border);font-size:12px;}
+.chw{position:relative;height:180px;margin-top:.8rem;}
+.lr{display:flex;gap:14px;margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border);}
+.li{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);}
+.lsq{width:8px;height:8px;border-radius:2px;}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;}
+.mo.open{display:flex;}
+.md{background:var(--white);border:1px solid var(--border);border-radius:4px;padding:1.8rem;width:620px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15);animation:fu .2s ease;}
+.mt{font-family:'Playfair Display',serif;font-size:20px;color:var(--ink);margin-bottom:1.2rem;padding-bottom:1rem;border-bottom:1px solid var(--border);}
+.imo{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:300;display:none;align-items:center;justify-content:center;}
+.imo.open{display:flex;}.imo img{max-width:90vw;max-height:85vh;border-radius:2px;}
+#toast{position:fixed;bottom:1.5rem;right:1.5rem;padding:10px 18px;border-radius:3px;font-size:12px;z-index:999;opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none;border:1px solid;}
+#toast.success{background:var(--white);border-color:#c5e1a5;color:#2e7d32;}
+#toast.error{background:var(--white);border-color:#ffcdd2;color:#c62828;}
+#toast.show{opacity:1;transform:translateY(0);}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">☕</div>
+    <div class="brand-name">Kcafé <span>Ancestral</span></div>
+    <div class="brand-sub">· Administración</div>
+  </div>
+  <div class="tb-right">
+    <a href="/" target="_blank" class="vista-a">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Vista cliente
+    </a>
+    <div class="srv"><div class="dot"></div>localhost:3000</div>
+  </div>
+</div>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nl">General</div>
+    <div class="ni active" onclick="navTo('dashboard',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</div>
+    <div class="nl">Gestión</div>
+    <div class="ni" onclick="navTo('clientes',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Clientes</div>
+    <div class="ni" onclick="navTo('cabanas',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Cabañas</div>
+    <div class="ni" onclick="navTo('servicios',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>Servicios</div>
+    <div class="ni" onclick="navTo('paquetes',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Paquetes</div>
+    <div class="sf"><div class="dot"></div>Servidor activo</div>
+  </aside>
+  <main class="main">
+
+    <div id="sec-dashboard" class="sec active">
+      <div class="ph"><div><div class="pt">Vista <em>general</em></div><div class="ps">Resumen del sistema</div></div><div class="dc" id="fecha-chip">—</div></div>
+      <div class="metrics">
+        <div class="mc cg"><div class="ml">Clientes</div><div class="mv" id="m-cli">—</div><div class="ms">Registrados</div></div>
+        <div class="mc cd"><div class="ml">Cabañas</div><div class="mv" id="m-cab">—</div><div class="ms">Total</div></div>
+        <div class="mc co"><div class="ml">Servicios</div><div class="mv" id="m-svc">—</div><div class="ms">Registrados</div></div>
+        <div class="mc cr"><div class="ml">Paquetes</div><div class="mv" id="m-pkg">—</div><div class="ms">Planes</div></div>
+      </div>
+      <div class="dg">
+        <div class="panel"><div class="ph2"><span class="ptit">Servicios — estado</span><span class="badge" id="bd-svc">0</span></div><div id="d-svc" class="sl"></div></div>
+        <div class="panel"><div class="ph2"><span class="ptit">Estadísticas</span></div><div class="chw"><canvas id="grafica" role="img" aria-label="Totales">Totales</canvas></div><div class="lr"><div class="li"><div class="lsq" style="background:var(--sage)"></div>Clientes</div><div class="li"><div class="lsq" style="background:var(--earth)"></div>Cabañas</div><div class="li"><div class="lsq" style="background:var(--gold)"></div>Servicios</div><div class="li"><div class="lsq" style="background:var(--rust)"></div>Paquetes</div></div></div>
+      </div>
+      <div class="panel"><div class="ph2"><span class="ptit">Cabañas disponibles</span></div><div id="d-cab" class="cabanas-grid" style="margin-top:.6rem;"></div></div>
+    </div>
+
+    <div id="sec-clientes" class="sec">
+      <div class="ph"><div><div class="pt">Gestión de <em>clientes</em></div><div class="ps">Huéspedes registrados</div></div></div>
+      <div class="fp"><div class="ftit">Nuevo cliente</div>
+        <div class="fg c5">
+          <div class="fld"><label>Nombre completo <span class="req">*</span></label><input id="cn" type="text" placeholder="Mín. 3 caracteres"></div>
+          <div class="fld"><label>Documento <span class="req">*</span> (solo números)</label><input id="cd" type="text" placeholder="CC o NIT"></div>
+          <div class="fld"><label>Teléfono</label><input id="ct" type="text" placeholder="300 000 0000"></div>
+          <div class="fld"><label>Procedencia</label><input id="cp" type="text" placeholder="Ciudad"></div>
+          <div class="fld"><label>Días estadía <span class="req">*</span></label><input id="cdias" type="number" placeholder="1" min="1"></div>
+        </div>
+        <div class="fg c3" style="margin-top:10px;">
+          <div class="fld"><label>Email</label><input id="ce" type="email" placeholder="correo@ejemplo.com"></div>
+          <div class="fld"><label>Cabaña</label><select id="ccab"><option value="">— Sin cabaña —</option></select></div>
+          <div class="fld"><label>Paquete</label><select id="cpkg"><option value="">— Sin paquete —</option></select></div>
+        </div>
+        <div class="fa"><button class="btn bp" onclick="agregarCliente()">+ Registrar</button><button class="btn bg2" onclick="limpiar('cn','cd','ct','cp','cdias','ce')">Limpiar</button></div>
+      </div>
+      <div class="panel"><div class="ph2"><span class="ptit">Clientes</span><span class="badge" id="b-cli">0</span></div>
+        <div class="tw"><table><thead><tr><th>ID</th><th>Nombre</th><th>Documento</th><th>Teléfono</th><th>Procedencia</th><th>Días</th><th>Cabaña</th><th>Paquete</th><th>Estado</th><th style="text-align:right">Acciones</th></tr></thead><tbody id="t-cli"><tr><td colspan="10" class="es">Cargando...</td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="sec-cabanas" class="sec">
+      <div class="ph"><div><div class="pt">Gestión de <em>cabañas</em></div><div class="ps">Alojamientos y disponibilidad</div></div></div>
+      <div class="fp"><div class="ftit">Nueva cabaña</div>
+        <div class="fg c4">
+          <div class="fld"><label>Nombre <span class="req">*</span></label><input id="cabn" type="text" placeholder="El Roble..."></div>
+          <div class="fld"><label>Capacidad</label><input id="cabcap" type="number" placeholder="2" min="1" value="2"></div>
+          <div class="fld"><label>Precio/noche <span class="req">*</span></label><input id="cabpr" type="number" placeholder="180000" min="0"></div>
+          <div class="fld"><label>Estado</label><select id="cabest"><option value="disponible">Disponible</option><option value="ocupada">Ocupada</option><option value="mantenimiento">Mantenimiento</option></select></div>
+        </div>
+        <div class="fg c2" style="margin-top:10px;">
+          <div class="fld"><label>Descripción</label><input id="cabdesc" type="text" placeholder="Vista al bosque..."></div>
+          <div class="fld"><label>URL imagen</label><input id="cabimg" type="text" placeholder="https://..."></div>
+        </div>
+        <div class="fa"><button class="btn bp" onclick="agregarCabana()">+ Agregar cabaña</button><button class="btn bg2" onclick="limpiar('cabn','cabdesc','cabimg','cabpr')">Limpiar</button></div>
+      </div>
+      <div id="cabanas-cards" class="cabanas-grid"></div>
+    </div>
+
+    <div id="sec-servicios" class="sec">
+      <div class="ph"><div><div class="pt">Gestión de <em>servicios</em></div><div class="ps">Disponibilidad</div></div></div>
+      <div class="fp"><div class="ftit">Nuevo servicio</div>
+        <div class="fg c4">
+          <div class="fld"><label>Nombre <span class="req">*</span></label><input id="svn" type="text" placeholder="WiFi, Spa..."></div>
+          <div class="fld"><label>Descripción</label><input id="svdesc" type="text" placeholder="Descripción breve..."></div>
+          <div class="fld"><label>Estado</label><select id="svest"><option value="activo">Activo</option><option value="agotado">Agotado</option><option value="no_disponible">No disponible</option></select></div>
+          <div class="fld"><label>&nbsp;</label><div class="fa" style="margin-top:0;"><button class="btn bp" onclick="agregarServicio()">+ Agregar</button><button class="btn bg2" onclick="limpiar('svn','svdesc')">Limpiar</button></div></div>
+        </div>
+      </div>
+      <div class="panel"><div class="ph2"><span class="ptit">Servicios — clic en estado para cambiar</span><span class="badge" id="b-svc">0</span></div>
+        <div class="tw"><table><thead><tr><th>ID</th><th>Servicio</th><th>Descripción</th><th>Estado</th><th style="text-align:right">Acciones</th></tr></thead><tbody id="t-svc"><tr><td colspan="5" class="es">Cargando...</td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="sec-paquetes" class="sec">
+      <div class="ph"><div><div class="pt">Gestión de <em>paquetes</em></div><div class="ps">Planes y tarifas</div></div></div>
+      <div class="fp"><div class="ftit">Nuevo paquete</div>
+        <div class="fg c4">
+          <div class="fld"><label>Nombre <span class="req">*</span></label><input id="pkn" type="text" placeholder="Plan Romántico..."></div>
+          <div class="fld"><label>Precio <span class="req">*</span></label><input id="pkp" type="number" placeholder="150000" min="0"></div>
+          <div class="fld"><label>Descripción</label><input id="pkd" type="text" placeholder="Incluye..."></div>
+          <div class="fld"><label>Estado</label><select id="pke"><option value="activo">Activo</option><option value="agotado">Agotado</option><option value="no_disponible">No disponible</option></select></div>
+        </div>
+        <div class="fa"><button class="btn bp" onclick="agregarPaquete()">+ Agregar paquete</button><button class="btn bg2" onclick="limpiar('pkn','pkp','pkd')">Limpiar</button></div>
+      </div>
+      <div class="panel"><div class="ph2"><span class="ptit">Paquetes — clic en estado para cambiar</span><span class="badge" id="b-pkg">0</span></div>
+        <div class="tw"><table><thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Descripción</th><th>Estado</th><th style="text-align:right">Acciones</th></tr></thead><tbody id="t-pkg"><tr><td colspan="6" class="es">Cargando...</td></tr></tbody></table></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODALES -->
+<div class="mo" id="m-cli"><div class="md"><div class="mt">Editar cliente</div><input type="hidden" id="e-cli-id"><div class="fg c3"><div class="fld"><label>Nombre <span class="req">*</span></label><input id="e-cn" type="text"></div><div class="fld"><label>Documento <span class="req">*</span></label><input id="e-cd" type="text"></div><div class="fld"><label>Teléfono</label><input id="e-ct" type="text"></div><div class="fld"><label>Procedencia</label><input id="e-cp" type="text"></div><div class="fld"><label>Email</label><input id="e-ce" type="email"></div><div class="fld"><label>Días <span class="req">*</span></label><input id="e-cdias" type="number" min="1"></div></div><div class="fg c3" style="margin-top:10px;"><div class="fld"><label>Cabaña</label><select id="e-ccab"><option value="">—</option></select></div><div class="fld"><label>Paquete</label><select id="e-cpkg"><option value="">—</option></select></div><div class="fld"><label>Estado</label><select id="e-cest"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div></div><div class="fa" style="margin-top:1.2rem;"><button class="btn bp" onclick="guardarCliente()">Guardar cambios</button><button class="btn bg2" onclick="cerrarM('m-cli')">Cancelar</button></div></div></div>
+<div class="mo" id="m-cab"><div class="md"><div class="mt">Editar cabaña</div><input type="hidden" id="e-cab-id"><div class="fg c3"><div class="fld"><label>Nombre</label><input id="e-cabn" type="text"></div><div class="fld"><label>Capacidad</label><input id="e-cabcap" type="number" min="1"></div><div class="fld"><label>Precio/noche</label><input id="e-cabpr" type="number" min="0"></div><div class="fld"><label>Descripción</label><input id="e-cabdesc" type="text"></div><div class="fld"><label>URL imagen</label><input id="e-cabimg" type="text"></div><div class="fld"><label>Estado</label><select id="e-cabest"><option value="disponible">Disponible</option><option value="ocupada">Ocupada</option><option value="mantenimiento">Mantenimiento</option></select></div></div><div class="fa" style="margin-top:1.2rem;"><button class="btn bp" onclick="guardarCabana()">Guardar</button><button class="btn bg2" onclick="cerrarM('m-cab')">Cancelar</button></div></div></div>
+<div class="mo" id="m-svc"><div class="md"><div class="mt">Editar servicio</div><input type="hidden" id="e-svc-id"><div class="fg c3"><div class="fld"><label>Nombre</label><input id="e-svn" type="text"></div><div class="fld"><label>Descripción</label><input id="e-svdesc" type="text"></div><div class="fld"><label>Estado</label><select id="e-svest"><option value="activo">Activo</option><option value="agotado">Agotado</option><option value="no_disponible">No disponible</option></select></div></div><div class="fa" style="margin-top:1.2rem;"><button class="btn bp" onclick="guardarServicio()">Guardar</button><button class="btn bg2" onclick="cerrarM('m-svc')">Cancelar</button></div></div></div>
+<div class="mo" id="m-pkg"><div class="md"><div class="mt">Editar paquete</div><input type="hidden" id="e-pkg-id"><div class="fg c2"><div class="fld"><label>Nombre</label><input id="e-pkn" type="text"></div><div class="fld"><label>Precio</label><input id="e-pkp" type="number" min="0"></div><div class="fld"><label>Descripción</label><input id="e-pkd" type="text"></div><div class="fld"><label>Estado</label><select id="e-pke"><option value="activo">Activo</option><option value="agotado">Agotado</option><option value="no_disponible">No disponible</option></select></div></div><div class="fa" style="margin-top:1.2rem;"><button class="btn bp" onclick="guardarPaquete()">Guardar</button><button class="btn bg2" onclick="cerrarM('m-pkg')">Cancelar</button></div></div></div>
+<div class="imo" id="img-m" onclick="this.classList.remove('open')"><img id="img-src" src="" alt=""></div>
+<div id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
