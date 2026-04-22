@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Seleccionar Rol — Kafe Ancestral</title>
+  <link rel="stylesheet" href="css/variables.css"/>
+  <link rel="stylesheet" href="css/reset.css"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(160deg, #f8f9fa 0%, #e9ecef 40%, #dee2e6 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.5rem; position: relative; overflow: hidden;
+    }
+    body::before {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 60% at 15% 50%, rgba(255,193,7,0.08), transparent),
+        radial-gradient(ellipse 50% 70% at 85% 30%, rgba(255,87,34,0.15), transparent),
+        repeating-linear-gradient(-45deg, transparent, transparent 30px, rgba(255,255,255,0.05) 30px, rgba(255,255,255,0.05) 31px);
+    }
+    .login-shell {
+      display: grid; grid-template-columns: 1fr 420px;
+      width: min(900px, 100%);
+      background: rgba(255,255,255,0.95);
+      border: 1px solid rgba(0,0,0,0.05);
+      border-radius: var(--r-xl);
+      backdrop-filter: blur(20px);
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.1);
+    }
+    @media(max-width:680px) { .login-shell { grid-template-columns: 1fr; } }
+    .login-deco {
+      background: linear-gradient(160deg, rgba(255,193,7,0.1) 0%, rgba(255,87,34,0.15) 100%);
+      padding: 3rem 2.5rem; display: flex; flex-direction: column; justify-content: space-between;
+      border-right: 1px solid rgba(255,255,255,0.3);
+    }
+    .login-deco-logo { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 2.5rem; }
+    .deco-mark {
+      width: 48px; height: 48px; border-radius: var(--r-md);
+      background: linear-gradient(135deg, var(--fire), var(--amber));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; box-shadow: var(--sh-fire);
+    }
+    .deco-title { font-family: var(--font-display); font-size: 1.2rem; font-weight: 800; color: #333; }
+    .deco-sub   { font-size: 0.68rem; color: rgba(0,0,0,0.4); text-transform: uppercase; letter-spacing: 0.12em; }
+    .deco-headline { font-family: var(--font-display); font-size: clamp(1.6rem,3vw,2.4rem); font-weight: 800; color: #333; line-height: 1.15; margin-bottom: 1rem; }
+    .deco-headline em { font-style: italic; color: var(--terra); }
+    .deco-text { font-size: 0.88rem; color: rgba(0,0,0,0.6); line-height: 1.7; }
+    .deco-features { margin-top: 2rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    .deco-feat { display: flex; align-items: center; gap: 0.75rem; font-size: 0.82rem; color: rgba(0,0,0,0.7); }
+    .deco-feat-ico { width: 30px; height: 30px; border-radius: var(--r-sm); background: rgba(255,193,7,0.1); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
+    .login-form-panel { background: var(--white); padding: 2.5rem 2rem; display: flex; flex-direction: column; }
+    .lf-head { margin-bottom: 2rem; }
+    .lf-head h2 { font-size: 1.5rem; margin-bottom: 0.3rem; }
+    .lf-head p  { font-size: 0.85rem; color: var(--mist); }
+    .role-selection { display: flex; flex-direction: column; gap: 1rem; }
+    .role-btn {
+      padding: 1.5rem 1rem; border-radius: var(--r-lg); border: 2px solid var(--sand-mid);
+      background: var(--white); cursor: pointer; transition: all 0.2s; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    }
+    .role-btn:hover { border-color: var(--fire); background: var(--fire-soft); }
+    .role-btn .role-ico { font-size: 2rem; }
+    .role-btn .role-title { font-size: 1.1rem; font-weight: 700; color: var(--bark); }
+    .role-btn .role-desc { font-size: 0.8rem; color: var(--mist); }
+    .lf-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--sand); margin-bottom: 1.75rem; }
+    .lf-tab  {
+      flex: 1; padding: 0.7rem 0.5rem; text-align: center;
+      background: none; border: none; border-bottom: 2.5px solid transparent; margin-bottom: -2px;
+      font-family: var(--font-body); font-size: 0.84rem; font-weight: 600;
+      color: var(--mist); cursor: pointer; transition: all 0.18s;
+    }
+    .lf-tab:hover  { color: var(--bark); }
+    .lf-tab.active { color: var(--fire); border-bottom-color: var(--fire); }
+    .lf-pane { display: none; }
+    .lf-pane.on { display: block; animation: fadeSlide 0.2s ease; }
+    .role-note {
+      background: var(--fire-soft); border: 1px solid var(--fire-border);
+      border-radius: var(--r-md); padding: 0.75rem 1rem;
+      font-size: 0.8rem; color: var(--clay); margin-bottom: 1.25rem;
+      display: flex; gap: 0.5rem; align-items: flex-start;
+    }
+    .demo-logins { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px dashed var(--sand); }
+    .demo-title  { font-size: 0.72rem; color: var(--mist-light); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.75rem; }
+    .demo-btns   { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .demo-btn    {
+      padding: 0.38rem 0.85rem; border-radius: var(--r-pill); font-size: 0.74rem; font-weight: 600;
+      border: 1.5px solid var(--sand-mid); background: var(--bone); color: var(--mist);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .demo-btn:hover { border-color: var(--fire); color: var(--fire); background: var(--fire-soft); }
+    @media(max-width:680px) { .login-deco { display: none; } .login-form-panel { padding: 2rem 1.5rem; } }
+  </style>
+</head>
+<body>
+<div class="login-shell">
+  <div class="login-deco">
+    <div>
+      <div class="login-deco-logo">
+        <div class="deco-mark">🌿</div>
+        <div>
+          <div class="deco-title">Kafe Ancestral</div>
+          <div class="deco-sub">Sistema de Reservas</div>
+        </div>
+      </div>
+      <div class="deco-headline">Reconecta con<br/><em>la naturaleza</em></div>
+      <p class="deco-text">Reserva tu estadía en nuestras cabañas y vive una experiencia única rodeado de naturaleza, café y tradición ancestral.</p>
+      <div class="deco-features">
+        <div class="deco-feat"><div class="deco-feat-ico">🏡</div> 3 cabañas únicas para todos los grupos</div>
+        <div class="deco-feat"><div class="deco-feat-ico">☕</div> Paquetes con tour cafetero y gastronomía</div>
+        <div class="deco-feat"><div class="deco-feat-ico">📅</div> Reserva fácil con disponibilidad en tiempo real</div>
+        <div class="deco-feat"><div class="deco-feat-ico">💰</div> Precio transparente con desglose de IVA</div>
+      </div>
+    </div>
+    <p style="font-size:0.72rem;color:rgba(0,0,0,0.3);margin-top:2rem;">v1.0.0 · Kafe Ancestral © 2025</p>
+  </div>
+  <div class="login-form-panel">
+    <div class="lf-head">
+      <h2>Seleccionar Rol</h2>
+      <p>Elige tu rol para acceder al sistema de reservas</p>
+    </div>
+    <div class="role-selection">
+      <button class="role-btn" onclick="selectRole('cliente')">
+        <div class="role-ico">👤</div>
+        <div class="role-title">Cliente</div>
+        <div class="role-desc">Ver disponibilidad, crear y gestionar mis reservas</div>
+      </button>
+      <button class="role-btn" onclick="selectRole('admin')">
+        <div class="role-ico">🔑</div>
+        <div class="role-title">Administrador</div>
+        <div class="role-desc">Gestionar reservas, bloquear fechas y ver estadísticas</div>
+      </button>
+    </div>
+  </div>
+</div>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+function selectRole(role) {
+  localStorage.setItem('kafe_role', role);
+  if (role === 'cliente') {
+    window.location.href = 'cliente.html';
+  } else if (role === 'admin') {
+    window.location.href = 'admin.html';
+  }
+}
+</script>
+</body>
+</html>

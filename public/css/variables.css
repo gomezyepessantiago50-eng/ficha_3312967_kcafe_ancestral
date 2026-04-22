@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --fire:        #E85D04;
+  --fire-hover:  #C94D00;
+  --fire-soft:   #FFF0E6;
+  --fire-border: rgba(232,93,4,0.22);
+  --amber:       #F48C06;
+  --amber-soft:  #FFF8E6;
+  --clay:        #A3522A;
+  --terra:       #D4845A;
+  --earth:       #8B5E3C;
+
+  --bone:        #FAF7F2;
+  --cream:       #F5EFE6;
+  --sand:        #EBE0D0;
+  --sand-mid:    #D9C9B4;
+  --bark:        #2E1A0E;
+  --bark-mid:    #4A2E1A;
+  --mist:        #7D6E62;
+  --mist-light:  #B0A095;
+  --white:       #FFFFFF;
+
+  --success:     #2D7A4F;
+  --success-bg:  #EAF5EE;
+  --danger:      #C0392B;
+  --danger-bg:   #FDECEA;
+
+  --dark-bg:     #120D09;
+  --dark-card:   #1E1511;
+  --dark-card2:  #261A13;
+  --dark-border: rgba(255,255,255,0.07);
+  --dark-text:   rgba(255,255,255,0.88);
+  --dark-muted:  rgba(255,255,255,0.38);
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body:    'Outfit', system-ui, sans-serif;
+
+  --r-sm:  5px;
+  --r-md:  10px;
+  --r-lg:  16px;
+  --r-xl:  22px;
+  --r-pill:100px;
+
+  --sh-sm:   0 1px 4px rgba(46,26,14,0.08);
+  --sh-md:   0 4px 18px rgba(46,26,14,0.10);
+  --sh-lg:   0 14px 44px rgba(46,26,14,0.14);
+  --sh-fire: 0 6px 24px rgba(232,93,4,0.30);
+  --sh-card: 0 2px 12px rgba(46,26,14,0.08), 0 0 0 1px rgba(46,26,14,0.05);
+
+  --ease:        cubic-bezier(0.4,0,0.2,1);
+  --ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+}
