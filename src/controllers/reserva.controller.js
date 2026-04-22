@@ -63,7 +63,8 @@ const crearReserva = async (req, res) => {
   if (errores) return;
 
   try {
-    const reserva = await reservaService.crearReserva(req.body);
+    const usuarioId = req.user?.IDUsuario || 1;
+    const reserva = await reservaService.crearReserva(req.body, usuarioId);
     res.status(201).json({ ok: true, mensaje: 'Reserva creada exitosamente', data: reserva });
   } catch (error) {
     res.status(error.status || 500).json({ ok: false, mensaje: error.message, conflictos: error.conflictos || null });

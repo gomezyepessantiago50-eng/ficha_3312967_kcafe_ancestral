@@ -46,19 +46,17 @@ if (typeof _cals !== 'undefined') {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  let role = localStorage.getItem('kafe_role');
-  if (!role) {
-    localStorage.setItem('kafe_role', 'admin');
-    role = 'admin';
+  // Obtener usuario del localStorage (guardado al hacer login)
+  const user = JSON.parse(localStorage.getItem('kafe_user') || 'null');
+  const token = localStorage.getItem('kafe_token');
+  
+  // Validar que sea un usuario admin
+  if (!user || !user.id || user.idRol !== 1) {
+    window.location.href = 'index.html';
+    return;
   }
-  if (role !== 'admin') { window.location.href = 'index.html'; return; }
-  if (!localStorage.getItem('kafe_token') || localStorage.getItem('kafe_token') !== 'token-demo') {
-    localStorage.setItem('kafe_token', 'token-demo');
-  }
-  if (!localStorage.getItem('kafe_user')) {
-    localStorage.setItem('kafe_user', JSON.stringify({ nombre: 'Admin Demo', rol: 'admin' }));
-  }
-  document.getElementById('admin-username').textContent = 'Admin Demo';
+  
+  document.getElementById('admin-username').textContent = user.nombre || 'Admin';
   loadDashboard();
   refreshDashCal();
   loadReservas();
@@ -854,4 +852,15 @@ function clearClientSearch() {
   document.getElementById('cli-results').innerHTML = '<div style="text-align:center;color:var(--dark-muted);padding:3rem;font-size:0.9rem;">Introduce un número de documento para buscar</div>';
 }
 
-function doLogout() { localStorage.removeItem('kafe_role'); toast('Sesión cerrada','ok'); setTimeout(()=>window.location.href='index.html',600); }
+async function doLogout() {
+  try {
+    await req('/auth/logout', { method: 'POST' });
+  } catch (err) {
+    console.log('Logout realizado');
+  }
+  localStorage.removeItem('kafe_token');
+  localStorage.removeItem('kafe_user');
+  localStorage.removeItem('kafe_role');
+  toast('Sesión cerrada','ok');
+  setTimeout(()=>window.location.href='index.html',600);
+}

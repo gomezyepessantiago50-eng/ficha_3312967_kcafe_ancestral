@@ -14,11 +14,11 @@ const startServer = async () => {
 const launchServer = (port) => {
   const server = app.listen(port, () => {
     console.log('');
-    console.log('🌿 ══════════════════════════════════════');
+    console.log(' ══════════════════════════════════════');
     console.log(`   KAFE ANCESTRAL API`);
     console.log(`   Servidor: http://localhost:${port}`);
     console.log(`   Entorno:  ${process.env.NODE_ENV || 'development'}`);
-    console.log('🌿 ══════════════════════════════════════');
+    console.log(' ══════════════════════════════════════');
     console.log('');
   });
 

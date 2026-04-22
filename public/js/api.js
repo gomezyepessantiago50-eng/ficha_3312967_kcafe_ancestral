@@ -4,7 +4,7 @@
 const API_URL = `${window.location.origin}/api`;
 
 const Auth = {
-  getToken : ()      => localStorage.getItem('kafe_token') || 'token-demo',
+  getToken : ()      => localStorage.getItem('kafe_token') || 'token-cliente-demo',
   getUser  : ()      => JSON.parse(localStorage.getItem('kafe_user') || 'null'),
   save     : (t, u)  => { localStorage.setItem('kafe_token', t); localStorage.setItem('kafe_user', JSON.stringify(u)); },
   clear    : ()      => { localStorage.removeItem('kafe_token'); localStorage.removeItem('kafe_user'); },
@@ -26,7 +26,13 @@ async function req(path, opts = {}) {
       localStorage.setItem('kafe_token', 'token-demo');
       return req(path, opts);
     }
-    throw new Error(data.mensaje || data.message || `Error ${res.status}`);
+    // Construir mensaje detallado con errores de validación si existen
+    let errorMsg = data.mensaje || data.message || `Error ${res.status}`;
+    if (data.errores && Array.isArray(data.errores)) {
+      const detalles = data.errores.map(e => `${e.campo}: ${e.mensaje}`).join('\n');
+      errorMsg = `${errorMsg}\n${detalles}`;
+    }
+    throw new Error(errorMsg);
   }
 
   return data;

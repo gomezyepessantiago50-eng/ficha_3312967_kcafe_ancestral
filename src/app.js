@@ -23,7 +23,7 @@ app.get('/', (req, res) => {
 
 // ── Rutas de la API ──────────────────────────────────────────
 app.use('/api/reservas', require('./routes/reserva.routes'));
-
+app.use('/api/auth', require('./routes/auth.routes'));
 // app.use('/api/cabanas',   require('./routes/cabana.routes'));
 // app.use('/api/paquetes',  require('./routes/paquete.routes'));
 // app.use('/api/servicios', require('./routes/servicio.routes'));

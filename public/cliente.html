@@ -180,7 +180,7 @@
   <!-- SECCIÓN 1: RESERVAR -->
   <section class="section" id="section-reservar">
     <div class="page-hd" style="margin-bottom:1.5rem;">
-      <div><h2>Nueva Reserva</h2><p>Completa los pasos para confirmar tu estadía</p></div>
+      <div><h2 style="color: var(--bark); font-size: 1.8rem; margin-bottom: 0.4rem;">Nueva Reserva</h2><p style="color: var(--mist);">Completa los pasos para confirmar tu estadía</p></div>
     </div>
     <div class="wizard-layout">
       <div>
@@ -261,17 +261,6 @@
             <div class="field"><label class="label">Fecha salida <span style="color:red;">*</span></label><input type="date" class="input" id="f-fin" onchange="onForm()" min="" required/></div>
           </div>
           <div class="field">
-            <label class="label">Número de personas <span style="color:red;">*</span></label>
-            <select class="select" id="f-personas" onchange="onForm()">
-              <option value="1">1 persona</option>
-              <option value="2" selected>2 personas</option>
-              <option value="3">3 personas</option>
-              <option value="4">4 personas</option>
-              <option value="5">5 personas</option>
-              <option value="6">6 personas</option>
-            </select>
-          </div>
-          <div class="field">
             <label class="label">Notas especiales <span style="font-weight:400;color:var(--mist);">(opcional)</span></label>
             <textarea class="input" id="f-notas" rows="3" placeholder="Alergias, peticiones especiales, hora de llegada…" style="resize:vertical;"></textarea>
           </div>
@@ -306,7 +295,7 @@
   <!-- SECCIÓN 2: HABITACIONES -->
   <section class="section" id="section-habitaciones" style="display:none;">
     <div class="page-hd" style="margin-bottom:1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem;">
-      <div><h2>Habitaciones</h2><p>Fotos y descripción de las habitaciones por cabaña</p></div>
+      <div><h2 style="color: var(--bark); font-size: 1.8rem; margin-bottom: 0.4rem;">Habitaciones</h2><p style="color: var(--mist);">Fotos y descripción de las habitaciones por cabaña</p></div>
       <button class="btn btn-outline" onclick="closeCabanaDetails()">← Volver a reservar</button>
     </div>
     <div id="room-gallery" class="room-gallery"></div>
@@ -315,10 +304,10 @@
   <!-- SECCIÓN 3: MIS RESERVAS -->
   <section class="section" id="section-mis-reservas">
     <div class="page-hd" style="margin-bottom:1.5rem;">
-      <div><h2>Mis Reservas</h2><p>Historial de tus estadías</p></div>
+      <div><h2 style="color: var(--bark); font-size: 1.8rem; margin-bottom: 0.4rem;">Mis Reservas</h2><p style="color: var(--mist);">Historial de tus estadías</p></div>
     </div>
     <div id="reservas-list"></div>
-  </div>
+  </section>
 
 </div><!-- wrap -->
 

@@ -207,7 +207,7 @@ const desbloquearFechas = async (id) => {
   return { mensaje: 'Fechas desbloqueadas correctamente' };
 };
 
-const crearReserva = async (datos) => {
+const crearReserva = async (datos, usuarioId = 1) => {
   const payload = parsePayload(datos);
   const { FechaInicio, FechaFinalizacion, SubTotal, Descuento, IVA, cabana } = payload;
 
@@ -228,6 +228,7 @@ const crearReserva = async (datos) => {
   payload.MontoTotal = calcularTotal(SubTotal, Descuento, IVA);
   payload.FechaReserva = new Date();
   payload.IdEstadoReserva = 1;
+  payload.UsuarioIdusuario = usuarioId;
 
   const reserva = await Reserva.create(payload);
   return normalizeReserva(reserva);

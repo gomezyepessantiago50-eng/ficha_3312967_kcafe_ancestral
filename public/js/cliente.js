@@ -5,7 +5,9 @@ const CLIENTE_UI = {
   fechaInicio: '',
   fechaFin: '',
   personas: 2,
-  notas: ''
+  notas: '',
+  usuarioId: null,
+  usuarioEmail: null
 };
 
 const CABANAS = {
@@ -49,12 +51,20 @@ const SERVICIOS = {
 };
 
 function initClientePage() {
-  if (localStorage.getItem('kafe_role') !== 'cliente') {
-    localStorage.setItem('kafe_role','cliente');
+  // Obtener usuario del localStorage (guardado al hacer login)
+  const user = JSON.parse(localStorage.getItem('kafe_user') || 'null');
+  if (!user || !user.id) {
+    // Si no hay usuario, redirigir al login
+    window.location.href = 'index.html';
+    return;
   }
-  document.getElementById('cli-username').textContent = 'Cliente Demo';
+  
+  // Guardar datos del usuario en CLIENTE_UI
+  CLIENTE_UI.usuarioId = user.id;
+  CLIENTE_UI.usuarioEmail = user.email;
+  
+  document.getElementById('cli-username').textContent = user.nombre || 'Cliente';
   highlightSelection();
-  document.getElementById('f-personas').value = CLIENTE_UI.personas;
   setMinDateInputs();
   goPanel('reservar');
   updateResumen();
@@ -67,7 +77,14 @@ function togglePanel() {
   goPanel(target);
 }
 
-function doLogout() {
+async function doLogout() {
+  try {
+    await req('/auth/logout', { method: 'POST' });
+  } catch (err) {
+    console.log('Logout realizado');
+  }
+  localStorage.removeItem('kafe_token');
+  localStorage.removeItem('kafe_user');
   localStorage.removeItem('kafe_role');
   window.location.href = 'index.html';
 }
@@ -177,7 +194,8 @@ function onForm() {
   }
   
   CLIENTE_UI.fechaInicio = ini;
-  CLIENTE_UI.personas = Number(document.getElementById('f-personas').value) || 1;
+  // Número de personas se obtiene de la capacidad de la cabaña
+  CLIENTE_UI.personas = CABANAS[CLIENTE_UI.cabana].capacidad || 2;
   CLIENTE_UI.notas = document.getElementById('f-notas')?.value || '';
   updateResumen();
 }
@@ -229,16 +247,12 @@ async function confirmarReserva() {
   const errores = [];
   const fIni = document.getElementById('f-ini');
   const fFin = document.getElementById('f-fin');
-  const fPersonas = document.getElementById('f-personas');
   
   if (!fIni.value.trim()) {
     errores.push('Fecha llegada: campo necesario');
   }
   if (!fFin.value.trim()) {
     errores.push('Fecha salida: campo necesario');
-  }
-  if (!fPersonas.value.trim()) {
-    errores.push('Número de personas: campo necesario');
   }
   
   if (errores.length > 0) {
@@ -253,7 +267,7 @@ async function confirmarReserva() {
   try {
     setLoading(btn, true, 'Guardando…');
     await ReservasAPI.crear({
-      NroDocumentoCliente: 'demo-client',
+      NroDocumentoCliente: CLIENTE_UI.usuarioEmail || 'cliente@email.com',
       FechaInicio: fIni.value,
       FechaFinalizacion: fFin.value,
       SubTotal: calculateSubtotal(),
@@ -261,7 +275,7 @@ async function confirmarReserva() {
       IVA: Math.round(calculateSubtotal() * 0.19),
       MontoTotal: calculateSubtotal() + Math.round(calculateSubtotal() * 0.19),
       MetodoPago: 1,
-      num_personas: Number(fPersonas.value),
+      num_personas: CABANAS[CLIENTE_UI.cabana].capacidad,
       cabana: CLIENTE_UI.cabana,
       paquete: CLIENTE_UI.paquete,
       servicios: Array.from(CLIENTE_UI.servicios),
@@ -296,7 +310,7 @@ async function loadMisReservas() {
   container.innerHTML = '<div class="price-empty"><p>Cargando reservas…</p></div>';
   try {
     const data = await ReservasAPI.misReservas();
-    const reservas = data.reservas || data || [];
+    const reservas = data.data || data.reservas || [];
     if (!reservas.length) {
       container.innerHTML = '<div class="price-empty"><p>No tienes reservas aún.</p></div>';
       return;
@@ -304,8 +318,8 @@ async function loadMisReservas() {
     container.innerHTML = reservas.map(r => `
       <div class="res-item">
         <div class="res-id">#${r.id}</div>
-        <div class="res-info"><h4>${fDate(r.FechaInicio)} → ${fDate(r.FechaFinalizacion)} ${statusBadge(r.estado || r.Estado || 'pendiente')}</h4><p>${r.num_personas || r.num_personas || 1} personas · ${r.cabana || ''} · ${r.paquete || ''}</p></div>
-        <div class="res-actions"><button class="btn btn-outline btn-sm" type="button" onclick="viewReserva(${r.id})">Ver</button>${r.estado !== 'cancelada' ? ` <button class="btn btn-danger btn-sm" type="button" onclick="cancelReserva(${r.id})">Cancelar</button>` : ''}</div>
+        <div class="res-info"><h4>${fDate(r.fecha_inicio || r.FechaInicio)} → ${fDate(r.fecha_fin || r.FechaFinalizacion)} ${statusBadge(r.estado || r.Estado || 'pendiente')}</h4><p>${r.num_personas || 1} personas · ${r.cabana || ''} · ${r.paquete || ''}</p></div>
+        <div class="res-actions"><button class="btn btn-outline btn-sm" type="button" onclick="viewReserva(${r.id})">Ver</button>${(r.estado || r.Estado) !== 'cancelada' && (r.estado || r.Estado) !== 'completada' ? ` <button class="btn btn-danger btn-sm" type="button" onclick="cancelReserva(${r.id})">Cancelar</button>` : ''}</div>
       </div>
     `).join('');
   } catch (err) {
@@ -313,18 +327,154 @@ async function loadMisReservas() {
   }
 }
 
-async function cancelReserva(id) {
+function cancelReserva(id) {
+  document.getElementById('m-cancel-id').textContent = `#${id}`;
+  window._cancelReservaId = id;
+  openM('m-cancel');
+}
+
+async function doCancelReserva() {
+  const id = window._cancelReservaId;
+  if (!id) return;
+  
   try {
     await ReservasAPI.eliminar(id);
-    toast('Reserva cancelada', 'ok');
+    toast('Reserva cancelada correctamente', 'ok');
+    closeM('m-cancel');
     loadMisReservas();
   } catch (err) {
-    toast(err.message || 'No se pudo cancelar', 'err');
+    toast(err.message || 'No se pudo cancelar la reserva', 'err');
   }
 }
 
-function viewReserva(id) {
-  toast(`Reserva #${id}`, 'ok');
+async function viewReserva(id) {
+  try {
+    const data = await ReservasAPI.una(id);
+    const reserva = data.data || data;
+    
+    // Calcular noches
+    const inicio = new Date(reserva.fecha_inicio || reserva.FechaInicio);
+    const fin = new Date(reserva.fecha_fin || reserva.FechaFinalizacion);
+    const noches = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24));
+    
+    // Obtener nombres de cabaña, paquete y servicios
+    const cabanaKey = reserva.cabana || 'roble';
+    const paqueteKey = reserva.paquete || 'basico';
+    
+    // Parsear servicios (puede ser string o array)
+    let servicios = [];
+    if (reserva.servicios) {
+      if (typeof reserva.servicios === 'string') {
+        try {
+          servicios = JSON.parse(reserva.servicios);
+        } catch (e) {
+          servicios = [];
+        }
+      } else if (Array.isArray(reserva.servicios)) {
+        servicios = reserva.servicios;
+      }
+    }
+    
+    const serviciosArray = servicios.map(s => {
+      if (typeof s === 'string') return SERVICIOS[s]?.label || s;
+      return s.label || s;
+    });
+    
+    const cabanaLabel = CABANAS[cabanaKey]?.label || cabanaKey;
+    const paqueteLabel = PAQUETES[paqueteKey]?.label || paqueteKey;
+    const estadoBadge = statusBadge(reserva.estado || 'pendiente');
+    
+    // Construir el HTML del modal
+    const modalBody = document.getElementById('m-detalle-body');
+    modalBody.innerHTML = `
+      <div style="display: grid; gap: 1.5rem;">
+        
+        <!-- Encabezado de la reserva -->
+        <div style="border-bottom: 1px solid var(--sand); padding-bottom: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+            <span class="badge badge-fire">#${reserva.id}</span>
+            ${estadoBadge}
+          </div>
+          <p style="color: var(--mist); font-size: 0.85rem; margin: 0;">Reservada el ${fDate(reserva.fecha_reserva || reserva.FechaReserva)}</p>
+        </div>
+        
+        <!-- Fechas y personas -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div>
+            <label style="display: block; color: var(--mist); font-size: 0.8rem; margin-bottom: 0.3rem; font-weight: 600;">Fecha de llegada</label>
+            <div style="font-size: 0.95rem; font-weight: 600; color: var(--bark);">${fDate(reserva.fecha_inicio || reserva.FechaInicio)}</div>
+          </div>
+          <div>
+            <label style="display: block; color: var(--mist); font-size: 0.8rem; margin-bottom: 0.3rem; font-weight: 600;">Fecha de salida</label>
+            <div style="font-size: 0.95rem; font-weight: 600; color: var(--bark);">${fDate(reserva.fecha_fin || reserva.FechaFinalizacion)}</div>
+          </div>
+          <div>
+            <label style="display: block; color: var(--mist); font-size: 0.8rem; margin-bottom: 0.3rem; font-weight: 600;">Duración</label>
+            <div style="font-size: 0.95rem; font-weight: 600; color: var(--bark);">${noches} ${noches === 1 ? 'noche' : 'noches'}</div>
+          </div>
+          <div>
+            <label style="display: block; color: var(--mist); font-size: 0.8rem; margin-bottom: 0.3rem; font-weight: 600;">Número de personas</label>
+            <div style="font-size: 0.95rem; font-weight: 600; color: var(--bark);">${reserva.num_personas || 1} ${reserva.num_personas === 1 ? 'persona' : 'personas'}</div>
+          </div>
+        </div>
+        
+        <!-- Servicios contratados -->
+        <div style="border-top: 1px solid var(--sand); border-bottom: 1px solid var(--sand); padding: 1.25rem 0;">
+          <div style="margin-bottom: 0.75rem;">
+            <label style="display: block; color: var(--mist); font-size: 0.8rem; margin-bottom: 0.5rem; font-weight: 600;">Cabaña</label>
+            <div style="font-size: 0.95rem; color: var(--bark); font-weight: 500;">🏠 ${cabanaLabel}</div>
+          </div>
+          <div style="margin-bottom: 0.75rem;">
+            <label style="display: block; color: var(--mist); font-size: 0.8rem; margin-bottom: 0.5rem; font-weight: 600;">Paquete</label>
+            <div style="font-size: 0.95rem; color: var(--bark); font-weight: 500;">📦 ${paqueteLabel}</div>
+          </div>
+          ${serviciosArray.length > 0 ? `
+          <div>
+            <label style="display: block; color: var(--mist); font-size: 0.8rem; margin-bottom: 0.5rem; font-weight: 600;">Servicios adicionales</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+              ${serviciosArray.map(s => `<span style="background: var(--fire-soft); color: var(--fire); padding: 0.35rem 0.7rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">✓ ${s}</span>`).join('')}
+            </div>
+          </div>
+          ` : '<div style="font-size: 0.9rem; color: var(--mist);">Sin servicios adicionales</div>'}
+          ${reserva.notas ? `
+          <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--sand);">
+            <label style="display: block; color: var(--mist); font-size: 0.8rem; margin-bottom: 0.5rem; font-weight: 600;">Notas especiales</label>
+            <div style="font-size: 0.9rem; color: var(--bark); font-style: italic; background: var(--sand-soft); padding: 0.75rem; border-radius: 6px;">${reserva.notas}</div>
+          </div>
+          ` : ''}
+        </div>
+        
+        <!-- Desglose de precios -->
+        <div style="background: var(--fire-soft); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--fire-border);">
+          <div style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--fire-border);">
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.5rem;">
+              <span style="color: var(--bark);">Subtotal</span>
+              <span style="font-weight: 600; color: var(--bark);">${fCop(reserva.subtotal || reserva.SubTotal || 0)}</span>
+            </div>
+            ${reserva.descuento || reserva.Descuento ? `
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--success);">
+              <span>Descuento</span>
+              <span style="font-weight: 600;">-${fCop(reserva.descuento || reserva.Descuento)}</span>
+            </div>
+            ` : ''}
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--bark); margin-bottom: 0.75rem; opacity: 0.85;">
+            <span>IVA (19%)</span>
+            <span>${fCop(reserva.iva || reserva.IVA || 0)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 2px solid var(--fire); padding-top: 0.75rem;">
+            <span style="font-weight: 700; font-size: 0.95rem; color: var(--bark);">Total a pagar</span>
+            <span style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: var(--fire);">${fCop(reserva.monto_total || reserva.MontoTotal || 0)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Abrir el modal
+    openM('m-detalle');
+  } catch (err) {
+    toast(err.message || 'Error al cargar los detalles de la reserva', 'err');
+  }
 }
 
 window.addEventListener('DOMContentLoaded', initClientePage);
