@@ -151,11 +151,20 @@
       <button class="sb-item" onclick="showSec('calendario',this)">
         <span class="sb-ico">📅</span> Calendario
       </button>
+      <button class="sb-item" onclick="showSec('bloqueos',this)">
+        <span class="sb-ico">🔒</span> Bloquear Fechas
+      </button>
     </div>
     <div class="sb-section">
       <div class="sb-label">Gestión</div>
-      <button class="sb-item" onclick="showSec('bloqueos',this)">
-        <span class="sb-ico">🔒</span> Bloquear Fechas
+      <button class="sb-item" onclick="showSec('cabanas',this)">
+        <span class="sb-ico">🏡</span> Cabañas
+      </button>
+      <button class="sb-item" onclick="showSec('paquetes',this)">
+        <span class="sb-ico">☕</span> Paquetes
+      </button>
+      <button class="sb-item" onclick="showSec('clientes',this)">
+        <span class="sb-ico">👥</span> Usuarios
       </button>
     </div>
   </aside>
@@ -355,24 +364,26 @@
 
       <!-- CLIENTES -->
       <div class="a-section" id="sec-clientes">
-        <div class="page-hd"><div><h2>Clientes</h2><p>Búsqueda y gestión de clientes</p></div></div>
-        
-        <!-- Barra de búsqueda -->
+        <div class="page-hd"><div><h2>Usuarios</h2><p>Gestión de cuentas registradas</p></div></div>
+
+        <!-- Buscador -->
         <div style="background:var(--dark-card2);border:1px solid var(--dark-border);border-radius:var(--r-xl);padding:1.5rem;margin-bottom:2rem;">
           <div style="display:flex;gap:0.75rem;align-items:flex-end;">
             <div style="flex:1;">
-              <label class="label" style="color:var(--dark-text);display:block;margin-bottom:0.5rem;font-size:0.9rem;">Número de Documento</label>
-              <input type="text" class="input" id="cli-search" placeholder="Ej: 1234567890" onkeyup="if(event.key==='Enter') searchClientByDoc()" style="width:100%;background:rgba(255,255,255,0.05);border-color:var(--dark-border);color:#fff;"/>
+              <label class="label" style="color:var(--dark-text);display:block;margin-bottom:0.5rem;font-size:0.9rem;">Correo electrónico</label>
+              <input type="email" class="input" id="cli-search" placeholder="usuario@email.com"
+                onkeyup="if(event.key==='Enter') searchUsuario()"
+                style="width:100%;background:rgba(255,255,255,0.05);border-color:var(--dark-border);color:#fff;"/>
             </div>
-            <button class="btn btn-fire" onclick="searchClientByDoc()" style="white-space:nowrap;height:fit-content;">🔍 Buscar</button>
-            <button class="btn btn-dark-outline" onclick="clearClientSearch()" style="white-space:nowrap;height:fit-content;">Limpiar</button>
+            <button class="btn btn-fire" onclick="searchUsuario()" style="white-space:nowrap;">🔍 Buscar</button>
+            <button class="btn btn-dark-outline" onclick="clearUsuarioSearch()" style="white-space:nowrap;">Limpiar</button>
           </div>
         </div>
 
         <!-- Resultados -->
         <div id="cli-results">
           <div style="text-align:center;color:var(--dark-muted);padding:3rem;font-size:0.9rem;">
-            Introduce un número de documento para buscar
+            Introduce un correo electrónico para buscar
           </div>
         </div>
       </div>
@@ -580,5 +591,83 @@
 <script src="js/app.js"></script>
 <script src="js/fixes.js"></script>
 <script src="js/admin.js"></script>
+
+<!-- MODAL: Cambiar Rol Usuario -->
+<div class="modal-backdrop" id="m-rol" onclick="if(event.target===this)closeM('m-rol')">
+  <div class="modal modal-sm">
+    <div class="modal-hd">
+      <h3>Cambiar Rol — <span id="m-rol-email" style="color:var(--fire);font-size:0.9rem;"></span></h3>
+      <button class="modal-close" onclick="closeM('m-rol')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--bark);margin-bottom:1rem;font-size:0.9rem;">Selecciona el nuevo rol para este usuario:</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <button id="m-rol-btn-cliente" onclick="setRolSeleccion('cliente')"
+          style="padding:1rem;border-radius:var(--r-lg);border:2px solid var(--fire);background:rgba(232,93,4,0.08);cursor:pointer;font-family:inherit;transition:all 0.15s;">
+          <div style="font-size:1.5rem;margin-bottom:0.3rem;">👤</div>
+          <div style="font-weight:700;font-size:0.88rem;color:var(--bark);">Cliente</div>
+          <div style="font-size:0.72rem;color:var(--mist);">Acceso al portal de reservas</div>
+        </button>
+        <button id="m-rol-btn-admin" onclick="setRolSeleccion('admin')"
+          style="padding:1rem;border-radius:var(--r-lg);border:2px solid rgba(46,26,14,0.15);background:#fff;cursor:pointer;font-family:inherit;transition:all 0.15s;">
+          <div style="font-size:1.5rem;margin-bottom:0.3rem;">🔑</div>
+          <div style="font-weight:700;font-size:0.88rem;color:var(--bark);">Administrador</div>
+          <div style="font-size:0.72rem;color:var(--mist);">Acceso al panel admin</div>
+        </button>
+      </div>
+      <div id="m-rol-alert" style="margin-top:1rem;"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-dark-outline" onclick="closeM('m-rol')">Cancelar</button>
+      <button class="btn btn-fire" onclick="confirmarCambioRol()">Guardar cambio</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Eliminar Usuario -->
+<div class="modal-backdrop" id="m-del-usuario" onclick="if(event.target===this)closeM('m-del-usuario')">
+  <div class="modal modal-sm">
+    <div class="modal-hd">
+      <h3>Eliminar Usuario</h3>
+      <button class="modal-close" onclick="closeM('m-del-usuario')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--bark);font-weight:500;">¿Estás seguro de eliminar la cuenta de <strong id="m-del-usuario-email" style="color:var(--fire);"></strong>?</p>
+      <p style="color:var(--mist);font-size:0.85rem;margin-top:0.5rem;">Esta acción es irreversible. Se eliminarán todos los datos de la cuenta.</p>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-dark-outline" onclick="closeM('m-del-usuario')">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmarEliminarUsuario()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Reset Password Usuario -->
+<div class="modal-backdrop" id="m-reset-usuario" onclick="if(event.target===this)closeM('m-reset-usuario')">
+  <div class="modal modal-sm">
+    <div class="modal-hd">
+      <h3>Restablecer Contraseña</h3>
+      <button class="modal-close" onclick="closeM('m-reset-usuario')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="m-reset-content">
+        <p style="color:var(--bark);font-size:0.9rem;">¿Generar un enlace de restablecimiento para <strong id="m-reset-email" style="color:var(--fire);"></strong>?</p>
+        <p style="color:var(--mist);font-size:0.82rem;margin-top:0.5rem;">El enlace tendrá validez de 1 hora.</p>
+      </div>
+      <div id="m-reset-result" style="display:none;">
+        <div style="background:var(--fire-soft);border:1px solid var(--fire-border);border-radius:var(--r-lg);padding:1rem;margin-top:0.5rem;">
+          <p style="font-size:0.82rem;color:var(--bark);margin-bottom:0.5rem;font-weight:600;">✓ Enlace generado:</p>
+          <code id="m-reset-url" style="font-size:0.78rem;color:var(--fire);word-break:break-all;"></code>
+        </div>
+        <p style="font-size:0.75rem;color:var(--mist);margin-top:0.75rem;">Copia este enlace y compártelo con el usuario por un canal seguro.</p>
+      </div>
+    </div>
+    <div class="modal-ft" id="m-reset-ft">
+      <button class="btn btn-dark-outline" onclick="closeM('m-reset-usuario')">Cancelar</button>
+      <button class="btn btn-fire" onclick="confirmarResetUsuario()">Generar enlace</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

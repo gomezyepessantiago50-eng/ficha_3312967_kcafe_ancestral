@@ -18,15 +18,13 @@ const connectDB = async () => {
     await sequelize.authenticate();
     console.log('Conexion a MySQL establecida correctamente');
 
-    const queryInterface = sequelize.getQueryInterface();
-    const foreignKeys = await queryInterface.getForeignKeyReferencesForTable('Reserva').catch(() => []);
-    await Promise.all(foreignKeys.map(fk => queryInterface.removeConstraint('Reserva', fk.constraintName).catch(() => null)));
-
-    await sequelize.sync({ alter: true });
+    // Sincronizar modelos sin alterar tablas existentes
+    await sequelize.sync({ force: false });
     console.log('Modelos sincronizados con la base de datos');
   } catch (error) {
     console.error('Error al conectar a la base de datos:', error.message);
-    process.exit(1);
+    // No hacer exit(1) para permitir que el servidor continue
+    console.warn('⚠️  Continuando sin sincronización automática...');
   }
 };
 

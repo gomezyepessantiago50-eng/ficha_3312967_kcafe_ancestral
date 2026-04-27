@@ -1,7 +1,7 @@
-// app.js
+// src/app.js
 const express = require('express');
 const cors    = require('cors');
-const path    = require('path');  // ← AGREGAR ESTA
+const path    = require('path');
 require('dotenv').config();
 
 const { errorHandler, notFound } = require('./middlewares/error.middleware');
@@ -13,58 +13,27 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ── Servir frontend estático ─────────────────────────────────
-app.use(express.static(path.join(__dirname, '../public')));  // ← AGREGAR ESTA
-
-// ── Ruta de salud ────────────────────────────────────────────
+// ── Rutas principales (ANTES de express.static) ──────────────
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));  // ← CAMBIAR ESTA
+  res.sendFile(path.join(__dirname, '../public/landing.html'));
+});
+app.get('/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+app.get('/cliente', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/cliente.html'));
+});
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/admin.html'));
 });
 
-// ── Rutas de la API ──────────────────────────────────────────
-app.use('/api/reservas', require('./routes/reserva.routes'));
-app.use('/api/auth', require('./routes/auth.routes'));
-// app.use('/api/cabanas',   require('./routes/cabana.routes'));
-// app.use('/api/paquetes',  require('./routes/paquete.routes'));
-// app.use('/api/servicios', require('./routes/servicio.routes'));
-// app.use('/api/clientes',  require('./routes/cliente.routes'));
-// app.use('/api/usuarios',  require('./routes/usuario.routes'));
-// app.use('/api/auth',      require('./routes/auth.routes'));
+// ── Servir frontend estático ──────────────────────────────────
+app.use(express.static(path.join(__dirname, '../public')));
 
-// ── Login temporal para pruebas ──────────────────────────────
-app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
-
-  // Admin demo
-  if (email === 'admin@kafeancestral.com' && password === 'admin123') {
-    return res.json({
-      ok: true,
-      token: 'token-admin-demo',
-      usuario: { nombre: 'Administrador', email, rol: 'admin' }
-    });
-  }
-
-  // Cliente demo
-  if (email === 'cliente@demo.com' && password === '123456') {
-    return res.json({
-      ok: true,
-      token: 'token-cliente-demo',
-      usuario: { nombre: 'Cliente Demo', email, rol: 'cliente' }
-    });
-  }
-
-  // Token demo para selección de rol
-  if (email === 'demo' && password === 'demo') {
-    const rol = req.body.rol || 'cliente';
-    return res.json({
-      ok: true,
-      token: 'token-demo',
-      usuario: { nombre: rol === 'admin' ? 'Admin Demo' : 'Cliente Demo', email: 'demo@demo.com', rol }
-    });
-  }
-
-  return res.status(401).json({ ok: false, mensaje: 'Credenciales incorrectas' });
-});
+// ── Rutas de la API ───────────────────────────────────────────
+app.use('/api/reservas',  require('./routes/reserva.routes'));
+app.use('/api/auth',      require('./routes/auth.routes'));
+app.use('/api/usuarios',  require('./routes/usuario.routes'));
 
 // ── Manejo de rutas no encontradas ───────────────────────────
 app.use(notFound);
