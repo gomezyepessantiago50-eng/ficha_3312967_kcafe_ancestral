@@ -431,3 +431,22 @@ tbody tr:hover { background: var(--bone); }
   .topbar { padding:0 1rem; }
   .admin-content { padding:1rem; }
 }
+
+/* ── SVG ICON UTILITIES ─────────────────────────── */
+.ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; line-height: 1;
+}
+.ico svg {
+  width: 1em; height: 1em;
+  stroke: currentColor; fill: none;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.ico-xs { font-size: 0.85rem; }
+.ico-sm { font-size: 1rem; }
+.ico-md { font-size: 1.25rem; }
+.ico-lg { font-size: 1.5rem; }
+.ico-xl { font-size: 2rem; }
+.ico-2xl { font-size: 2.5rem; }
+.ico-3xl { font-size: 3rem; }
+

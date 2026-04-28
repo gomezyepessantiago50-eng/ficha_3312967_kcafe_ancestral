@@ -81,14 +81,16 @@ function buildCal(id, y, m, reserved = [], blocked = [], onClick = null) {
   let cells = '';
   for (let d = 1; d <= total; d++) {
     const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const isTod = d===today.getDate() && m===today.getMonth() && y===today.getFullYear();
-    const isRes = reserved.includes(ds);
-    const isBlk = blocked.includes(ds);
+    const isTod  = d===today.getDate() && m===today.getMonth() && y===today.getFullYear();
+    const isPast = new Date(y, m, d) < today && !isTod;
+    const isRes  = reserved.includes(ds);
+    const isBlk  = blocked.includes(ds);
     let cls = 'cal-day';
-    if (isTod) cls += ' cal-today';
-    else if (isBlk) cls += ' cal-blocked';
-    else if (isRes) cls += ' cal-reserved';
-    const click = onClick ? `onclick="${onClick}('${ds}')"` : '';
+    if (isTod)       cls += ' cal-today';
+    else if (isBlk)  cls += ' cal-blocked';
+    else if (isRes)  cls += ' cal-reserved';
+    else if (isPast) cls += ' cal-past';
+    const click = onClick && !isPast ? `onclick="${onClick}('${ds}')"` : '';
     cells += `<div class="${cls}" data-date="${ds}" ${click} title="${ds}">${d}</div>`;
   }
   el.innerHTML = `

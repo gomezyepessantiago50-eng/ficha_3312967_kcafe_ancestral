@@ -44,6 +44,20 @@ const registroRules = [
     .trim()
     .isLength({ min: 7, max: 20 }).withMessage('Número de teléfono inválido (7-20 caracteres).'),
 
+  body('tipoDocumento')
+    .trim()
+    .notEmpty().withMessage('El tipo de documento es obligatorio.')
+    .isIn(['CC', 'Pasaporte']).withMessage('Tipo de documento inválido. Debe ser CC o Pasaporte.'),
+
+  body('numeroDocumento')
+    .trim()
+    .notEmpty().withMessage('El número de documento es obligatorio.'),
+
+  body('pais')
+    .trim()
+    .notEmpty().withMessage('El país es obligatorio.')
+    .isLength({ min: 2, max: 100 }).withMessage('El país debe tener entre 2 y 100 caracteres.'),
+
   body('idRol')
     .optional()
     .isInt({ min: 1, max: 2 }).withMessage('Rol inválido.'),

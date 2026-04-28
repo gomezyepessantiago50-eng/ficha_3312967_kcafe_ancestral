@@ -46,7 +46,7 @@ function calcMontos(sub) {
 /* ════════ INIT ════════ */
 function initClientePage() {
   const user = Auth.getUser();
-  if (!user || !user.id) { window.location.href='index.html'; return; }
+  if (!user || !user.id) { window.location.replace('landing.html'); return; }
 
   CLIENTE_UI.usuarioId  = user.id;
   /* FIX 1: guardar documento (número), no email */
@@ -74,7 +74,7 @@ function initClientePage() {
 async function doLogout() {
   try { await AuthAPI.logout(); } catch { /* silencioso */ }
   Auth.clear();
-  window.location.href = 'index.html';
+  window.location.replace('landing.html');
 }
 
 /* ════════ NAVEGACIÓN ════════ */
@@ -343,3 +343,12 @@ async function viewReserva(id) {
 }
 
 window.addEventListener('DOMContentLoaded', initClientePage);
+
+/* ════════ PROTECCIÓN BOTÓN ATRÁS ════════ */
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+    if (!Auth.isLogged()) {
+      window.location.replace('landing.html');
+    }
+  }
+});

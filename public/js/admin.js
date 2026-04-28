@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════════════════════ */
 
 const CRUMBS = {
-  dashboard:'Dashboard', reservas:'Reservas', calendario:'Calendario',
+  dashboard:'Panel General', reservas:'Reservas', calendario:'Calendario',
   clientes:'Clientes', bloqueos:'Bloquear Fechas', cabanas:'Cabañas', paquetes:'Paquetes',
 };
 
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const user = Auth.getUser();
   /* FIX 3 */
   if (!user || !user.id || (user.idRol !== 1 && user.IDRol !== 1)) {
-    window.location.href = 'index.html'; return;
+    window.location.replace('landing.html'); return;
   }
   document.getElementById('admin-username').textContent = user.nombre || 'Admin';
 
@@ -66,6 +66,16 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDashboard();
   refreshDashCal();
   loadReservas();
+  initNotificaciones();
+
+  // Establecer fecha mínima en inputs de bloqueo (mañana)
+  const tom = new Date(); tom.setDate(tom.getDate() + 1);
+  const tomStr = tom.toISOString().split('T')[0];
+  const bIni = document.getElementById('b-ini');
+  const bFin = document.getElementById('b-fin');
+  if (bIni) bIni.setAttribute('min', tomStr);
+  if (bFin) bFin.setAttribute('min', tomStr);
+
   setInterval(() => {
     const cl = document.getElementById('footer-clock');
     if (cl) cl.textContent = new Date().toLocaleString('es-CO');
@@ -410,10 +420,30 @@ function adminResetNuevaRES() {
 
 /* ════════ BLOQUEOS ════════ */
 /* FIX 9: nombres de campo correctos */
+
+/* ════════ SYNC FECHAS BLOQUEO ════════ */
+function syncBloqueoDates() {
+  const iniEl = document.getElementById('b-ini');
+  const finEl = document.getElementById('b-fin');
+  const ini   = iniEl.value;
+  if (ini) {
+    finEl.setAttribute('min', ini);
+    if (finEl.value && finEl.value < ini) finEl.value = '';
+  }
+}
+
 async function doBloquear() {
   const ini=document.getElementById('b-ini').value, fin=document.getElementById('b-fin').value;
   const alEl=document.getElementById('blq-alert');
   if (!ini||!fin) { alEl.innerHTML='<div class="alert alert-error">⚠ Selecciona las fechas</div>'; return; }
+
+  // Validar que no sean fechas pasadas ni hoy
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const [yi,mi,di] = ini.split('-').map(Number);
+  const fechaIni = new Date(yi, mi-1, di);
+  if (fechaIni <= hoy) {
+    alEl.innerHTML='<div class="alert alert-error">⚠ La fecha de inicio debe ser a partir de mañana</div>'; return;
+  }
   if (new Date(fin)<new Date(ini)) { alEl.innerHTML='<div class="alert alert-error">⚠ Fecha fin no puede ser anterior al inicio</div>'; return; }
   try {
     await BloqueosAPI.crear({ FechaInicio:ini, FechaFinalizacion:fin, Motivo:document.getElementById('b-motivo').value });
@@ -581,13 +611,145 @@ async function confirmarResetUsuario() {
 function searchClientByDoc()  { searchUsuario(); }
 function clearClientSearch()  { clearUsuarioSearch(); }
 
+
+/* ════════════════════════════════════════════════════════
+   NOTIFICACIONES — polling cada 60s
+════════════════════════════════════════════════════════ */
+let _notifUltimaRevision = Date.now();
+let _notifLeidas         = JSON.parse(localStorage.getItem('kafe_notif_leidas') || '[]');
+let _notifLista          = [];
+let _notifPanelAbierto   = false;
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notif-panel');
+  _notifPanelAbierto = !_notifPanelAbierto;
+  panel.classList.toggle('open', _notifPanelAbierto);
+  if (_notifPanelAbierto) renderNotifPanel();
+}
+
+// Cerrar panel al hacer click fuera
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('notif-btn')?.closest('.notif-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('notif-panel')?.classList.remove('open');
+    _notifPanelAbierto = false;
+  }
+});
+
+function renderNotifPanel() {
+  const list = document.getElementById('notif-list');
+  if (!list) return;
+  if (!_notifLista.length) {
+    list.innerHTML = '<div class="notif-empty">Sin notificaciones nuevas</div>';
+    return;
+  }
+  list.innerHTML = _notifLista.map(n => {
+    const leida   = _notifLeidas.includes(n.id);
+    const tiempo  = timeAgo(n.timestamp);
+    return `
+      <div class="notif-item ${leida ? '' : 'unread'}">
+        <div class="notif-ico">📋</div>
+        <div class="notif-txt">
+          <p>${n.mensaje}</p>
+          <span>${tiempo}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function marcarTodasLeidas() {
+  _notifLeidas = _notifLista.map(n => n.id);
+  localStorage.setItem('kafe_notif_leidas', JSON.stringify(_notifLeidas));
+  document.getElementById('notif-btn')?.classList.remove('has-new');
+  renderNotifPanel();
+}
+
+function timeAgo(ts) {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60)    return 'Hace un momento';
+  if (diff < 3600)  return `Hace ${Math.floor(diff/60)} min`;
+  if (diff < 86400) return `Hace ${Math.floor(diff/3600)} h`;
+  return new Date(ts).toLocaleDateString('es-CO');
+}
+
+async function checkNuevasReservas() {
+  try {
+    const token = Auth.getToken(); if (!token) return;
+    const resp  = await fetch('/api/reservas?limit=500&page=1', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const d  = await resp.json();
+    const rs = d.data || [];
+
+    // Reservas creadas después de la última revisión
+    const nuevas = rs.filter(r => {
+      const fechaReserva = new Date(r.fecha_reserva).getTime();
+      return fechaReserva > _notifUltimaRevision;
+    });
+
+    if (nuevas.length > 0) {
+      nuevas.forEach(r => {
+        const id = `res-${r.id}`;
+        if (!_notifLista.find(n => n.id === id)) {
+          _notifLista.unshift({
+            id,
+            mensaje: `Nueva reserva #${r.id} — ${r.cabana ? (CABANAS[r.cabana]?.label || r.cabana) : 'Cabaña'} · ${r.documento || 'Cliente'}`,
+            timestamp: new Date(r.fecha_reserva).getTime(),
+          });
+        }
+      });
+
+      // Limitar a 20 notificaciones
+      _notifLista = _notifLista.slice(0, 20);
+
+      // Animar campanita si hay no leídas
+      const noLeidas = _notifLista.filter(n => !_notifLeidas.includes(n.id));
+      if (noLeidas.length > 0) {
+        const btn = document.getElementById('notif-btn');
+        btn?.classList.add('has-new');
+      }
+
+      if (_notifPanelAbierto) renderNotifPanel();
+    }
+
+    _notifUltimaRevision = Date.now();
+  } catch { /* silencioso */ }
+}
+
+function initNotificaciones() {
+  // Primera carga — cargar reservas existentes como "leídas" para no notificar las viejas
+  setTimeout(async () => {
+    try {
+      const token = Auth.getToken(); if (!token) return;
+      const resp  = await fetch('/api/reservas?limit=500&page=1', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const d  = await resp.json();
+      const rs = d.data || [];
+      // Marcar todas las existentes como ya leídas
+      const idsExistentes = rs.map(r => `res-${r.id}`);
+      _notifLeidas = [...new Set([..._notifLeidas, ...idsExistentes])];
+      localStorage.setItem('kafe_notif_leidas', JSON.stringify(_notifLeidas));
+      _notifUltimaRevision = Date.now();
+    } catch { /* silencioso */ }
+    // Iniciar polling cada 60 segundos
+    setInterval(checkNuevasReservas, 60000);
+  }, 3000);
+}
+
 /* ════════ LOGOUT — FIX 1 ════════ */
 async function doLogout() {
   try { await AuthAPI.logout(); } catch { /* silencioso */ }
   Auth.clear();
   toast('Sesión cerrada','ok');
-  setTimeout(()=>window.location.href='index.html',600);
+  setTimeout(()=>window.location.replace('landing.html'),600);
 }
 
-
-
+/* ════════ PROTECCIÓN BOTÓN ATRÁS ════════ */
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+    if (!Auth.isLogged()) {
+      window.location.replace('landing.html');
+    }
+  }
+});

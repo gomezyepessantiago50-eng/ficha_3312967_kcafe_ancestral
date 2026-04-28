@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeScrollAnimations();
   initializeScrollIndicator();
   initializeButtonInteractions();
-  initializeHeroSlider();
   initializeLazyImages();
 });
 
@@ -37,46 +36,9 @@ function initializeMobileMenu() {
   });
 }
 
-// ── HERO SLIDER (rotación automática de imágenes de cabañas) ─────────────────
-function initializeHeroSlider() {
-  const slides = document.querySelectorAll('.hero-slide');
-  const dots   = document.querySelectorAll('.hero-dot');
-  if (!slides.length) return;
-
-  let current = 0;
-  let timer   = null;
-
-  function goTo(idx) {
-    slides[current].classList.remove('active');
-    dots[current]?.classList.remove('active');
-    current = (idx + slides.length) % slides.length;
-    slides[current].classList.add('active');
-    dots[current]?.classList.add('active');
-  }
-
-  function next() { goTo(current + 1); }
-
-  function startAuto() { timer = setInterval(next, 4500); }
-  function stopAuto()  { clearInterval(timer); }
-
-  dots.forEach((dot, i) => {
-    dot.addEventListener('click', () => { stopAuto(); goTo(i); startAuto(); });
-  });
-
-  // Swipe en móvil
-  let startX = 0;
-  const heroEl = document.querySelector('.hero');
-  if (heroEl) {
-    heroEl.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
-    heroEl.addEventListener('touchend', e => {
-      const diff = startX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 50) { stopAuto(); goTo(current + (diff > 0 ? 1 : -1)); startAuto(); }
-    }, { passive: true });
-  }
-
-  goTo(0);
-  startAuto();
-}
+// ── HERO (imagen estática — slider eliminado) ────────────────────────────────
+// La imagen del hero ahora usa una animación Ken Burns por CSS.
+// No se necesita lógica JS para el slider.
 
 // ── ANIMACIONES EN SCROLL ─────────────────────────────────────────────────────
 function initializeScrollAnimations() {

@@ -3,6 +3,8 @@
 //   1 = Pendiente | 2 = Confirmada | 3 = Cancelada | 4 = Completada | 5 = Bloqueada
 const { Op } = require('sequelize');
 const Reserva = require('../models/reserva.model');
+const Usuario = require('../models/usuario.model');
+const { enviarConfirmacionReserva } = require('./email.service');
 
 const ESTADO_MAP = {
   1: 'pendiente',
@@ -231,7 +233,23 @@ const crearReserva = async (datos, usuarioId = 1) => {
   payload.UsuarioIdusuario = usuarioId;
 
   const reserva = await Reserva.create(payload);
-  return normalizeReserva(reserva);
+  const reservaNormalizada = normalizeReserva(reserva);
+
+  // Enviar notificación por correo al cliente (no bloqueante)
+  try {
+    const usuario = await Usuario.findByPk(usuarioId);
+    if (usuario && usuario.Email) {
+      enviarConfirmacionReserva({
+        to: usuario.Email,
+        nombre: usuario.NombreUsuario,
+        reserva: reservaNormalizada,
+      }).catch(err => console.error('Error enviando email de reserva:', err.message));
+    }
+  } catch (emailErr) {
+    console.error('No se pudo obtener datos del usuario para el email:', emailErr.message);
+  }
+
+  return reservaNormalizada;
 };
 
 const listarReservas = async (filtros = {}, paginacion = {}) => {

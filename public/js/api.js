@@ -30,7 +30,7 @@ async function req(path, opts = {}) {
   if (!res.ok) {
     if (res.status === 401) {
       Auth.clear();
-      window.location.href = 'index.html';
+      window.location.replace('landing.html');
       return;
     }
     let errorMsg = data.mensaje || data.message || `Error ${res.status}`;

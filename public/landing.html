@@ -19,7 +19,7 @@
   <header class="landing-header">
     <div class="header-content">
       <a href="#" class="brand">
-        <span class="brand-icon">🌿</span>
+        <span class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 20 2 20 2s-1.7 5.5-3 9.4c-.7 2.1-1.6 3.9-2.8 5.4"/><path d="M10.7 13.7c-2.3-1-4.7-1.7-7.4-2.4"/></svg></span>
         <span class="brand-text">Kcafé Ancestral</span>
       </a>
 
@@ -42,27 +42,14 @@
   </header>
 
   <!-- ══════════════════════════════════════════
-       HERO — Slider con imágenes de cabañas
+       HERO — Imagen de la Región Cafetera
   ══════════════════════════════════════════ -->
   <section id="hero" class="hero">
 
-    <!-- Slides -->
-    <div class="hero-slides">
-      <div class="hero-slide active">
-        <img src="assets/images/cabana-roble.jpg"
-             onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&h=900&fit=crop'"
-             alt="Cabaña El Roble"/>
-      </div>
-      <div class="hero-slide">
-        <img src="assets/images/cabana-ceiba.jpg"
-             onerror="this.src='https://images.unsplash.com/photo-1571896349842-f18b3f2e5467?w=1600&h=900&fit=crop'"
-             alt="Cabaña La Ceiba"/>
-      </div>
-      <div class="hero-slide">
-        <img src="assets/images/cabana-ancestral.jpg"
-             onerror="this.src='https://images.unsplash.com/photo-1564507592333-c60657eea523?w=1600&h=900&fit=crop'"
-             alt="Cabaña Ancestral"/>
-      </div>
+    <!-- Imagen de fondo estática — Región Cafetera de Antioquia -->
+    <div class="hero-bg">
+      <img src="assets/images/hero-region-cafetera.png"
+           alt="Paisaje de la Región Cafetera de Antioquia, Colombia"/>
     </div>
 
     <!-- Overlay con gradiente cálido -->
@@ -70,7 +57,7 @@
 
     <!-- Contenido -->
     <div class="hero-content">
-      <div class="hero-badge">🌿 Glamping Ancestral · Colombia</div>
+      <div class="hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 20 2 20 2s-1.7 5.5-3 9.4c-.7 2.1-1.6 3.9-2.8 5.4"/><path d="M10.7 13.7c-2.3-1-4.7-1.7-7.4-2.4"/></svg> Glamping Ancestral · Colombia</div>
 
       <h1 class="hero-title">
         Reconecta con<br/>
@@ -79,7 +66,7 @@
 
       <p class="hero-subtitle">
         Vive una experiencia única en nuestras cabañas de lujo<br/>
-        inmersas en el corazón de la selva ancestral
+        inmersas en el corazón de la región cafetera
       </p>
 
       <div class="hero-cta">
@@ -107,13 +94,6 @@
           <span class="stat-label">Calificación promedio</span>
         </div>
       </div>
-    </div>
-
-    <!-- Dots del slider -->
-    <div class="hero-dots">
-      <button class="hero-dot active" aria-label="Slide 1"></button>
-      <button class="hero-dot" aria-label="Slide 2"></button>
-      <button class="hero-dot" aria-label="Slide 3"></button>
     </div>
 
     <!-- Scroll indicator -->
@@ -154,22 +134,22 @@
 
           <div class="values-grid">
             <div class="value-card">
-              <div class="value-icon">🌱</div>
+              <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px;color:var(--fire);"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 20 2 20 2s-1.7 5.5-3 9.4c-.7 2.1-1.6 3.9-2.8 5.4"/><path d="M10.7 13.7c-2.3-1-4.7-1.7-7.4-2.4"/></svg></div>
               <h4>Naturaleza Pura</h4>
               <p>Entorno pristino y ecosistema preservado</p>
             </div>
             <div class="value-card">
-              <div class="value-icon">✨</div>
+              <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px;color:var(--fire);"><polygon points="6 3 18 3 22 9 12 22 2 9"/></svg></div>
               <h4>Lujo Sostenible</h4>
               <p>Confort sin comprometer el ambiente</p>
             </div>
             <div class="value-card">
-              <div class="value-icon">🌍</div>
+              <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px;color:var(--fire);"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
               <h4>Compromiso Ecológico</h4>
               <p>Prácticas responsables y conscientes</p>
             </div>
             <div class="value-card">
-              <div class="value-icon">💆</div>
+              <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px;color:var(--fire);"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg></div>
               <h4>Experiencia Transformadora</h4>
               <p>Desconexión y renovación del espíritu</p>
             </div>
@@ -208,11 +188,11 @@
             <h3>El Roble</h3>
             <p class="cabaña-description">Refugio íntimo con chimenea y vistas al bosque. La cabaña perfecta para escapar juntos.</p>
             <ul class="cabaña-features">
-              <li>🛏️ Cama queen · Chimenea</li>
-              <li>👥 Capacidad: 2 huéspedes</li>
-              <li>🏡 Vista directa al bosque</li>
-              <li>🛁 Baño privado con ducha</li>
-              <li>🌳 Terraza privada</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg> Cama queen · Chimenea</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Capacidad: 2 huéspedes</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Vista directa al bosque</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M4 12h16a1 1 0 0 1 1 1v3a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-3a1 1 0 0 1 1-1z"/><path d="M6 12V5a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1"/></svg> Baño privado con ducha</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 20 2 20 2s-1.7 5.5-3 9.4c-.7 2.1-1.6 3.9-2.8 5.4"/><path d="M10.7 13.7c-2.3-1-4.7-1.7-7.4-2.4"/></svg> Terraza privada</li>
             </ul>
             <div class="cabaña-footer">
               <span class="price">$280.000<small>/noche</small></span>
@@ -233,11 +213,11 @@
             <h3>La Ceiba</h3>
             <p class="cabaña-description">Cabaña familiar con hamacas y jardín privado. Perfecta para grupos que buscan descanso y naturaleza.</p>
             <ul class="cabaña-features">
-              <li>🛏️ Cama doble + sofá cama</li>
-              <li>👥 Capacidad: 4 huéspedes</li>
-              <li>🌿 Hamacas · Jardín privado</li>
-              <li>🛁 Baño privado</li>
-              <li>☕ Terraza con amanecer</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg> Cama doble + sofá cama</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Capacidad: 4 huéspedes</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 20 2 20 2s-1.7 5.5-3 9.4c-.7 2.1-1.6 3.9-2.8 5.4"/><path d="M10.7 13.7c-2.3-1-4.7-1.7-7.4-2.4"/></svg> Hamacas · Jardín privado</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M4 12h16a1 1 0 0 1 1 1v3a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-3a1 1 0 0 1 1-1z"/><path d="M6 12V5a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1"/></svg> Baño privado</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg> Terraza con amanecer</li>
             </ul>
             <div class="cabaña-footer">
               <span class="price">$420.000<small>/noche</small></span>
@@ -258,11 +238,11 @@
             <h3>Ancestral</h3>
             <p class="cabaña-description">Nuestra cabaña insignia. Decoración artesanal, vista panorámica y la experiencia más completa.</p>
             <ul class="cabaña-features">
-              <li>🛏️ 2 camas queen · Sala de estar</li>
-              <li>👥 Capacidad: 6 huéspedes</li>
-              <li>🏔️ Vista panorámica</li>
-              <li>🎨 Decoración artesanal</li>
-              <li>🌅 Amanecer espectacular</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg> 2 camas queen · Sala de estar</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Capacidad: 6 huéspedes</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/><path d="M4.14 15.08c2.62-1.57 5.24-1.43 7.86.42 2.74 1.94 5.49 2 8.23.19"/></svg> Vista panorámica</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><circle cx="13.5" cy="6.5" r="0.5" fill="currentColor"/><circle cx="17.5" cy="10.5" r="0.5" fill="currentColor"/><circle cx="8.5" cy="7.5" r="0.5" fill="currentColor"/><circle cx="6.5" cy="12" r="0.5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.75 1.5-1.5 0-.4-.15-.75-.38-1-.23-.25-.37-.58-.37-.98 0-.83.67-1.52 1.5-1.52H16a6 6 0 0 0 6-6c0-5.52-4.48-10-10-10z"/></svg> Decoración artesanal</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg> Amanecer espectacular</li>
             </ul>
             <div class="cabaña-footer">
               <span class="price">$650.000<small>/noche</small></span>
@@ -293,32 +273,32 @@
 
       <div class="experiencia-grid">
         <div class="experiencia-card">
-          <div class="experiencia-icon">🌿</div>
+          <div class="experiencia-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 20 2 20 2s-1.7 5.5-3 9.4c-.7 2.1-1.6 3.9-2.8 5.4"/><path d="M10.7 13.7c-2.3-1-4.7-1.7-7.4-2.4"/></svg></div>
           <h3>Conexión con la Naturaleza</h3>
           <p>Despierta rodeado de sonidos naturales, vistas panorámicas y aire puro. Reconecta con tu esencia en un entorno prístino y preservado.</p>
         </div>
         <div class="experiencia-card">
-          <div class="experiencia-icon">🔐</div>
+          <div class="experiencia-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
           <h3>Privacidad Absoluta</h3>
           <p>Cada cabaña está estratégicamente ubicada para garantizar tu privacidad. Un espacio donde tú y tus seres queridos disfrutan sin interrupciones.</p>
         </div>
         <div class="experiencia-card">
-          <div class="experiencia-icon">☕</div>
+          <div class="experiencia-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg></div>
           <h3>Tour Cafetero</h3>
           <p>Vive el proceso completo del café de especialidad, desde la cosecha hasta la taza, en el corazón de la región cafetera colombiana.</p>
         </div>
         <div class="experiencia-card">
-          <div class="experiencia-icon">♻️</div>
+          <div class="experiencia-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;"><path d="M7 19H4.82a1 1 0 0 1-.87-1.5l3.54-6.15"/><path d="M11 22L7 19l4-3"/><path d="M16.18 19H19a1 1 0 0 0 .87-1.5L16.8 12"/><path d="M13 22l4-3-4-3"/><path d="M12 6.5L9.47 2.33A1 1 0 0 1 10.33 1h3.34a1 1 0 0 1 .87.5L17 6.5"/><path d="M9 6l3 3.5L15 6"/></svg></div>
           <h3>Entorno Ecológico</h3>
           <p>Energía solar, agua filtrada naturalmente y cero impacto ambiental. Disfrutamos del lujo sin comprometer el planeta.</p>
         </div>
         <div class="experiencia-card">
-          <div class="experiencia-icon">🍽️</div>
+          <div class="experiencia-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
           <h3>Gastronomía Ancestral</h3>
           <p>Menús preparados con ingredientes locales y técnicas tradicionales. Una experiencia culinaria que honra nuestras raíces.</p>
         </div>
         <div class="experiencia-card">
-          <div class="experiencia-icon">🎯</div>
+          <div class="experiencia-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
           <h3>Actividades Exclusivas</h3>
           <p>Desde senderismo guiado hasta yoga al amanecer. Experiencias diseñadas para enriquecer cada momento de tu visita.</p>
         </div>
@@ -467,7 +447,7 @@
 
       <div class="testimonios-grid">
         <div class="testimonio-card">
-          <div class="testimonio-stars">⭐⭐⭐⭐⭐</div>
+          <div class="testimonio-stars"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
           <p class="testimonio-text">"Fue la experiencia más mágica de nuestras vidas. La cabaña es un paraíso y el personal increíblemente atento. Regresaremos cada año."</p>
           <div class="testimonio-author">
             <strong>María & Juan</strong>
@@ -475,7 +455,7 @@
           </div>
         </div>
         <div class="testimonio-card">
-          <div class="testimonio-stars">⭐⭐⭐⭐⭐</div>
+          <div class="testimonio-stars"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
           <p class="testimonio-text">"Mis hijos no querían irse. El equilibrio entre naturaleza y confort es perfecto. Definitivamente la mejor decisión de vacaciones."</p>
           <div class="testimonio-author">
             <strong>Carlos & Familia</strong>
@@ -483,7 +463,7 @@
           </div>
         </div>
         <div class="testimonio-card">
-          <div class="testimonio-stars">⭐⭐⭐⭐⭐</div>
+          <div class="testimonio-stars"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;color:var(--amber);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
           <p class="testimonio-text">"Como aventurera, encontré exactamente lo que buscaba. Las excursiones fueron emocionantes y el equipo muy profesional. ¡Volvería mañana!"</p>
           <div class="testimonio-author">
             <strong>Daniela</strong>
@@ -517,17 +497,17 @@
 
       <div class="cta-info-cards">
         <div class="info-card">
-          <div class="info-icon">📍</div>
+          <div class="info-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
           <h4>Ubicación</h4>
           <p>Antioquia · Colombia</p>
         </div>
         <div class="info-card">
-          <div class="info-icon">🕐</div>
+          <div class="info-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
           <h4>Check-in / Check-out</h4>
           <p>Check-in: 3 PM · Check-out: 12 M</p>
         </div>
         <div class="info-card">
-          <div class="info-icon">✓</div>
+          <div class="info-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
           <h4>Cancelación gratuita</h4>
           <p>Hasta 48 horas antes de la llegada</p>
         </div>
@@ -545,9 +525,9 @@
           <h4>Kcafé Ancestral</h4>
           <p>Glamping sostenible en el corazón de la naturaleza. Cada estadía es una contribución a la conservación de nuestro ecosistema.</p>
           <div class="social-links">
-            <a href="#" aria-label="Instagram">📱</a>
-            <a href="#" aria-label="Facebook">f</a>
-            <a href="#" aria-label="WhatsApp">💬</a>
+            <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+            <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+            <a href="#" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
           </div>
         </div>
         <div class="footer-section">
@@ -571,15 +551,15 @@
         <div class="footer-section">
           <h4>Contacto</h4>
           <p>
-            📧 info@kcafeancestral.com<br/>
-            📞 +57 (300) 123-4567<br/>
-            📍 Antioquia, Colombia
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg> info@kcafeancestral.com<br/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.36 1.6.68 2.35a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.74.28 1.54.55 2.35.68A2 2 0 0 1 22 16.92z"/></svg> +57 (300) 123-4567<br/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Antioquia, Colombia
           </p>
         </div>
       </div>
       <div class="footer-bottom">
         <p>© 2025 Kcafé Ancestral. Todos los derechos reservados.</p>
-        <p>Diseñado con 🌿 para la naturaleza y nuestros huéspedes.</p>
+        <p>Diseñado con <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;color:var(--fire);"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 20 2 20 2s-1.7 5.5-3 9.4c-.7 2.1-1.6 3.9-2.8 5.4"/><path d="M10.7 13.7c-2.3-1-4.7-1.7-7.4-2.4"/></svg> para la naturaleza y nuestros huéspedes.</p>
       </div>
     </div>
   </footer>
