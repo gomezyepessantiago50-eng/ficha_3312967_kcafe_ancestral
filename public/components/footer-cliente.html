@@ -1,0 +1,159 @@
+<!--
+  KAFE ANCESTRAL — footer-cliente.html  (v2)
+  USO: pegar justo antes de </body> en cliente.html y pages/*.html
+-->
+
+<style>
+.footer-cliente {
+  background: linear-gradient(135deg, #0E0805 0%, #1A0A04 60%, #0E0805 100%);
+  border-top: 1px solid rgba(232,93,4,0.14);
+  margin-top: 4rem;
+  padding: 2rem 1.75rem 1.75rem;
+  font-family: 'Outfit', system-ui, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.footer-cliente::before {
+  content: '';
+  position: absolute;
+  top: -40px; left: 50%;
+  transform: translateX(-50%);
+  width: 400px; height: 120px;
+  background: radial-gradient(ellipse, rgba(232,93,4,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.footer-cliente-inner {
+  max-width: 1060px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.footer-mark {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #E85D04, #F48C06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  box-shadow: 0 3px 12px rgba(232,93,4,0.35);
+  flex-shrink: 0;
+}
+
+.footer-brand-name {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.75);
+  letter-spacing: -0.01em;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.footer-link-item {
+  font-size: 0.77rem;
+  color: rgba(255,255,255,0.28);
+  transition: color 0.15s;
+  cursor: default;
+}
+
+.footer-link-sep {
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.1);
+}
+
+.footer-highlights {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.footer-hl {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.74rem;
+  color: rgba(255,255,255,0.22);
+}
+
+.footer-hl-ico {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.footer-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(255,255,255,0.05);
+}
+
+.footer-copy {
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.15);
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.footer-copy-fire {
+  color: rgba(232,93,4,0.4);
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .footer-highlights { gap: 0.85rem; }
+  .footer-hl         { font-size: 0.7rem; }
+}
+</style>
+
+<footer class="footer-cliente">
+  <div class="footer-cliente-inner">
+
+    <div class="footer-brand">
+      <div class="footer-mark">🌿</div>
+      <div class="footer-brand-name">Kafe Ancestral</div>
+    </div>
+
+    <div class="footer-highlights">
+      <div class="footer-hl"><span class="footer-hl-ico">🏡</span> 3 cabañas únicas</div>
+      <div class="footer-hl"><span class="footer-hl-ico">☕</span> Tour cafetero incluido</div>
+      <div class="footer-hl"><span class="footer-hl-ico">📅</span> Check-in 3pm · Check-out 12m</div>
+      <div class="footer-hl"><span class="footer-hl-ico">✓</span> Cancelación gratuita 48h antes</div>
+    </div>
+
+    <div class="footer-divider"></div>
+
+    <div class="footer-links">
+      <span class="footer-link-item">Portal de Reservas</span>
+      <span class="footer-link-sep">·</span>
+      <span class="footer-link-item">Términos y condiciones</span>
+      <span class="footer-link-sep">·</span>
+      <span class="footer-link-item">Política de privacidad</span>
+      <span class="footer-link-sep">·</span>
+      <span class="footer-link-item">Contacto</span>
+    </div>
+
+    <div class="footer-copy">
+      © 2025 <span class="footer-copy-fire">Kafe Ancestral</span> — Sistema de Reservas &nbsp;·&nbsp; v1.0.0
+    </div>
+
+  </div>
+</footer>

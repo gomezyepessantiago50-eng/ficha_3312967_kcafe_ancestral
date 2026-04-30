@@ -1,0 +1,58 @@
+/* ═══════════════════════════════════════════════════
+   KAFE ANCESTRAL — fixes.css
+   Parche de compatibilidad — agregar al final de styles.css
+   o incluir como <link> después de styles.css
+═══════════════════════════════════════════════════ */
+
+/* ── Alias modal-backdrop → overlay ─────────────── */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0; z-index: 900;
+  background: rgba(46,26,14,0.6); backdrop-filter: blur(8px);
+  align-items: center; justify-content: center; padding: 1rem;
+}
+.modal-backdrop.open { display: flex; }
+
+/* ── Alias modal-hd → modal-head ────────────────── */
+.modal-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.5rem 1.75rem 1rem; border-bottom: 1px solid var(--sand);
+  position: sticky; top:0; background: var(--white); z-index:1;
+}
+.modal-dark .modal-hd { background: var(--dark-card2); border-color: var(--dark-border); }
+.modal-hd h3 { font-size: 1.1rem; }
+
+/* ── Alias modal-ft → modal-foot ────────────────── */
+.modal-ft {
+  padding: 1rem 1.75rem 1.5rem;
+  display: flex; gap: 0.75rem; justify-content: flex-end;
+  border-top: 1px solid var(--sand);
+}
+.modal-dark .modal-ft { border-color: var(--dark-border); }
+
+/* ── Alias modal-sm ──────────────────────────────── */
+.modal-sm { width: min(400px, 100%); }
+
+/* ── Alias table-wrap / table-dark ──────────────── */
+.table-wrap { overflow-x:auto; border-radius: var(--r-lg); border:1px solid rgba(46,26,14,0.08); }
+.table-dark { background: var(--dark-card); }
+.table-dark thead th { background: var(--dark-bg); color: var(--dark-muted); font-size:0.71rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; padding:0.8rem 1rem; }
+.table-dark tbody td { border-color: rgba(255,255,255,0.05); color: var(--dark-text); padding:0.9rem 1rem; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.9rem; }
+.table-dark tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+/* ── admin-footer ────────────────────────────────── */
+.admin-footer {
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;
+  padding:0.85rem 1.75rem; border-top:1px solid rgba(232,93,4,0.1);
+  background:rgba(10,6,3,0.6); font-size:0.73rem; color:rgba(255,255,255,0.22);
+  font-family: var(--font-body);
+}
+
+/* ── cal-light (alias de cal sin dark) ──────────── */
+.cal-light .cal-nav-btn { border-color: var(--sand-mid); color: var(--mist); }
+.cal-light .cal-nav-btn:hover { border-color:var(--fire); color:var(--fire); background:var(--fire-soft); }
+.cal-light .cal-title { color: var(--bark); }
+.cal-light .cal-wday  { color: var(--mist-light); }
+.cal-light .cal-day   { color: var(--bark); }
+
+/* ── Auth.user() alias ───────────────────────────── */
+/* El api.js exporta Auth.getUser() pero app.js llama Auth.user() — parche en JS abajo */

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Admin — Kafe Ancestral</title>
+  <link rel="stylesheet" href="css/variables.css"/>
+  <link rel="stylesheet" href="css/reset.css"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+  <link rel="stylesheet" href="css/fixes.css"/>
+  <style>
+    body { background: var(--dark-bg); }
+
+    .ov-card {
+      background: var(--dark-card2); border: 1px solid var(--dark-border);
+      border-radius: var(--r-xl); padding: 1.25rem 1.5rem;
+      display: flex; gap: 1rem; align-items: center; position: relative; overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .ov-card:hover { box-shadow: var(--sh-md); }
+    .ov-accent { position: absolute; top:0; left:0; width:3px; height:100%; border-radius:0 2px 2px 0; }
+    .ov-ico  { font-size: 1.8rem; }
+    .ov-val  { font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; }
+    .ov-lbl  { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dark-muted); margin-top: 0.2rem; }
+
+    .r-row {
+      display: flex; align-items: center; gap: 1rem; padding: 0.8rem 0;
+      border-bottom: 1px solid var(--dark-border);
+    }
+    .r-row:last-child { border-bottom: none; }
+    .r-num  { width: 38px; height: 38px; border-radius: var(--r-md); flex-shrink: 0; background: rgba(232,93,4,0.12); color: var(--fire); font-family: var(--font-display); font-size: 0.78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; text-align: center; }
+    .r-info h4 { font-size: 0.86rem; color: var(--dark-text); margin-bottom: 0.15rem; }
+    .r-info p  { font-size: 0.77rem; color: var(--dark-muted); }
+    .r-right { margin-left: auto; text-align: right; }
+
+    .fbar {
+      display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+      background: var(--dark-card2); border: 1px solid var(--dark-border);
+      border-radius: var(--r-lg); padding: 0.9rem 1.25rem; margin-bottom: 1.25rem;
+    }
+    .fbar .select, .fbar .input {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--dark-border);
+      color: #fff;
+      width: auto;
+      min-width: 160px;
+    }
+    .fbar .select option {
+      color: var(--bark);
+      background: #fff;
+    }
+    .fbar .select:focus, .fbar .input:focus { border-color: var(--fire); }
+
+    .blq-item {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0.85rem 1rem; background: rgba(255,255,255,0.03);
+      border: 1px solid var(--dark-border); border-radius: var(--r-lg);
+      transition: border-color 0.15s;
+    }
+    .blq-item:hover { border-color: rgba(255,255,255,0.12); }
+    .blq-ico { width: 38px; height: 38px; border-radius: var(--r-md); background: rgba(192,57,43,0.12); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .blq-txt h4 { font-size: 0.88rem; color: var(--dark-text); margin-bottom: 0.15rem; }
+    .blq-txt p  { font-size: 0.76rem; color: var(--dark-muted); }
+
+    .cab-card {
+      background: var(--dark-card2); border: 1px solid var(--dark-border);
+      border-radius: var(--r-xl); overflow: hidden; transition: all 0.2s;
+    }
+    .cab-card:hover { box-shadow: var(--sh-lg); transform: translateY(-2px); border-color: rgba(232,93,4,0.2); }
+    .cab-img { height: 130px; display: flex; align-items: center; justify-content: center; font-size: 2.8rem; }
+    .cab-body { padding: 1.1rem; }
+    .cab-body h3 { color: var(--dark-text); font-size: 0.95rem; margin-bottom: 0.25rem; }
+    .cab-body p  { font-size: 0.78rem; color: var(--dark-muted); margin-bottom: 0.75rem; }
+    .cab-foot { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+
+    /* Estilos para el modal de nueva reserva */
+    .paq-opt {
+      display: block; width: 100%; text-align: center; padding: 1rem;
+      background: rgba(255, 255, 255, 0.03); border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--r-lg); cursor: pointer; transition: all 0.2s;
+      color: var(--bark); font-family: inherit; font-size: inherit; position: relative;
+    }
+    .paq-opt:hover { border-color: rgba(232, 93, 4, 0.4); }
+    .paq-opt.selected { background: rgba(232, 93, 4, 0.2); border-color: var(--fire); }
+    .paq-opt.selected::after { 
+      content: '✓'; position: absolute; top: 0.5rem; right: 0.5rem; 
+      width: 20px; height: 20px; border-radius: 50%; background: var(--fire); 
+      color: #fff; display: flex; align-items: center; justify-content: center; 
+      font-size: 0.7rem; font-weight: 700;
+    }
+    .paq-ico { font-size: 1.8rem; margin-bottom: 0.3rem; }
+    .paq-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.2rem; color: var(--bark); }
+    .paq-desc { font-size: 0.75rem; color: var(--mist); margin-bottom: 0.3rem; }
+    .paq-price { display: block; margin-top: 0.35rem; font-size: 0.8rem; color: var(--fire) !important; font-weight: 600; }
+
+    .srv-grid { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+    .srv-chip {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.5rem 0.8rem; border-radius: var(--r-pill); 
+      border: 1.5px solid rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.03);
+      color: var(--bark); font-size: 0.8rem; cursor: pointer; transition: all 0.15s;
+      font-family: inherit;
+    }
+    .srv-chip:hover { border-color: rgba(232, 93, 4, 0.5); }
+    .srv-chip.selected { background: var(--fire) !important; border-color: var(--fire) !important; color: #fff !important; }
+    .srv-chip.selected .srv-price { color: #fff !important; opacity: 0.95; }
+    .srv-price { font-size: 0.7rem; opacity: 0.85; }
+
+    .price-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--r-xl); }
+    .price-header { background: linear-gradient(135deg, rgba(232, 93, 4, 0.5), rgba(192, 57, 43, 0.3)); padding: 1rem; }
+    .price-header h3 { color: var(--bark); font-size: 0.95rem; margin: 0 0 0.1rem 0; }
+    .price-header p { color: var(--mist); font-size: 0.75rem; margin: 0; }
+    .price-body { padding: 1rem; font-size: 0.85rem; }
+    .price-row { 
+      display: flex; justify-content: space-between; padding: 0.4rem 0;
+      border-bottom: 1px solid rgba(46, 26, 14, 0.2); color: var(--bark);
+    }
+    .price-row:last-child { border-bottom: none; }
+    .price-row .pk { color: var(--mist); }
+    .price-row .pv { font-weight: 600; color: var(--bark); }
+    .price-total-row { 
+      display: flex; justify-content: space-between; padding: 1rem;
+      background: rgba(232, 93, 4, 0.15); border-top: 2px solid rgba(232, 93, 4, 0.3);
+    }
+    .pt-l { color: var(--bark); font-size: 0.88rem; font-weight: 700; }
+    .pt-v { color: var(--fire); font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; }
+
+    /* ── Fix calendario oscuro: estados visibles ─────── */
+    .cal-dark .cal-day.cal-reserved {
+      background: rgba(45,122,79,0.25) !important;
+      color: #6fcf97 !important;
+      font-weight: 600;
+    }
+    .cal-dark .cal-day.cal-blocked {
+      background: rgba(192,57,43,0.25) !important;
+      color: #e57373 !important;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    .cal-dark .cal-day.cal-today {
+      background: var(--fire) !important;
+      color: #fff !important;
+      font-weight: 700;
+      border-radius: 50%;
+    }
+
+    /* ── Fix bloqueos: fechas pasadas no clickeables ──── */
+    .cal-dark .cal-day.cal-past {
+      opacity: 0.25;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* ── Sidebar SVG icons ───────────────────── */
+    .sb-item svg { width:18px; height:18px; flex-shrink:0; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+    /* ── Campanita ───────────────────────────── */
+    .notif-btn {
+      position: relative;
+      width: 36px; height: 36px;
+      border-radius: var(--r-md);
+      border: 1px solid var(--dark-border);
+      background: rgba(255,255,255,0.04);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; color: var(--dark-muted);
+    }
+    .notif-btn:hover { border-color: var(--fire); color: var(--fire); background: rgba(232,93,4,0.08); }
+    .notif-btn svg   { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+    .notif-btn.has-new { color: var(--fire); border-color: rgba(232,93,4,0.4); animation: bellPulse 1s ease 3; }
+    @keyframes bellPulse {
+      0%,100% { transform: rotate(0deg); }
+      20%     { transform: rotate(-12deg); }
+      40%     { transform: rotate(12deg); }
+      60%     { transform: rotate(-8deg); }
+      80%     { transform: rotate(8deg); }
+    }
+
+    /* ── Panel de notificaciones ─────────────── */
+    .notif-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      width: 320px;
+      background: var(--dark-card2);
+      border: 1px solid var(--dark-border);
+      border-radius: var(--r-xl);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+      z-index: 200;
+      overflow: hidden;
+      animation: modalIn 0.2s var(--ease-spring);
+    }
+    .notif-panel.open { display: block; }
+    .notif-panel-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem 0.75rem;
+      border-bottom: 1px solid var(--dark-border);
+    }
+    .notif-panel-hd h4 { color: #fff; font-size: 0.88rem; margin: 0; }
+    .notif-mark-all {
+      font-size: 0.72rem; color: var(--fire); background: none; border: none;
+      cursor: pointer; font-family: inherit; padding: 0;
+    }
+    .notif-mark-all:hover { text-decoration: underline; }
+    .notif-list { max-height: 320px; overflow-y: auto; }
+    .notif-item {
+      display: flex; gap: 0.75rem; align-items: flex-start;
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.15s;
+    }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-item:hover { background: rgba(255,255,255,0.03); }
+    .notif-item.unread { background: rgba(232,93,4,0.06); }
+    .notif-ico {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(232,93,4,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+    }
+    .notif-txt { flex: 1; }
+    .notif-txt p { font-size: 0.82rem; color: var(--dark-text); margin: 0 0 0.2rem; line-height: 1.45; }
+    .notif-txt span { font-size: 0.72rem; color: var(--dark-muted); }
+    .notif-empty { padding: 2rem; text-align: center; color: var(--dark-muted); font-size: 0.85rem; }
+    .notif-wrap { position: relative; }
+  </style>
+</head>
+<body>
+
+<div class="admin-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 20 2 20 2s-1.7 5.5-3 9.4c-.7 2.1-1.6 3.9-2.8 5.4"/><path d="M10.7 13.7c-2.3-1-4.7-1.7-7.4-2.4"/></svg></div>
+      <div>
+        <div class="sb-name">Kafe Ancestral</div>
+        <div class="sb-role">Panel Admin</div>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Principal</div>
+      <button class="sb-item active" onclick="showSec('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Panel General
+      </button>
+      <button class="sb-item" onclick="showSec('reservas',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+        Reservas
+        <span class="sb-badge" id="nb-pend"></span>
+      </button>
+      <button class="sb-item" onclick="showSec('calendario',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Calendario
+      </button>
+      <button class="sb-item" onclick="showSec('bloqueos',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+        Bloquear Fechas
+      </button>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Gestión</div>
+      <button class="sb-item" onclick="showSec('cabanas',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Cabañas
+      </button>
+      <button class="sb-item" onclick="showSec('paquetes',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        Paquetes
+      </button>
+      <button class="sb-item" onclick="showSec('clientes',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Usuarios
+      </button>
+    </div>
+    <div class="sb-footer">
+      <div class="sb-version">v1.0.0 · Kafe Ancestral © 2025</div>
+    </div>
+  </aside>
+
+  <div class="admin-body">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <span class="topbar-title" id="topbar-crumb">Panel General</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <div class="notif-wrap">
+          <button class="notif-btn" id="notif-btn" onclick="toggleNotifPanel()" title="Notificaciones">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </button>
+          <div class="notif-panel" id="notif-panel">
+            <div class="notif-panel-hd">
+              <h4>Notificaciones</h4>
+              <button class="notif-mark-all" onclick="marcarTodasLeidas()">Marcar como leídas</button>
+            </div>
+            <div class="notif-list" id="notif-list">
+              <div class="notif-empty">Sin notificaciones nuevas</div>
+            </div>
+          </div>
+        </div>
+        <div class="user-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <span id="admin-username">Admin</span></div>
+        <button class="btn btn-sm btn-dark-outline" onclick="doLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Salir</button>
+      </div>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- DASHBOARD -->
+      <div class="a-section active" id="sec-dashboard">
+        <div class="page-hd"><div><h2>Panel General</h2><p>Resumen general de operaciones</p></div></div>
+        <div class="g4" style="margin-bottom:1.5rem;">
+          <div class="ov-card"><div class="ov-accent" style="background:var(--fire)"></div><span class="ov-ico" style="color:var(--fire);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14h6M9 18h4"/></svg></span><div><div class="ov-val" id="ov-total">—</div><div class="ov-lbl">Total Reservas</div></div></div>
+          <div class="ov-card"><div class="ov-accent" style="background:var(--amber)"></div><span class="ov-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><div><div class="ov-val" id="ov-pend">—</div><div class="ov-lbl">Pendientes</div></div></div>
+          <div class="ov-card"><div class="ov-accent" style="background:var(--success)"></div><span class="ov-ico" style="color:var(--success);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span><div><div class="ov-val" id="ov-conf">—</div><div class="ov-lbl">Confirmadas</div></div></div>
+          <div class="ov-card"><div class="ov-accent" style="background:var(--mist-light)"></div><span class="ov-ico" style="color:var(--mist-light);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><div><div class="ov-val" id="ov-bloq">—</div><div class="ov-lbl">Días Bloqueados</div></div></div>
+        </div>
+        <div class="g2">
+          <div class="card-dark card-dark-pad">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+              <h3 style="color:#fff;font-size:1rem;">Próximas Llegadas</h3>
+              <span class="badge badge-fire" id="prox-count">0</span>
+            </div>
+            <div id="prox-list"><p style="color:var(--dark-muted);font-size:0.85rem;">Cargando…</p></div>
+          </div>
+          <div class="card-dark card-dark-pad">
+            <h3 style="color:#fff;font-size:1rem;margin-bottom:1rem;">Disponibilidad Mensual</h3>
+            <div class="cal-dark" id="dash-cal"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESERVAS -->
+      <div class="a-section" id="sec-reservas">
+        <div class="page-hd">
+          <div><h2>Reservas</h2><p>Gestiona todas las reservas</p></div>
+          <button class="btn btn-fire" onclick="adminAbrirNuevaReserva()">+ Nueva Reserva</button>
+        </div>
+        <div class="fbar">
+          <select class="select" id="fil-estado" onchange="loadReservas(1)">
+            <option value="">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="cancelada">Cancelada</option>
+            <option value="completada">Completada</option>
+          </select>
+          <input type="date" class="input" id="fil-fecha" onchange="loadReservas(1)"/>
+          <button class="btn btn-sm btn-dark-outline" onclick="clearFil()">Limpiar</button>
+          <button class="btn btn-sm btn-fire" onclick="verTodasReservas()">Ver todas</button>
+          <span class="badge" id="res-count" style="margin-left:auto;"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="table-dark">
+            <thead><tr>
+              <th>#</th><th>Cliente</th><th>Entrada</th><th>Salida</th>
+              <th>Noches</th><th>Pers.</th><th>Cabaña</th><th>Paquete</th>
+              <th>Estado</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="res-tbody">
+              <tr><td colspan="10" style="text-align:center;padding:3rem;color:var(--dark-muted);">Cargando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="pagination-controls"></div>
+      </div>
+
+      <!-- CALENDARIO -->
+      <div class="a-section" id="sec-calendario">
+        <div class="page-hd"><div><h2>Calendario</h2><p>Vista mensual de disponibilidad</p></div>
+          <div style="display:flex;gap:0.5rem;">
+            <button class="btn btn-sm btn-dark-outline" onclick="prevMonth()">← Anterior</button>
+            <button class="btn btn-sm btn-dark-outline" onclick="nextMonth()">Siguiente →</button>
+          </div>
+        </div>
+        <div class="g2" style="align-items:start;">
+          <div class="card-dark card-dark-pad">
+            <div class="cal-dark" id="admin-cal"></div>
+            <div style="display:flex;gap:1.5rem;margin-top:1rem;font-size:0.78rem;color:var(--dark-muted);">
+              <span><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:var(--success);margin-right:4px;"></span> Reservado</span><span><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:var(--danger);margin-right:4px;"></span> Bloqueado</span><span><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:#6fcf97;margin-right:4px;"></span> Disponible</span>
+            </div>
+          </div>
+          <div class="card-dark card-dark-pad">
+            <h3 style="color:#fff;font-size:1rem;margin-bottom:1rem;" id="cal-day-title">Selecciona un día</h3>
+            <div id="cal-day-body"><p style="color:var(--dark-muted);font-size:0.85rem;">Haz clic en un día del calendario para ver las reservas de esa fecha.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BLOQUEOS -->
+      <div class="a-section" id="sec-bloqueos">
+        <div class="page-hd"><div><h2>Bloquear Fechas</h2><p>Gestiona períodos no disponibles</p></div></div>
+        <div class="g2" style="align-items:start;">
+          <div class="card-dark card-dark-pad">
+            <h3 style="color:#fff;font-size:1rem;margin-bottom:1.25rem;">Nuevo Bloqueo</h3>
+            <div id="blq-alert"></div>
+            <div class="row-2">
+              <div class="field">
+                <label class="label" style="color:var(--dark-muted);">Fecha inicio</label>
+                <input type="date" class="input" id="b-ini"
+                style="background:rgba(255,255,255,0.05);border-color:var(--dark-border);color:var(--dark-text);"
+                onchange="syncBloqueoDates()"/>
+              </div>
+              <div class="field">
+                <label class="label" style="color:var(--dark-muted);">Fecha fin</label>
+                <input type="date" class="input" id="b-fin" style="background:rgba(255,255,255,0.05);border-color:var(--dark-border);color:var(--dark-text);"/>
+              </div>
+            </div>
+            <div class="field">
+              <label class="label" style="color:var(--dark-muted);">Motivo (opcional)</label>
+              <input type="text" class="input" id="b-motivo" placeholder="Ej: Mantenimiento" style="background:rgba(255,255,255,0.05);border-color:var(--dark-border);color:var(--dark-text);"/>
+            </div>
+            <button class="btn btn-fire btn-block" onclick="doBloquear()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Bloquear Fechas</button>
+          </div>
+          <div class="card-dark card-dark-pad">
+            <h3 style="color:#fff;font-size:1rem;margin-bottom:1.25rem;">Bloqueos Activos</h3>
+            <div id="blq-list" class="stack"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CABAÑAS -->
+      <div class="a-section" id="sec-cabanas">
+        <div class="page-hd"><div><h2>Cabañas</h2><p>Gestión de alojamientos</p></div></div>
+        <div class="g3" id="cab-grid">
+          <div class="cab-card">
+            <div class="cab-img" style="background:linear-gradient(135deg,rgba(139,69,19,0.3),rgba(210,105,30,0.2));"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px;color:var(--amber);"><path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14"/><path d="m17 8 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 8"/><line x1="12" y1="22" x2="12" y2="19"/></svg></div>
+            <div class="cab-body">
+              <h3>Cabaña El Roble</h3>
+              <p>Cabaña rústica con chimenea y vista al bosque. Ideal para parejas.</p>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+                <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 2 pers.</span>
+                <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Zona Norte</span>
+              </div>
+              <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--fire);">$280.000<small style="font-size:0.7rem;color:var(--dark-muted);font-family:var(--font-body);font-weight:400;">/noche</small></div>
+            </div>
+          </div>
+          <div class="cab-card">
+            <div class="cab-img" style="background:linear-gradient(135deg,rgba(29,58,47,0.4),rgba(46,18,5,0.3));"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px;color:var(--amber);"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 20 2 20 2s-1.7 5.5-3 9.4c-.7 2.1-1.6 3.9-2.8 5.4"/><path d="M10.7 13.7c-2.3-1-4.7-1.7-7.4-2.4"/></svg></div>
+            <div class="cab-body">
+              <h3>Cabaña La Ceiba</h3>
+              <p>Amplia cabaña familiar con hamacas y jardín privado.</p>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+                <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 4 pers.</span>
+                <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Zona Sur</span>
+              </div>
+              <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--fire);">$420.000<small style="font-size:0.7rem;color:var(--dark-muted);font-family:var(--font-body);font-weight:400;">/noche</small></div>
+            </div>
+          </div>
+          <div class="cab-card">
+            <div class="cab-img" style="background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(139,69,19,0.3));"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px;color:var(--amber);"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg></div>
+            <div class="cab-body">
+              <h3>Cabaña Ancestral</h3>
+              <p>Nuestra cabaña insignia con decoración artesanal y vista panorámica.</p>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+                <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 6 pers.</span>
+                <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Zona Alta</span>
+              </div>
+              <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--fire);">$650.000<small style="font-size:0.7rem;color:var(--dark-muted);font-family:var(--font-body);font-weight:400;">/noche</small></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAQUETES -->
+      <div class="a-section" id="sec-paquetes">
+        <div class="page-hd"><div><h2>Paquetes</h2><p>Servicios y experiencias disponibles</p></div></div>
+        <div class="g3">
+          <div class="card-dark card-dark-pad">
+            <div style="font-size:2rem;margin-bottom:0.75rem;color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:36px;height:36px;"><path d="M3.5 21L12 3l8.5 18"/><path d="M20.5 21H3.5"/><path d="M12 6v15"/></svg></div>
+            <h3 style="color:#fff;margin-bottom:0.5rem;">Básico</h3>
+            <p style="color:var(--dark-muted);font-size:0.85rem;margin-bottom:1rem;">Solo alojamiento, sin servicios adicionales.</p>
+            <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;color:var(--fire);">Incluido</div>
+          </div>
+          <div class="card-dark card-dark-pad">
+            <div style="font-size:2rem;margin-bottom:0.75rem;color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:36px;height:36px;"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg></div>
+            <h3 style="color:#fff;margin-bottom:0.5rem;">Cafetero</h3>
+            <p style="color:var(--dark-muted);font-size:0.85rem;margin-bottom:1rem;">Tour por cultivos + desayuno típico incluido.</p>
+            <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;color:var(--fire);">+$80.000</div>
+          </div>
+          <div class="card-dark card-dark-pad">
+            <div style="font-size:2rem;margin-bottom:0.75rem;color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:36px;height:36px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+            <h3 style="color:#fff;margin-bottom:0.5rem;">Premium</h3>
+            <p style="color:var(--dark-muted);font-size:0.85rem;margin-bottom:1rem;">Todo incluido: tour, spa, gastronomía y fogata.</p>
+            <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;color:var(--fire);">+$200.000</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="a-section" id="sec-clientes">
+        <div class="page-hd"><div><h2>Usuarios</h2><p>Gestión de cuentas registradas</p></div></div>
+
+        <!-- Buscador -->
+        <div style="background:var(--dark-card2);border:1px solid var(--dark-border);border-radius:var(--r-xl);padding:1.5rem;margin-bottom:2rem;">
+          <div style="display:flex;gap:0.75rem;align-items:flex-end;">
+            <div style="flex:1;">
+              <label class="label" style="color:var(--dark-text);display:block;margin-bottom:0.5rem;font-size:0.9rem;">Correo electrónico</label>
+              <input type="email" class="input" id="cli-search" placeholder="usuario@email.com"
+                onkeyup="if(event.key==='Enter') searchUsuario()"
+                style="width:100%;background:rgba(255,255,255,0.05);border-color:var(--dark-border);color:#fff;"/>
+            </div>
+            <button class="btn btn-fire" onclick="searchUsuario()" style="white-space:nowrap;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Buscar</button>
+            <button class="btn btn-dark-outline" onclick="clearUsuarioSearch()" style="white-space:nowrap;">Limpiar</button>
+          </div>
+        </div>
+
+        <!-- Resultados -->
+        <div id="cli-results">
+          <div style="text-align:center;color:var(--dark-muted);padding:3rem;font-size:0.9rem;">
+            Introduce un correo electrónico para buscar
+          </div>
+        </div>
+      </div>
+
+    </div><!-- admin-content -->
+
+    <!-- FOOTER -->
+    <div class="admin-footer">
+      <span>Kafe Ancestral © 2025</span>
+      <span id="footer-clock"></span>
+    </div>
+
+  </div><!-- admin-body -->
+</div><!-- admin-shell -->
+
+<!-- MODAL: Nueva Reserva -->
+<div class="modal-backdrop" id="m-nueva" onclick="if(event.target===this)closeM('m-nueva')">
+  <div class="modal" style="max-width:1080px;width:calc(100vw - 3rem);max-height:90vh;overflow-y:auto;">
+    <div class="modal-hd"><h3 style="color:var(--fire);">Nueva Reserva</h3><button class="modal-close" onclick="closeM('m-nueva')">✕</button></div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 380px;gap:1.5rem;align-items:start;">
+        <div>
+          <!-- CLIENTE -->
+          <div style="margin-bottom:1.5rem;border-top:1px solid rgba(46,26,14,0.1);padding-top:1rem;">
+            <h4 style="margin-bottom:0.75rem;color:var(--bark);font-size:0.95rem;">1. Selecciona el cliente</h4>
+            
+            <!-- Búsqueda por documento -->
+            <div style="margin-bottom:1rem;">
+              <label style="color:var(--bark);font-size:0.85rem;font-weight:600;display:block;margin-bottom:0.4rem;">Número de documento <span style="color:var(--fire);font-weight:800;">*</span></label>
+              <div style="display:flex;gap:0.5rem;">
+                <input type="text" class="input" id="modal-cli-doc" placeholder="Ej: 1234567890" style="flex:1;background:#fff;border:1px solid rgba(46,26,14,0.15);color:var(--bark);" onkeyup="if(event.key==='Enter') modalSearchClientByDoc()"/>
+                <button type="button" class="btn btn-fire" onclick="modalSearchClientByDoc()" style="white-space:nowrap;padding:0.6rem 1rem;">🔍 Buscar</button>
+              </div>
+              <div id="modal-cli-msg" style="font-size:0.75rem;color:var(--mist);margin-top:0.3rem;"></div>
+            </div>
+
+            <!-- Selector con la lista de clientes o resultado de búsqueda -->
+            <label style="color:var(--bark);font-size:0.85rem;font-weight:600;display:block;margin-bottom:0.4rem;">Cliente <span style="color:var(--fire);font-weight:800;">*</span></label>
+            <select class="select" id="mn-doc" style="width:100%;background:#fff;border:1px solid rgba(46,26,14,0.15);color:var(--bark);" onchange="adminResumenUpdate()">
+              <option value="">— Selecciona un cliente —</option>
+              <option value="demo-new">+ Crear nuevo cliente</option>
+            </select>
+          </div>
+
+          <!-- FECHAS Y CLIENTE -->
+          <div style="margin-bottom:1.5rem;">
+            <h4 style="margin-bottom:0.75rem;color:var(--bark);font-size:0.95rem;">2. Fecha de reserva</h4>
+            <div class="row-2">
+              <div class="field"><label class="label" style="color:var(--bark);">Fecha inicio <span style="color:var(--fire);font-weight:800;">*</span></label><input type="date" class="input" id="mn-ini" onchange="adminResumenUpdate()" min="" required/></div>
+              <div class="field"><label class="label" style="color:var(--bark);">Fecha fin <span style="color:var(--fire);font-weight:800;">*</span></label><input type="date" class="input" id="mn-fin" onchange="adminResumenUpdate()" min="" required/></div>
+            </div>
+            <div class="row-2" style="margin-top:1rem;">
+              <div class="field">
+                <label class="label" style="color:var(--bark);">Cabaña</label>
+                <select class="select" id="mn-cab" onchange="adminCabanaChange()" style="color:var(--bark);background:#fff;border:1px solid rgba(46,26,14,0.15);">
+                  <option value="roble">El Roble (2 pers.) — $280.000</option>
+                  <option value="ceiba">La Ceiba (4 pers.) — $420.000</option>
+                  <option value="ancestral">Ancestral (6 pers.) — $650.000</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- PAQUETE -->
+          <div style="margin-bottom:1.5rem;border-top:1px solid rgba(46,26,14,0.1);padding-top:1rem;">
+            <h4 style="margin-bottom:0.75rem;color:var(--bark);font-size:0.95rem;">3. Selecciona el paquete</h4>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;">
+              <button type="button" class="paq-opt" id="adm-p-basico" onclick="adminSelectPaquete('basico')" style="border:2px solid rgba(46,26,14,0.1);background:#fff;">
+                <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M3.5 21L12 3l8.5 18"/><path d="M20.5 21H3.5"/><path d="M12 6v15"/></svg></div>
+                <div class="paq-name">Básico</div>
+                <div class="paq-desc" style="font-size:0.9rem;color:var(--mist);">Alojamiento en cabaña sin servicios adicionales</div>
+                <div class="paq-price" style="font-size:0.75rem;color:var(--dark-text);">Incluido</div>
+              </button>
+              <button type="button" class="paq-opt" id="adm-p-cafetero" onclick="adminSelectPaquete('cafetero')" style="border:2px solid rgba(46,26,14,0.1);background:#fff;">
+                <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg></div>
+                <div class="paq-name">Cafetero</div>
+                <div class="paq-desc" style="font-size:0.9rem;color:var(--mist);">Incluye tour guiado por café y desayuno típico</div>
+                <div class="paq-price" style="font-size:0.75rem;color:var(--dark-text);">+$80.000</div>
+              </button>
+              <button type="button" class="paq-opt" id="adm-p-premium" onclick="adminSelectPaquete('premium')" style="border:2px solid rgba(46,26,14,0.1);background:#fff;">
+                <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+                <div class="paq-name">Premium</div>
+                <div class="paq-desc" style="font-size:0.9rem;color:var(--mist);">Incluye tour, spa, gastronomía y fogata</div>
+                <div class="paq-price" style="font-size:0.75rem;color:var(--dark-text);">+$200.000</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- SERVICIOS -->
+          <div style="margin-bottom:1rem;border-top:1px solid rgba(46,26,14,0.1);padding-top:1rem;">
+            <h4 style="margin-bottom:0.75rem;color:var(--bark);font-size:0.95rem;">4. Servicios adicionales</h4>
+            <div class="srv-grid">
+              <button type="button" class="srv-chip" id="adm-srv-spa" onclick="adminToggleSrv('spa')" style="border:1.5px solid rgba(46,26,14,0.15);background:#fff;color:var(--bark);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg> Spa <span class="srv-price" style="margin-left:0.3rem;">+$90K</span>
+              </button>
+              <button type="button" class="srv-chip" id="adm-srv-fogata" onclick="adminToggleSrv('fogata')" style="border:1.5px solid rgba(46,26,14,0.15);background:#fff;color:var(--bark);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Fogata <span class="srv-price" style="margin-left:0.3rem;">+$45K</span>
+              </button>
+              <button type="button" class="srv-chip" id="adm-srv-transporte" onclick="adminToggleSrv('transporte')" style="border:1.5px solid rgba(46,26,14,0.15);background:#fff;color:var(--bark);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M22 16v-5l-4-5h-3v12"/></svg> Transporte <span class="srv-price" style="margin-left:0.3rem;">+$60K</span>
+              </button>
+              <button type="button" class="srv-chip" id="adm-srv-fotografia" onclick="adminToggleSrv('fotografia')" style="border:1.5px solid rgba(46,26,14,0.15);background:#fff;color:var(--bark);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Fotografía <span class="srv-price" style="margin-left:0.3rem;">+$120K</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="mn-alert"></div>
+        </div>
+
+        <!-- RESUMEN DE PRECIO (SIDEBAR) -->
+        <div style="position:sticky;top:0;">
+          <div class="price-card" style="background:#fff;border:1px solid rgba(46,26,14,0.1);">
+            <div class="price-header" style="background:linear-gradient(135deg,var(--fire-soft),rgba(232,93,4,0.15));padding:1rem;">
+              <h3 style="color:var(--bark);font-size:0.95rem;margin:0;margin-bottom:0.1rem;">Resumen</h3>
+              <p style="color:var(--mist);font-size:0.75rem;margin:0;">Monto total a pagar</p>
+            </div>
+            <div class="price-body" id="admin-price-body" style="padding:1rem;font-size:0.85rem;">
+              <p style="color:var(--mist);text-align:center;">Selecciona fechas para calcular</p>
+            </div>
+            <div class="price-total-row" id="admin-price-total" style="display:none;background:rgba(232,93,4,0.1);border-top:2px solid rgba(232,93,4,0.3);">
+              <span class="pt-l" style="color:var(--bark);">Total</span>
+              <span class="pt-v" id="admin-pt-val" style="color:var(--fire);">$0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-fire" onclick="closeM('m-nueva')">Cancelar</button>
+      <button class="btn btn-fire" onclick="doNuevaAdmin()">Crear Reserva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Cambiar Estado -->
+<div class="modal-backdrop" id="m-estado" onclick="if(event.target===this)closeM('m-estado')">
+  <div class="modal">
+    <div class="modal-hd"><h3>Cambiar Estado — Reserva #<span id="m-est-id"></span></h3><button class="modal-close" onclick="closeM('m-estado')">✕</button></div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="label">Nuevo estado</label>
+        <select class="select" id="m-est-val">
+          <option value="pendiente">Pendiente</option>
+          <option value="confirmada">Confirmada</option>
+          <option value="cancelada">Cancelada</option>
+          <option value="completada">Completada</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-dark-outline" onclick="closeM('m-estado')">Cancelar</button>
+      <button class="btn btn-fire" onclick="guardarEstado()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar Eliminar -->
+<div class="modal-backdrop" id="m-del" onclick="if(event.target===this)closeM('m-del')">
+  <div class="modal modal-sm">
+    <div class="modal-hd"><h3>Eliminar Reserva #<span id="m-del-id"></span></h3><button class="modal-close" onclick="closeM('m-del')">✕</button></div>
+    <div class="modal-body"><p style="color: var(--bark); font-weight: 500;">¿Estás seguro? Esta acción no se puede deshacer.</p></div>
+    <div class="modal-ft">
+      <button class="btn btn-dark-outline" onclick="closeM('m-del')">Cancelar</button>
+      <button class="btn btn-danger" onclick="doEliminar()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Ver y editar reserva -->
+<div class="modal-backdrop" id="m-detalle-admin" onclick="if(event.target===this)closeM('m-detalle-admin')">
+  <div class="modal">
+    <div class="modal-hd"><h3>Detalle de Reserva #<span id="m-det-id"></span></h3><button class="modal-close" onclick="closeM('m-detalle-admin')">✕</button></div>
+    <div class="modal-body">
+      <div id="m-det-alert"></div>
+      <div class="field"><label class="label">Cliente</label><input class="input" id="m-det-doc" readonly /></div>
+      <div class="field"><label class="label">Cabaña</label><select class="select" id="m-det-cabana"><option value="roble">El Roble</option><option value="ceiba">La Ceiba</option><option value="ancestral">Ancestral</option></select></div>
+      <div class="field"><label class="label">Fecha inicio</label><input class="input" id="m-det-ini" type="date" onchange="mDetRangeCheck()" /></div>
+      <div class="field"><label class="label">Fecha fin</label><input class="input" id="m-det-fin" type="date" onchange="mDetRangeCheck()" /></div>
+      <div class="field"><label class="label">Paquete</label><select class="select" id="m-det-paquete"><option value="basico">Básico</option><option value="cafetero">Cafetero</option><option value="premium">Premium</option></select></div>
+      <div class="field"><label class="label">Personas</label><input class="input" id="m-det-personas" type="number" min="1" /></div>
+      <div class="field"><label class="label">Notas</label><textarea class="textarea" id="m-det-notas" rows="3"></textarea></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-fire" onclick="closeM('m-detalle-admin')">Cerrar</button>
+      <button class="btn btn-fire" onclick="guardarDetalleReserva()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Ver reserva -->
+<div class="modal-backdrop" id="m-view-reserva" onclick="if(event.target===this)closeM('m-view-reserva')">
+  <div class="modal">
+    <div class="modal-hd"><h3>Ver Reserva #<span id="m-view-id"></span></h3><button class="modal-close" onclick="closeM('m-view-reserva')">✕</button></div>
+    <div class="modal-body">
+      <div id="m-view-body"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-fire" onclick="closeM('m-view-reserva')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script src="js/fixes.js"></script>
+<script src="js/admin.js"></script>
+
+<!-- MODAL: Cambiar Rol Usuario -->
+<div class="modal-backdrop" id="m-rol" onclick="if(event.target===this)closeM('m-rol')">
+  <div class="modal modal-sm">
+    <div class="modal-hd">
+      <h3>Cambiar Rol — <span id="m-rol-email" style="color:var(--fire);font-size:0.9rem;"></span></h3>
+      <button class="modal-close" onclick="closeM('m-rol')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--bark);margin-bottom:1rem;font-size:0.9rem;">Selecciona el nuevo rol para este usuario:</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <button id="m-rol-btn-cliente" onclick="setRolSeleccion('cliente')"
+          style="padding:1rem;border-radius:var(--r-lg);border:2px solid var(--fire);background:rgba(232,93,4,0.08);cursor:pointer;font-family:inherit;transition:all 0.15s;">
+          <div style="font-size:1.5rem;margin-bottom:0.3rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div style="font-weight:700;font-size:0.88rem;color:var(--bark);">Cliente</div>
+          <div style="font-size:0.72rem;color:var(--mist);">Acceso al portal de reservas</div>
+        </button>
+        <button id="m-rol-btn-admin" onclick="setRolSeleccion('admin')"
+          style="padding:1rem;border-radius:var(--r-lg);border:2px solid rgba(46,26,14,0.15);background:#fff;cursor:pointer;font-family:inherit;transition:all 0.15s;">
+          <div style="font-size:1.5rem;margin-bottom:0.3rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>
+          <div style="font-weight:700;font-size:0.88rem;color:var(--bark);">Administrador</div>
+          <div style="font-size:0.72rem;color:var(--mist);">Acceso al panel admin</div>
+        </button>
+      </div>
+      <div id="m-rol-alert" style="margin-top:1rem;"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-dark-outline" onclick="closeM('m-rol')">Cancelar</button>
+      <button class="btn btn-fire" onclick="confirmarCambioRol()">Guardar cambio</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Eliminar Usuario -->
+<div class="modal-backdrop" id="m-del-usuario" onclick="if(event.target===this)closeM('m-del-usuario')">
+  <div class="modal modal-sm">
+    <div class="modal-hd">
+      <h3>Eliminar Usuario</h3>
+      <button class="modal-close" onclick="closeM('m-del-usuario')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--bark);font-weight:500;">¿Estás seguro de eliminar la cuenta de <strong id="m-del-usuario-email" style="color:var(--fire);"></strong>?</p>
+      <p style="color:var(--mist);font-size:0.85rem;margin-top:0.5rem;">Esta acción es irreversible. Se eliminarán todos los datos de la cuenta.</p>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-dark-outline" onclick="closeM('m-del-usuario')">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmarEliminarUsuario()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Reset Password Usuario -->
+<div class="modal-backdrop" id="m-reset-usuario" onclick="if(event.target===this)closeM('m-reset-usuario')">
+  <div class="modal modal-sm">
+    <div class="modal-hd">
+      <h3>Restablecer Contraseña</h3>
+      <button class="modal-close" onclick="closeM('m-reset-usuario')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="m-reset-content">
+        <p style="color:var(--bark);font-size:0.9rem;">¿Generar un enlace de restablecimiento para <strong id="m-reset-email" style="color:var(--fire);"></strong>?</p>
+        <p style="color:var(--mist);font-size:0.82rem;margin-top:0.5rem;">El enlace tendrá validez de 1 hora.</p>
+      </div>
+      <div id="m-reset-result" style="display:none;">
+        <div style="background:var(--fire-soft);border:1px solid var(--fire-border);border-radius:var(--r-lg);padding:1rem;margin-top:0.5rem;">
+          <p style="font-size:0.82rem;color:var(--bark);margin-bottom:0.5rem;font-weight:600;">✓ Enlace generado:</p>
+          <code id="m-reset-url" style="font-size:0.78rem;color:var(--fire);word-break:break-all;"></code>
+        </div>
+        <p style="font-size:0.75rem;color:var(--mist);margin-top:0.75rem;">Copia este enlace y compártelo con el usuario por un canal seguro.</p>
+      </div>
+    </div>
+    <div class="modal-ft" id="m-reset-ft">
+      <button class="btn btn-dark-outline" onclick="closeM('m-reset-usuario')">Cancelar</button>
+      <button class="btn btn-fire" onclick="confirmarResetUsuario()">Generar enlace</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

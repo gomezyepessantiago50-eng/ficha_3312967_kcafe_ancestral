@@ -1,0 +1,196 @@
+<!--
+  KAFE ANCESTRAL — header-cliente.html  (v2)
+  USO: pegar justo después de <body> en cliente.html y pages/*.html
+  El script de la página define: goPanel(name), doLogout()
+  #hdr-user-zone se rellena en DOMContentLoaded:
+    zone.innerHTML = `
+      <div class="hdr-user-chip">
+        <div class="hdr-user-avatar">👤</div>
+        <span>${user?.nombre || 'Usuario'}</span>
+      </div>
+      <button class="hdr-btn-logout" onclick="doLogout()">⎋ Salir</button>`;
+-->
+
+<style>
+.hdr {
+  background: linear-gradient(135deg, #0E0805 0%, #1A0A04 45%, #2B1106 100%);
+  border-bottom: 1px solid rgba(232,93,4,0.18);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 0 rgba(232,93,4,0.12), 0 4px 24px rgba(0,0,0,0.4);
+}
+
+.hdr-inner {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 0 1.75rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.hdr-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.hdr-mark {
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #E85D04, #F48C06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 3px 14px rgba(232,93,4,0.42), 0 0 0 1px rgba(232,93,4,0.28);
+  flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
+}
+.hdr-brand:hover .hdr-mark {
+  transform: scale(1.08) rotate(-3deg);
+  box-shadow: 0 5px 20px rgba(232,93,4,0.55), 0 0 0 1px rgba(232,93,4,0.4);
+}
+
+.hdr-name {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.hdr-sub {
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  margin-top: 0.15rem;
+  font-family: 'Outfit', system-ui, sans-serif;
+}
+
+.hdr-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 0.3rem;
+}
+
+.hdr-link {
+  padding: 0.42rem 1rem;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: none;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  transition: all 0.16s ease;
+  white-space: nowrap;
+}
+.hdr-link:hover {
+  color: rgba(255,255,255,0.82);
+  background: rgba(255,255,255,0.06);
+}
+.hdr-link.active {
+  color: #fff;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(232,93,4,0.3), rgba(232,93,4,0.15));
+  border-color: rgba(232,93,4,0.35);
+  box-shadow: 0 2px 12px rgba(232,93,4,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+#hdr-user-zone {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+.hdr-user-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(232,93,4,0.12);
+  border: 1px solid rgba(232,93,4,0.28);
+  border-radius: 100px;
+  padding: 0.3rem 0.9rem 0.3rem 0.38rem;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: #D4845A;
+  transition: all 0.15s;
+  cursor: default;
+}
+.hdr-user-chip:hover {
+  background: rgba(232,93,4,0.18);
+  border-color: rgba(232,93,4,0.4);
+  color: #F48C06;
+}
+
+.hdr-user-avatar {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #E85D04, #F48C06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(232,93,4,0.4);
+}
+
+.hdr-btn-logout {
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 0.4rem 0.85rem;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.38);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.hdr-btn-logout:hover {
+  background: rgba(192,57,43,0.14);
+  border-color: rgba(192,57,43,0.35);
+  color: #ef9a9a;
+  transform: translateX(1px);
+}
+
+@media (max-width: 640px) {
+  .hdr-nav { gap: 0; padding: 0.25rem; }
+  .hdr-link { padding: 0.38rem 0.65rem; font-size: 0.76rem; }
+  .hdr-sub  { display: none; }
+}
+</style>
+
+<header class="hdr">
+  <div class="hdr-inner">
+
+    <a href="cliente.html" class="hdr-brand">
+      <div class="hdr-mark">🌿</div>
+      <div>
+        <div class="hdr-name">Kafe Ancestral</div>
+        <div class="hdr-sub">Portal de Reservas</div>
+      </div>
+    </a>
+
+    <nav class="hdr-nav">
+      <button class="hdr-link active" id="nav-disp" onclick="goPanel('disponibilidad')">Disponibilidad</button>
+      <button class="hdr-link"        id="nav-rsv"  onclick="goPanel('reservar')">Reservar</button>
+      <button class="hdr-link"        id="nav-mine" onclick="goPanel('mis-reservas')">Mis Reservas</button>
+    </nav>
+
+    <div id="hdr-user-zone"></div>
+
+  </div>
+</header>
