@@ -3,7 +3,7 @@
 const fs        = require('fs');
 const path      = require('path');
 const Sequelize = require('sequelize');
-const sequelize = require('../database/connection');
+const { sequelize } = require('../database/connection');
 
 const db = {};
 
@@ -11,8 +11,22 @@ const db = {};
 fs.readdirSync(__dirname)
   .filter((file) => file !== 'index.js' && file.endsWith('.js'))
   .forEach((file) => {
-    const model = require(path.join(__dirname, file))(sequelize);
-    db[model.name] = model;
+    const imported = require(path.join(__dirname, file));
+    let model;
+    try {
+      // Intentar como factory function: (sequelize) => ...
+      model = imported(sequelize, Sequelize.DataTypes);
+    } catch (err) {
+      // Si da error de 'Class constructor', significa que el archivo ya exportaba el modelo instanciado
+      if (err.message && err.message.includes("Class constructor")) {
+        model = imported;
+      } else {
+        throw err;
+      }
+    }
+    if (model && model.name) {
+      db[model.name] = model;
+    }
   });
 
 // Ejecuta las asociaciones una vez que todos los modelos están cargados

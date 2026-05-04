@@ -15,17 +15,12 @@ module.exports = (sequelize) => {
         allowNull: false,
       },
       ImagenHabitacion: {
-        type:      DataTypes.BLOB,
+        type:      DataTypes.TEXT('long'),
         allowNull: true,
       },
-      Descripcion: {
-        type:      DataTypes.STRING(50),
+      IDCabana: {
+        type:      DataTypes.INTEGER,
         allowNull: false,
-      },
-      Costo: {
-        type:      DataTypes.FLOAT,
-        allowNull: false,
-        validate:  { min: 0 },
       },
       Estado: {
         type:         DataTypes.BOOLEAN,

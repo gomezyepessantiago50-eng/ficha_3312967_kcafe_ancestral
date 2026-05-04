@@ -20,7 +20,7 @@
     .ov-card:hover { box-shadow: var(--sh-md); }
     .ov-accent { position: absolute; top:0; left:0; width:3px; height:100%; border-radius:0 2px 2px 0; }
     .ov-ico  { font-size: 1.8rem; }
-    .ov-val  { font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; }
+    .ov-val  { font-family: var(--font-display); font-size: 1.45rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-weight: 800; color: #fff; line-height: 1; }
     .ov-lbl  { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dark-muted); margin-top: 0.2rem; }
 
     .r-row {
@@ -264,12 +264,24 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Cabañas
       </button>
+      <button class="sb-item" onclick="showSec('habitaciones',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M3 22v-8"/><path d="M21 22v-8"/><path d="M3 14h18"/><path d="M7 14v-4a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v4"/><path d="M12 6V2"/></svg>
+        Habitaciones
+      </button>
       <button class="sb-item" onclick="showSec('paquetes',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
         Paquetes
       </button>
+      <button class="sb-item" onclick="showSec('servicios',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Servicios
+      </button>
       <button class="sb-item" onclick="showSec('clientes',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Clientes
+      </button>
+      <button class="sb-item" onclick="showSec('usuarios',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         Usuarios
       </button>
     </div>
@@ -312,9 +324,23 @@
         <div class="page-hd"><div><h2>Panel General</h2><p>Resumen general de operaciones</p></div></div>
         <div class="g4" style="margin-bottom:1.5rem;">
           <div class="ov-card"><div class="ov-accent" style="background:var(--fire)"></div><span class="ov-ico" style="color:var(--fire);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14h6M9 18h4"/></svg></span><div><div class="ov-val" id="ov-total">—</div><div class="ov-lbl">Total Reservas</div></div></div>
+          <div class="ov-card"><div class="ov-accent" style="background:var(--success)"></div><span class="ov-ico" style="color:var(--success);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><div><div class="ov-val" id="ov-ventas">—</div><div class="ov-lbl">Ventas Totales</div></div></div>
           <div class="ov-card"><div class="ov-accent" style="background:var(--amber)"></div><span class="ov-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><div><div class="ov-val" id="ov-pend">—</div><div class="ov-lbl">Pendientes</div></div></div>
-          <div class="ov-card"><div class="ov-accent" style="background:var(--success)"></div><span class="ov-ico" style="color:var(--success);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span><div><div class="ov-val" id="ov-conf">—</div><div class="ov-lbl">Confirmadas</div></div></div>
           <div class="ov-card"><div class="ov-accent" style="background:var(--mist-light)"></div><span class="ov-ico" style="color:var(--mist-light);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><div><div class="ov-val" id="ov-bloq">—</div><div class="ov-lbl">Días Bloqueados</div></div></div>
+        </div>
+        <div class="g2" style="margin-bottom:1.5rem;">
+          <div class="card-dark card-dark-pad">
+            <h3 style="color:#fff;font-size:1rem;margin-bottom:1rem;">Reservas Mensuales</h3>
+            <div style="position: relative; height: 260px; width: 100%;">
+              <canvas id="reservasChart"></canvas>
+            </div>
+          </div>
+          <div class="card-dark card-dark-pad">
+            <h3 style="color:#fff;font-size:1rem;margin-bottom:1rem;">Top Cabañas Más Reservadas</h3>
+            <div style="position: relative; height: 260px; width: 100%;">
+              <canvas id="cabanasChart"></canvas>
+            </div>
+          </div>
         </div>
         <div class="g2">
           <div class="card-dark card-dark-pad">
@@ -421,74 +447,77 @@
 
       <!-- CABAÑAS -->
       <div class="a-section" id="sec-cabanas">
-        <div class="page-hd"><div><h2>Cabañas</h2><p>Gestión de alojamientos</p></div></div>
+        <div class="page-hd">
+          <div><h2>Cabañas</h2><p>Gestión de alojamientos</p></div>
+          <button class="btn btn-fire" onclick="adminNuevaCabana()">+ Nueva Cabaña</button>
+        </div>
         <div class="g3" id="cab-grid">
-          <div class="cab-card">
-            <div class="cab-img" style="background:linear-gradient(135deg,rgba(139,69,19,0.3),rgba(210,105,30,0.2));"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px;color:var(--amber);"><path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14"/><path d="m17 8 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 8"/><line x1="12" y1="22" x2="12" y2="19"/></svg></div>
-            <div class="cab-body">
-              <h3>Cabaña El Roble</h3>
-              <p>Cabaña rústica con chimenea y vista al bosque. Ideal para parejas.</p>
-              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
-                <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 2 pers.</span>
-                <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Zona Norte</span>
-              </div>
-              <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--fire);">$280.000<small style="font-size:0.7rem;color:var(--dark-muted);font-family:var(--font-body);font-weight:400;">/noche</small></div>
-            </div>
-          </div>
-          <div class="cab-card">
-            <div class="cab-img" style="background:linear-gradient(135deg,rgba(29,58,47,0.4),rgba(46,18,5,0.3));"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px;color:var(--amber);"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 20 2 20 2s-1.7 5.5-3 9.4c-.7 2.1-1.6 3.9-2.8 5.4"/><path d="M10.7 13.7c-2.3-1-4.7-1.7-7.4-2.4"/></svg></div>
-            <div class="cab-body">
-              <h3>Cabaña La Ceiba</h3>
-              <p>Amplia cabaña familiar con hamacas y jardín privado.</p>
-              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
-                <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 4 pers.</span>
-                <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Zona Sur</span>
-              </div>
-              <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--fire);">$420.000<small style="font-size:0.7rem;color:var(--dark-muted);font-family:var(--font-body);font-weight:400;">/noche</small></div>
-            </div>
-          </div>
-          <div class="cab-card">
-            <div class="cab-img" style="background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(139,69,19,0.3));"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px;color:var(--amber);"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg></div>
-            <div class="cab-body">
-              <h3>Cabaña Ancestral</h3>
-              <p>Nuestra cabaña insignia con decoración artesanal y vista panorámica.</p>
-              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
-                <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 6 pers.</span>
-                <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Zona Alta</span>
-              </div>
-              <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--fire);">$650.000<small style="font-size:0.7rem;color:var(--dark-muted);font-family:var(--font-body);font-weight:400;">/noche</small></div>
-            </div>
-          </div>
+          <div style="grid-column: 1 / -1; text-align:center;color:var(--dark-muted);padding:3rem;">Cargando cabañas...</div>
         </div>
       </div>
 
       <!-- PAQUETES -->
       <div class="a-section" id="sec-paquetes">
-        <div class="page-hd"><div><h2>Paquetes</h2><p>Servicios y experiencias disponibles</p></div></div>
-        <div class="g3">
-          <div class="card-dark card-dark-pad">
-            <div style="font-size:2rem;margin-bottom:0.75rem;color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:36px;height:36px;"><path d="M3.5 21L12 3l8.5 18"/><path d="M20.5 21H3.5"/><path d="M12 6v15"/></svg></div>
-            <h3 style="color:#fff;margin-bottom:0.5rem;">Básico</h3>
-            <p style="color:var(--dark-muted);font-size:0.85rem;margin-bottom:1rem;">Solo alojamiento, sin servicios adicionales.</p>
-            <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;color:var(--fire);">Incluido</div>
-          </div>
-          <div class="card-dark card-dark-pad">
-            <div style="font-size:2rem;margin-bottom:0.75rem;color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:36px;height:36px;"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg></div>
-            <h3 style="color:#fff;margin-bottom:0.5rem;">Cafetero</h3>
-            <p style="color:var(--dark-muted);font-size:0.85rem;margin-bottom:1rem;">Tour por cultivos + desayuno típico incluido.</p>
-            <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;color:var(--fire);">+$80.000</div>
-          </div>
-          <div class="card-dark card-dark-pad">
-            <div style="font-size:2rem;margin-bottom:0.75rem;color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:36px;height:36px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-            <h3 style="color:#fff;margin-bottom:0.5rem;">Premium</h3>
-            <p style="color:var(--dark-muted);font-size:0.85rem;margin-bottom:1rem;">Todo incluido: tour, spa, gastronomía y fogata.</p>
-            <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;color:var(--fire);">+$200.000</div>
-          </div>
+        <div class="page-hd">
+          <div><h2>Paquetes</h2><p>Servicios y experiencias disponibles</p></div>
+          <button class="btn btn-fire" onclick="adminNuevoPaquete()">+ Nuevo Paquete</button>
+        </div>
+        <div class="g3" id="paq-grid">
+          <div style="grid-column: 1 / -1; text-align:center;color:var(--dark-muted);padding:3rem;">Cargando paquetes...</div>
+        </div>
+      </div>
+
+      <!-- HABITACIONES -->
+      <div class="a-section" id="sec-habitaciones">
+        <div class="page-hd">
+          <div><h2>Habitaciones</h2><p>Gestión de las cabañas y habitaciones individuales</p></div>
+          <button class="btn btn-fire" onclick="adminNuevaHabitacion()">+ Nueva Habitación</button>
+        </div>
+        <div class="g3" id="hab-grid">
+          <div style="grid-column: 1 / -1; text-align:center;color:var(--dark-muted);padding:3rem;">Cargando habitaciones...</div>
+        </div>
+      </div>
+
+      <!-- SERVICIOS -->
+      <div class="a-section" id="sec-servicios">
+        <div class="page-hd">
+          <div><h2>Servicios Adicionales</h2><p>Gestión de servicios extra para reservas</p></div>
+          <button class="btn btn-fire" onclick="adminNuevoServicio()">+ Nuevo Servicio</button>
+        </div>
+        <div class="table-wrap">
+          <table class="table-dark">
+            <thead><tr>
+              <th>ID</th><th>Nombre</th><th>Descripción</th><th>Precio</th><th>Estado</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="srv-tbody">
+              <tr><td colspan="6" style="text-align:center;padding:3rem;color:var(--dark-muted);">Cargando servicios...</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
       <!-- CLIENTES -->
       <div class="a-section" id="sec-clientes">
+        <div class="page-hd"><div><h2>Clientes</h2><p>Directorio de clientes registrados</p></div></div>
+        <div class="fbar">
+          <input type="text" class="input" id="fil-cliente-q" placeholder="Buscar por nombre, apellido o doc..." onkeyup="if(event.key==='Enter') loadClientes()" style="flex:1;"/>
+          <button class="btn btn-fire" onclick="loadClientes()">Buscar</button>
+          <button class="btn btn-sm btn-dark-outline" onclick="document.getElementById('fil-cliente-q').value=''; loadClientes()">Limpiar</button>
+        </div>
+        <div class="table-wrap">
+          <table class="table-dark">
+            <thead><tr>
+              <th>Documento</th><th>Nombre</th><th>Apellido</th><th>Teléfono</th><th>Nacionalidad</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="cli-tbody">
+              <tr><td colspan="6" style="text-align:center;padding:3rem;color:var(--dark-muted);">Cargando clientes...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- USUARIOS -->
+      <div class="a-section" id="sec-usuarios">
         <div class="page-hd"><div><h2>Usuarios</h2><p>Gestión de cuentas registradas</p></div></div>
 
         <!-- Buscador -->
@@ -527,7 +556,7 @@
 <!-- MODAL: Nueva Reserva -->
 <div class="modal-backdrop" id="m-nueva" onclick="if(event.target===this)closeM('m-nueva')">
   <div class="modal" style="max-width:1080px;width:calc(100vw - 3rem);max-height:90vh;overflow-y:auto;">
-    <div class="modal-hd"><h3 style="color:var(--fire);">Nueva Reserva</h3><button class="modal-close" onclick="closeM('m-nueva')">✕</button></div>
+    <div class="modal-hd"><h3 style="color:var(--fire);">Nueva Reserva</h3></div>
     <div class="modal-body">
       <div style="display:grid;grid-template-columns:1fr 380px;gap:1.5rem;align-items:start;">
         <div>
@@ -535,12 +564,12 @@
           <div style="margin-bottom:1.5rem;border-top:1px solid rgba(46,26,14,0.1);padding-top:1rem;">
             <h4 style="margin-bottom:0.75rem;color:var(--bark);font-size:0.95rem;">1. Selecciona el cliente</h4>
             
-            <!-- Búsqueda por documento -->
+            <!-- Búsqueda por correo -->
             <div style="margin-bottom:1rem;">
-              <label style="color:var(--bark);font-size:0.85rem;font-weight:600;display:block;margin-bottom:0.4rem;">Número de documento <span style="color:var(--fire);font-weight:800;">*</span></label>
+              <label style="color:var(--bark);font-size:0.85rem;font-weight:600;display:block;margin-bottom:0.4rem;">Buscar por Correo o Nombre</label>
               <div style="display:flex;gap:0.5rem;">
-                <input type="text" class="input" id="modal-cli-doc" placeholder="Ej: 1234567890" style="flex:1;background:#fff;border:1px solid rgba(46,26,14,0.15);color:var(--bark);" onkeyup="if(event.key==='Enter') modalSearchClientByDoc()"/>
-                <button type="button" class="btn btn-fire" onclick="modalSearchClientByDoc()" style="white-space:nowrap;padding:0.6rem 1rem;">🔍 Buscar</button>
+                <input type="text" class="input" id="modal-cli-email" placeholder="Ej: cliente@correo.com o Juan" style="flex:1;background:#fff;border:1px solid rgba(46,26,14,0.15);color:var(--bark);" onkeyup="if(event.key==='Enter') modalSearchClientByEmail()"/>
+                <button type="button" class="btn btn-fire" onclick="modalSearchClientByEmail()" style="white-space:nowrap;padding:0.6rem 1rem;">🔍 Buscar</button>
               </div>
               <div id="modal-cli-msg" style="font-size:0.75rem;color:var(--mist);margin-top:0.3rem;"></div>
             </div>
@@ -549,7 +578,7 @@
             <label style="color:var(--bark);font-size:0.85rem;font-weight:600;display:block;margin-bottom:0.4rem;">Cliente <span style="color:var(--fire);font-weight:800;">*</span></label>
             <select class="select" id="mn-doc" style="width:100%;background:#fff;border:1px solid rgba(46,26,14,0.15);color:var(--bark);" onchange="adminResumenUpdate()">
               <option value="">— Selecciona un cliente —</option>
-              <option value="demo-new">+ Crear nuevo cliente</option>
+              
             </select>
           </div>
 
@@ -638,7 +667,7 @@
       </div>
     </div>
     <div class="modal-ft">
-      <button class="btn btn-fire" onclick="closeM('m-nueva')">Cancelar</button>
+      <button type="button" class="btn btn-outline" onclick="closeM('m-nueva')">Cancelar</button>
       <button class="btn btn-fire" onclick="doNuevaAdmin()">Crear Reserva</button>
     </div>
   </div>
@@ -647,7 +676,7 @@
 <!-- MODAL: Cambiar Estado -->
 <div class="modal-backdrop" id="m-estado" onclick="if(event.target===this)closeM('m-estado')">
   <div class="modal">
-    <div class="modal-hd"><h3>Cambiar Estado — Reserva #<span id="m-est-id"></span></h3><button class="modal-close" onclick="closeM('m-estado')">✕</button></div>
+    <div class="modal-hd"><h3>Cambiar Estado — Reserva #<span id="m-est-id"></span></h3></div>
     <div class="modal-body">
       <div class="field">
         <label class="label">Nuevo estado</label>
@@ -660,7 +689,7 @@
       </div>
     </div>
     <div class="modal-ft">
-      <button class="btn btn-dark-outline" onclick="closeM('m-estado')">Cancelar</button>
+      <button type="button" class="btn btn-outline" onclick="closeM('m-estado')">Cancelar</button>
       <button class="btn btn-fire" onclick="guardarEstado()">Guardar</button>
     </div>
   </div>
@@ -669,10 +698,10 @@
 <!-- MODAL: Confirmar Eliminar -->
 <div class="modal-backdrop" id="m-del" onclick="if(event.target===this)closeM('m-del')">
   <div class="modal modal-sm">
-    <div class="modal-hd"><h3>Eliminar Reserva #<span id="m-del-id"></span></h3><button class="modal-close" onclick="closeM('m-del')">✕</button></div>
+    <div class="modal-hd"><h3>Eliminar Reserva #<span id="m-del-id"></span></h3></div>
     <div class="modal-body"><p style="color: var(--bark); font-weight: 500;">¿Estás seguro? Esta acción no se puede deshacer.</p></div>
     <div class="modal-ft">
-      <button class="btn btn-dark-outline" onclick="closeM('m-del')">Cancelar</button>
+      <button type="button" class="btn btn-outline" onclick="closeM('m-del')">Cancelar</button>
       <button class="btn btn-danger" onclick="doEliminar()">Eliminar</button>
     </div>
   </div>
@@ -681,7 +710,7 @@
 <!-- MODAL: Ver y editar reserva -->
 <div class="modal-backdrop" id="m-detalle-admin" onclick="if(event.target===this)closeM('m-detalle-admin')">
   <div class="modal">
-    <div class="modal-hd"><h3>Detalle de Reserva #<span id="m-det-id"></span></h3><button class="modal-close" onclick="closeM('m-detalle-admin')">✕</button></div>
+    <div class="modal-hd"><h3>Detalle de Reserva #<span id="m-det-id"></span></h3></div>
     <div class="modal-body">
       <div id="m-det-alert"></div>
       <div class="field"><label class="label">Cliente</label><input class="input" id="m-det-doc" readonly /></div>
@@ -693,7 +722,7 @@
       <div class="field"><label class="label">Notas</label><textarea class="textarea" id="m-det-notas" rows="3"></textarea></div>
     </div>
     <div class="modal-ft">
-      <button class="btn btn-fire" onclick="closeM('m-detalle-admin')">Cerrar</button>
+      <button type="button" class="btn btn-outline" onclick="closeM('m-detalle-admin')">Cerrar</button>
       <button class="btn btn-fire" onclick="guardarDetalleReserva()">Guardar cambios</button>
     </div>
   </div>
@@ -702,27 +731,27 @@
 <!-- MODAL: Ver reserva -->
 <div class="modal-backdrop" id="m-view-reserva" onclick="if(event.target===this)closeM('m-view-reserva')">
   <div class="modal">
-    <div class="modal-hd"><h3>Ver Reserva #<span id="m-view-id"></span></h3><button class="modal-close" onclick="closeM('m-view-reserva')">✕</button></div>
+    <div class="modal-hd"><h3>Ver Reserva #<span id="m-view-id"></span></h3></div>
     <div class="modal-body">
       <div id="m-view-body"></div>
     </div>
     <div class="modal-ft">
-      <button class="btn btn-fire" onclick="closeM('m-view-reserva')">Cerrar</button>
+      <button type="button" class="btn btn-outline" onclick="closeM('m-view-reserva')">Cerrar</button>
     </div>
   </div>
 </div>
 
-<script src="js/api.js"></script>
-<script src="js/app.js"></script>
-<script src="js/fixes.js"></script>
-<script src="js/admin.js"></script>
+<script src="js/api.js?v=2"></script>
+<script src="js/app.js?v=2"></script>
+<script src="js/fixes.js?v=2"></script>
+
 
 <!-- MODAL: Cambiar Rol Usuario -->
 <div class="modal-backdrop" id="m-rol" onclick="if(event.target===this)closeM('m-rol')">
   <div class="modal modal-sm">
     <div class="modal-hd">
       <h3>Cambiar Rol — <span id="m-rol-email" style="color:var(--fire);font-size:0.9rem;"></span></h3>
-      <button class="modal-close" onclick="closeM('m-rol')">✕</button>
+      
     </div>
     <div class="modal-body">
       <p style="color:var(--bark);margin-bottom:1rem;font-size:0.9rem;">Selecciona el nuevo rol para este usuario:</p>
@@ -743,7 +772,7 @@
       <div id="m-rol-alert" style="margin-top:1rem;"></div>
     </div>
     <div class="modal-ft">
-      <button class="btn btn-dark-outline" onclick="closeM('m-rol')">Cancelar</button>
+      <button type="button" class="btn btn-outline" onclick="closeM('m-rol')">Cancelar</button>
       <button class="btn btn-fire" onclick="confirmarCambioRol()">Guardar cambio</button>
     </div>
   </div>
@@ -754,14 +783,14 @@
   <div class="modal modal-sm">
     <div class="modal-hd">
       <h3>Eliminar Usuario</h3>
-      <button class="modal-close" onclick="closeM('m-del-usuario')">✕</button>
+      
     </div>
     <div class="modal-body">
       <p style="color:var(--bark);font-weight:500;">¿Estás seguro de eliminar la cuenta de <strong id="m-del-usuario-email" style="color:var(--fire);"></strong>?</p>
       <p style="color:var(--mist);font-size:0.85rem;margin-top:0.5rem;">Esta acción es irreversible. Se eliminarán todos los datos de la cuenta.</p>
     </div>
     <div class="modal-ft">
-      <button class="btn btn-dark-outline" onclick="closeM('m-del-usuario')">Cancelar</button>
+      <button type="button" class="btn btn-outline" onclick="closeM('m-del-usuario')">Cancelar</button>
       <button class="btn btn-danger" onclick="confirmarEliminarUsuario()">Sí, eliminar</button>
     </div>
   </div>
@@ -772,7 +801,7 @@
   <div class="modal modal-sm">
     <div class="modal-hd">
       <h3>Restablecer Contraseña</h3>
-      <button class="modal-close" onclick="closeM('m-reset-usuario')">✕</button>
+      
     </div>
     <div class="modal-body">
       <div id="m-reset-content">
@@ -788,11 +817,141 @@
       </div>
     </div>
     <div class="modal-ft" id="m-reset-ft">
-      <button class="btn btn-dark-outline" onclick="closeM('m-reset-usuario')">Cancelar</button>
+      <button type="button" class="btn btn-outline" onclick="closeM('m-reset-usuario')">Cancelar</button>
       <button class="btn btn-fire" onclick="confirmarResetUsuario()">Generar enlace</button>
     </div>
   </div>
 </div>
 
+<!-- MODAL: Crear/Editar Habitación -->
+<div class="modal-backdrop" id="m-hab" onclick="if(event.target===this)closeM('m-hab')">
+  <div class="modal">
+    <div class="modal-hd"><h3 id="m-hab-title">Nueva Habitación</h3></div>
+    <div class="modal-body">
+      <input type="hidden" id="m-hab-id" />
+      <div class="field"><label class="label">Nombre Habitación <span style="color:var(--fire)">*</span></label><input type="text" class="input" id="m-hab-nombre" required /></div>
+      <div class="field"><label class="label">Pertenece a la Cabaña <span style="color:var(--fire)">*</span></label>
+        <select class="select" id="m-hab-cabana">
+          <option value="">Cargando...</option>
+        </select>
+      </div>
+      
+      <div class="field">
+        <label class="label">Foto de la Habitación <span style="font-weight:400;color:var(--mist);">(Opcional)</span></label>
+        <input type="file" id="m-hab-foto" class="input" accept="image/*" style="padding:0.4rem; cursor:pointer; background:#fff; color:var(--bark);" onchange="adminPreviewHabFoto(this)" />
+        <div id="m-hab-foto-preview" style="margin-top:0.75rem; border-radius:var(--r-md); overflow:hidden; max-width: 100%; height: auto; display:none;"></div>
+      </div>
+
+      <div class="field">
+        <label class="label">Foto de la Habitación <span style="font-weight:400;color:var(--mist);">(Opcional)</span></label>
+        <input type="file" id="m-hab-foto" class="input" accept="image/*" style="padding:0.4rem; cursor:pointer; background:#fff; color:var(--bark);" onchange="adminPreviewHabFoto(this)" />
+        <div id="m-hab-foto-preview" style="margin-top:0.75rem; border-radius:var(--r-md); overflow:hidden; max-width: 100%; height: auto; display:none;"></div>
+      </div>
+<div class="field"><label class="label">Estado</label><select class="select" id="m-hab-est"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-outline" onclick="closeM('m-hab')">Cancelar</button>
+      <button class="btn btn-fire" onclick="saveHabitacion()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Crear/Editar Cabaña -->
+<div class="modal-backdrop" id="m-cab" onclick="if(event.target===this)closeM('m-cab')">
+  <div class="modal">
+    <div class="modal-hd"><h3 id="m-cab-title">Nueva Cabaña</h3></div>
+    <div class="modal-body">
+      <input type="hidden" id="m-cab-id" />
+      <div class="field"><label class="label">Nombre <span style="color:var(--fire)">*</span></label><input type="text" class="input" id="m-cab-nombre" required /></div>
+      <div class="field"><label class="label">Descripción</label><textarea class="textarea" id="m-cab-desc" rows="3"></textarea></div>
+      <div class="row-2">
+        <div class="field"><label class="label">Capacidad Máxima <span style="color:var(--fire)">*</span></label><input type="number" class="input" id="m-cab-cap" min="1" required /></div>
+        <div class="field"><label class="label">Costo por Noche <span style="color:var(--fire)">*</span></label><input type="number" class="input" id="m-cab-costo" required /></div>
+      </div>
+      <div class="row-2">
+        <div class="field"><label class="label">Número de Habitaciones <span style="color:var(--fire)">*</span></label><input type="number" class="input" id="m-cab-numhab" min="1" value="1" required /></div>
+        <div class="field"><label class="label">Estado</label><select class="select" id="m-cab-est"><option value="true">Activa</option><option value="false">Inactiva</option></select></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-outline" onclick="closeM('m-cab')">Cancelar</button>
+      <button class="btn btn-fire" onclick="saveCabana()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Crear/Editar Paquete -->
+<div class="modal-backdrop" id="m-paq" onclick="if(event.target===this)closeM('m-paq')">
+  <div class="modal">
+    <div class="modal-hd"><h3 id="m-paq-title">Nuevo Paquete</h3></div>
+    <div class="modal-body">
+      <input type="hidden" id="m-paq-id" />
+      <div class="field"><label class="label">Nombre <span style="color:var(--fire)">*</span></label><input type="text" class="input" id="m-paq-nombre" required /></div>
+      <div class="field"><label class="label">Descripción</label><textarea class="textarea" id="m-paq-desc" rows="3"></textarea></div>
+      <div class="row-2">
+        <div class="field"><label class="label">Precio Base <span style="color:var(--fire)">*</span></label><input type="number" class="input" id="m-paq-precio" required /></div>
+        <div class="field"><label class="label">Servicio Asociado</label>
+          <select class="select" id="m-paq-servicio">
+            <option value="">Cargando...</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label class="label">Estado</label><select class="select" id="m-paq-est"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-outline" onclick="closeM('m-paq')">Cancelar</button>
+      <button class="btn btn-fire" onclick="savePaquete()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Crear/Editar Servicio -->
+<div class="modal-backdrop" id="m-srv" onclick="if(event.target===this)closeM('m-srv')">
+  <div class="modal">
+    <div class="modal-hd"><h3 id="m-srv-title">Nuevo Servicio</h3></div>
+    <div class="modal-body">
+      <input type="hidden" id="m-srv-id" />
+      <div class="field"><label class="label">Nombre <span style="color:var(--fire)">*</span></label><input type="text" class="input" id="m-srv-nombre" required /></div>
+      <div class="field"><label class="label">Descripción</label><textarea class="textarea" id="m-srv-desc" rows="3"></textarea></div>
+      <div class="row-2">
+        <div class="field"><label class="label">Capacidad Máxima <span style="color:var(--fire)">*</span></label><input type="number" class="input" id="m-srv-cap" value="1" min="1" required /></div>
+        <div class="field"><label class="label">Precio Fijo <span style="color:var(--fire)">*</span></label><input type="number" class="input" id="m-srv-precio" required /></div>
+      </div>
+      <div class="field"><label class="label">Estado</label><select class="select" id="m-srv-est"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-outline" onclick="closeM('m-srv')">Cancelar</button>
+      <button class="btn btn-fire" onclick="saveServicio()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Ver/Editar Cliente -->
+<div class="modal-backdrop" id="m-cli" onclick="if(event.target===this)closeM('m-cli')">
+  <div class="modal">
+    <div class="modal-hd"><h3>Detalle de Cliente</h3></div>
+    <div class="modal-body">
+      <input type="hidden" id="m-cli-doc" />
+      <div class="row-2">
+        <div class="field"><label class="label">Nombre</label><input type="text" class="input" id="m-cli-nombre" /></div>
+        <div class="field"><label class="label">Apellido</label><input type="text" class="input" id="m-cli-apellido" /></div>
+      </div>
+      <div class="row-2">
+        <div class="field"><label class="label">Teléfono</label><input type="text" class="input" id="m-cli-tel" /></div>
+        <div class="field"><label class="label">Nacionalidad</label><input type="text" class="input" id="m-cli-nac" /></div>
+      </div>
+      <div class="field"><label class="label">Historial de Reservas</label>
+        <div id="m-cli-historial" style="background:rgba(0,0,0,0.1);padding:0.75rem;border-radius:var(--r-md);max-height:150px;overflow-y:auto;font-size:0.85rem;color:var(--dark-muted);">Cargando...</div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-outline" onclick="closeM('m-cli')">Cancelar</button>
+      <button class="btn btn-fire" onclick="saveCliente()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="js/admin.js?v=2"></script>
 </body>
 </html>

@@ -143,7 +143,8 @@ async function loadDashboard() {
     const conf = rs.filter(r=>r.estado==='confirmada').length;
     document.getElementById('ov-total').textContent = rs.length;
     document.getElementById('ov-pend').textContent  = pend;
-    document.getElementById('ov-conf').textContent  = conf;
+    const ventas = rs.filter(r=>['confirmada','completada'].includes(r.estado)).reduce((sum, r) => sum + parseFloat(r.monto_total || 0), 0);
+    if (document.getElementById('ov-ventas')) document.getElementById('ov-ventas').textContent = fCop(ventas);
     document.getElementById('ov-bloq').textContent  = bl.length;
     const badge = document.getElementById('nb-pend');
     badge.textContent = pend || '';
@@ -156,9 +157,11 @@ async function loadDashboard() {
     document.getElementById('prox-list').innerHTML = prox.length
       ? prox.map(r=>`<div class="r-row"><div class="r-num">#${r.id}</div><div class="r-info"><h4>${r.documento||'Cliente'} ${statusBadge(r.estado)}</h4><p>${fDate(r.fecha_inicio)} → ${fDate(r.fecha_fin)} · ${r.num_personas||1} pers.</p></div><div class="r-right" style="font-size:0.78rem;color:var(--dark-muted);">${CABANAS[r.cabana]?.label||r.cabana||'—'}</div></div>`).join('')
       : '<p style="color:var(--dark-muted);font-size:0.85rem;">No hay próximas llegadas</p>';
-  } catch {
-    ['ov-total','ov-pend','ov-conf','ov-bloq'].forEach(id=>document.getElementById(id).textContent='?');
-    document.getElementById('prox-list').innerHTML='<p style="color:var(--dark-muted);font-size:0.85rem;">Inicia el servidor para ver datos</p>';
+  } catch(e) {
+    console.error('Dashboard Error:', e);
+    ['ov-total','ov-pend','ov-ventas','ov-bloq'].forEach(id=>{ const el = document.getElementById(id); if (el) el.textContent='?'; });
+    const px = document.getElementById('prox-list');
+    if (px) px.innerHTML='<p style="color:var(--dark-muted);font-size:0.85rem;">Inicia el servidor para ver datos</p>';
   }
 }
 
@@ -753,3 +756,559 @@ window.addEventListener('pageshow', (event) => {
     }
   }
 });
+
+
+/* ════════ CABANAS Y HABITACIONES ════════ */
+
+async function loadCabanas() {
+  try {
+    const res = await req('/cabanas');
+    const grid = document.getElementById('cab-grid');
+    if (!res.success) {
+      grid.innerHTML = '<div style="grid-column: 1 / -1; text-align:center;">Error al cargar cabañas.</div>';
+      return;
+    }
+    const cabanas = res.data;
+    if (cabanas.length === 0) {
+      grid.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; color:var(--dark-muted); padding:3rem;">No hay cabañas registradas.</div>';
+      return;
+    }
+
+    grid.innerHTML = cabanas.map(c => `
+      <div class="cab-card">
+        <div class="cab-img" style="background:linear-gradient(135deg,rgba(139,69,19,0.3),rgba(210,105,30,0.2));">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px;color:var(--amber);"><path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14"/><path d="m17 8 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 8"/><line x1="12" y1="22" x2="12" y2="19"/></svg>
+        </div>
+        <div class="cab-body">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <h3>${c.Nombre}</h3>
+            ${c.Estado ? '<span class="badge badge-success">Activa</span>' : '<span class="badge badge-danger">Inactiva</span>'}
+          </div>
+          <p style="height: 40px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${c.Descripcion || 'Sin descripción'}</p>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+            <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:12px;height:12px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${c.CapacidadMaxima} pers.</span>
+            <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:12px;height:12px;"><path d="M3 22v-8"/><path d="M21 22v-8"/><path d="M3 14h18"/><path d="M7 14v-4a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v4"/><path d="M12 6V2"/></svg> ${c.NumeroHabitaciones} hab.</span>
+          </div>
+          <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--fire);">$${Number(c.Costo).toLocaleString('es-CO')}<small style="font-size:0.7rem;color:var(--dark-muted);font-family:var(--font-body);font-weight:400;">/noche</small></div>
+        </div>
+        <div class="cab-foot" style="padding:0 1.1rem 1.1rem;">
+          <button class="btn btn-sm btn-dark-outline" onclick="adminEditarCabana('${c.IDCabaña}')">Editar</button>
+          <button class="btn btn-sm btn-dark-outline" style="color:var(--danger);border-color:rgba(239,83,80,0.3);" onclick="adminEliminarCabana('${c.IDCabaña}')">Eliminar</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+window.adminNuevaCabana = function() {
+  document.getElementById('m-cab-id').value = '';
+  document.getElementById('m-cab-nombre').value = '';
+  document.getElementById('m-cab-desc').value = '';
+  document.getElementById('m-cab-cap').value = '';
+  document.getElementById('m-cab-costo').value = '';
+  document.getElementById('m-cab-numhab').value = '1';
+  document.getElementById('m-cab-est').value = 'true';
+  document.getElementById('m-cab-title').textContent = 'Nueva Cabaña';
+  openM('m-cab');
+};
+
+window.adminEditarCabana = async function(id) {
+  try {
+    const res = await req('/cabanas/' + id);
+    if (!res.success) return alert(res.message || 'Error al obtener cabaña');
+    const c = res.data;
+    document.getElementById('m-cab-id').value = c.IDCabaña;
+    document.getElementById('m-cab-nombre').value = c.Nombre;
+    document.getElementById('m-cab-desc').value = c.Descripcion || '';
+    document.getElementById('m-cab-cap').value = c.CapacidadMaxima;
+    document.getElementById('m-cab-costo').value = c.Costo;
+    document.getElementById('m-cab-numhab').value = c.NumeroHabitaciones;
+    document.getElementById('m-cab-est').value = c.Estado ? 'true' : 'false';
+    document.getElementById('m-cab-title').textContent = 'Editar Cabaña';
+    openM('m-cab');
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+window.saveCabana = async function() {
+  const id = document.getElementById('m-cab-id').value;
+  const data = {
+    Nombre: document.getElementById('m-cab-nombre').value,
+    Descripcion: document.getElementById('m-cab-desc').value,
+    CapacidadMaxima: parseInt(document.getElementById('m-cab-cap').value),
+    Costo: parseFloat(document.getElementById('m-cab-costo').value),
+    NumeroHabitaciones: parseInt(document.getElementById('m-cab-numhab').value),
+    Estado: document.getElementById('m-cab-est').value === 'true'
+  };
+
+  if (!data.Nombre || isNaN(data.CapacidadMaxima) || isNaN(data.Costo) || isNaN(data.NumeroHabitaciones)) {
+    return alert('Por favor, completa los campos requeridos correctamente.');
+  }
+
+  try {
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? '/api/cabanas/' + id : '/api/cabanas';
+    const res = await req(url, method, data);
+    if (res.success) {
+      closeM('m-cab');
+      loadCabanas();
+      loadHabitaciones(); // Update rooms too!
+    } else {
+      alert(res.message || 'Error al guardar cabaña');
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+window.adminEliminarCabana = async function(id) {
+  if (!confirm('¿Estás seguro de eliminar esta cabaña? Se eliminarán también sus habitaciones.')) return;
+  try {
+    const res = await req('/cabanas/' + id, 'DELETE');
+    if (res.success) {
+      loadCabanas();
+      loadHabitaciones();
+    } else {
+      alert(res.message || 'Error al eliminar cabaña');
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+// Override loadHabitaciones to fetch from our new API
+window.loadHabitaciones = async function() {
+  try {
+    const res = await req('/habitaciones');
+    const grid = document.getElementById('hab-grid');
+    if (!res.success) {
+      grid.innerHTML = '<div style="grid-column: 1 / -1; text-align:center;">Error al cargar habitaciones.</div>';
+      return;
+    }
+    const habitaciones = res.data;
+    if (habitaciones.length === 0) {
+      grid.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; color:var(--dark-muted); padding:3rem;">No hay habitaciones registradas.</div>';
+      return;
+    }
+
+    grid.innerHTML = habitaciones.map(h => `
+      <div class="blq-item" style="flex-direction:column; align-items:stretch; gap:0.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="blq-txt">
+            <h4>${h.NombreHabitacion}</h4>
+            <p style="color:var(--fire); font-weight:600;">Cabaña: ${h.NombreCabaña || 'Desconocida'}</p>
+          </div>
+          ${h.Estado ? '<span class="badge badge-success">Activa</span>' : '<span class="badge badge-danger">Inactiva</span>'}
+        </div>
+        <div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:0.5rem;">
+          <button class="btn btn-sm btn-dark-outline" onclick="adminEditarHabitacion('${h.IDHabitacion}')">Editar</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+window.adminNuevaHabitacion = async function() {
+  document.getElementById('m-hab-id').value = '';
+  document.getElementById('m-hab-nombre').value = '';
+  document.getElementById('m-hab-est').value = 'true';
+  window._currentHabFoto = null;
+  document.getElementById('m-hab-foto').value = '';
+  const preview = document.getElementById('m-hab-foto-preview');
+  if(preview) preview.style.display='none';
+  document.getElementById('m-hab-title').textContent = 'Nueva Habitación';
+  
+  // Load cabanas into select
+  const select = document.getElementById('m-hab-cabana');
+  select.innerHTML = '<option value="">Cargando...</option>';
+  try {
+    const res = await req('/cabanas');
+    if (res.success && res.data.length > 0) {
+      select.innerHTML = '<option value="">-- Seleccione Cabaña --</option>' + res.data.map(c => `<option value="${c.IDCabaña}">${c.Nombre}</option>`).join('');
+    } else {
+      select.innerHTML = '<option value="">No hay cabañas creadas</option>';
+    }
+  } catch(e) {}
+
+  openM('m-hab');
+};
+
+window.adminEditarHabitacion = async function(id) {
+  try {
+    const res = await req('/habitaciones/' + id);
+    if (!res.success) return alert(res.message);
+    const h = res.data;
+    
+    document.getElementById('m-hab-id').value = h.IDHabitacion;
+    document.getElementById('m-hab-nombre').value = h.NombreHabitacion;
+    document.getElementById('m-hab-est').value = h.Estado ? 'true' : 'false';
+    window._currentHabFoto = h.ImagenHabitacion || null;
+    document.getElementById('m-hab-foto').value = '';
+    const preview = document.getElementById('m-hab-foto-preview');
+    if(preview) { if(h.ImagenHabitacion) { preview.innerHTML = '<img src="'+h.ImagenHabitacion+'" style="width:100%; height:auto; display:block;"/>'; preview.style.display='block'; } else { preview.style.display='none'; } }
+    document.getElementById('m-hab-title').textContent = 'Editar Habitación';
+
+    const select = document.getElementById('m-hab-cabana');
+    const cRes = await req('/cabanas');
+    if (cRes.success) {
+      select.innerHTML = '<option value="">-- Seleccione Cabaña --</option>' + cRes.data.map(c => `<option value="${c.IDCabaña}" ${c.IDCabaña === h.IDCabaña ? 'selected' : ''}>${c.Nombre}</option>`).join('');
+    }
+    openM('m-hab');
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+window.saveHabitacion = async function() {
+  const id = document.getElementById('m-hab-id').value;
+  const data = {
+    NombreHabitacion: document.getElementById('m-hab-nombre').value,
+    IDCabaña: parseInt(document.getElementById('m-hab-cabana').value),
+    Estado: document.getElementById('m-hab-est').value === 'true',
+    ImagenHabitacion: window._currentHabFoto || undefined
+  };
+
+  if (!data.NombreHabitacion || isNaN(data.IDCabaña)) {
+    return alert('Completa los campos requeridos.');
+  }
+
+  try {
+    // If id exists, it's PUT, otherwise POST
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? '/api/habitaciones/' + id : '/api/habitaciones';
+    
+    let res = await req(url, method, data);
+    
+    // Si cambio el estado, usar PATCH para estado
+    if (id && res.success) {
+      await req('/habitaciones/' + id + '/estado', 'PATCH', { Estado: data.Estado });
+    }
+
+    if (res.success) {
+      closeM('m-hab');
+      loadHabitaciones();
+      loadCabanas(); // In case state changed
+    } else {
+      alert(res.message || 'Error');
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+/* ════════ DASHBOARD ════════ */
+// Override loadDashboard
+window.loadDashboard = async function() {
+  try {
+    const res = await req('/dashboard');
+    if (!res.success) return;
+    const stats = res.data;
+
+    document.getElementById('ov-ventas').textContent = '$' + Number(stats.totalSales || 0).toLocaleString('es-CO');
+    document.getElementById('ov-total').textContent = stats.totalReservations || 0;
+    
+    // The rest of ov-pend and ov-bloq can remain unchanged if populated elsewhere, or we could update them here.
+
+    // Chart.js Setup
+    if (window.Chart) {
+      // Cabanas Chart
+      const ctxCabanas = document.getElementById('cabanasChart');
+      if (ctxCabanas && !window.cabChartInst) {
+        window.cabChartInst = new Chart(ctxCabanas, {
+          type: 'doughnut',
+          data: {
+            labels: stats.topCabins.map(c => c.name),
+            datasets: [{
+              data: stats.topCabins.map(c => c.value),
+              backgroundColor: ['#e85d04', '#faa307', '#ffba08', '#f48c06', '#dc2f02'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            plugins: { legend: { position: 'right', labels: { color: '#fff' } } },
+            maintainAspectRatio: false
+          }
+        });
+      }
+
+      // Reservas por mes Chart
+      const ctxReservas = document.getElementById('reservasChart');
+      if (ctxReservas && !window.resChartInst) {
+        window.resChartInst = new Chart(ctxReservas, {
+          type: 'bar',
+          data: {
+            labels: stats.reservationsByMonth.map(m => m.month),
+            datasets: [{
+              label: 'Reservas',
+              data: stats.reservationsByMonth.map(m => m.count),
+              backgroundColor: '#e85d04',
+              borderRadius: 4
+            }]
+          },
+          options: {
+            scales: {
+              y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#fff' } },
+              x: { grid: { display: false }, ticks: { color: '#fff' } }
+            },
+            plugins: { legend: { display: false } },
+            maintainAspectRatio: false
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+// Link showSec properly
+const oldShowSec = window.showSec;
+window.showSec = function(name, btn) {
+  if (oldShowSec) oldShowSec(name, btn);
+  if (name === 'cabanas') loadCabanas();
+  if (name === 'dashboard') loadDashboard();
+};
+
+
+/* ════════ DYNAMIC SERVICES IN RESERVATION ════════ */
+async function refreshGlobalServices() {
+  try {
+    const data = await ServiciosAPI.listar();
+    const srvs = data.servicios || data.data || [];
+    
+    for (const key in SERVICIOS) delete SERVICIOS[key];
+    
+    let html = '';
+    srvs.forEach(s => {
+      if (!s.Estado && s.Estado !== 1) return; // Only show active services
+      SERVICIOS[s.IDServicio] = { label: s.NombreServicio, precio: s.Costo };
+      html += `
+        <button type="button" class="srv-chip" id="adm-srv-\${s.IDServicio}" onclick="adminToggleSrv('\${s.IDServicio}')" style="border:1.5px solid rgba(46,26,14,0.15);background:#fff;color:var(--bark);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M5 12l5 5L20 7"/></svg> \${s.NombreServicio} <span class="srv-price" style="margin-left:0.3rem;">+$\${s.Costo/1000}K</span>
+        </button>`;
+    });
+
+    const srvGrid = document.querySelector('#m-nueva .srv-grid');
+    if (srvGrid) srvGrid.innerHTML = html;
+  } catch(e) { console.error('Error refreshing services', e); }
+}
+
+const oldLoadServicios2 = window.loadServicios;
+window.loadServicios = async function() {
+  if (oldLoadServicios2) await oldLoadServicios2();
+  await refreshGlobalServices();
+};
+
+document.addEventListener('DOMContentLoaded', refreshGlobalServices);
+// Just in case DOM is already loaded:
+refreshGlobalServices();
+
+
+/* ════════ DYNAMIC PACKAGES IN RESERVATION ════════ */
+async function refreshGlobalPackages() {
+  try {
+    const data = await PaquetesAPI.listar();
+    const paqs = data.paquetes || data.data || [];
+    
+    for (const key in PAQUETES) delete PAQUETES[key];
+    
+    let html = '';
+    let firstPaq = null;
+    paqs.forEach(p => {
+      if (!p.Estado && p.Estado !== 1) return; // Active only
+      if (!firstPaq) firstPaq = p.IDPaquete;
+      PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion };
+    });
+    
+    // Fallback default selection
+    if (!PAQUETES[ADMIN_NUEVA_RES.paquete] && firstPaq) {
+      ADMIN_NUEVA_RES.paquete = firstPaq;
+    }
+
+    paqs.forEach(p => {
+      if (!PAQUETES[p.IDPaquete]) return;
+      const isSelected = ADMIN_NUEVA_RES.paquete == p.IDPaquete;
+      html += `
+        <button type="button" class="paq-opt \${isSelected?'selected':''}" id="adm-p-\${p.IDPaquete}" onclick="adminSelectPaquete('\${p.IDPaquete}')" style="border:2px solid rgba(46,26,14,0.1);background:#fff;">
+          <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div class="paq-name">\${p.NombrePaquete}</div>
+          <div class="paq-desc" style="font-size:0.9rem;color:var(--mist);">\${p.Descripcion||''}</div>
+          <div class="paq-price" style="font-size:0.75rem;color:var(--dark-text);">\${p.Precio>0 ? '+'+fCop(p.Precio) : 'Incluido'}</div>
+        </button>`;
+    });
+
+    const grid = document.getElementById('adm-p-basico')?.parentNode || document.querySelector('#m-nueva .paquete-grid') || document.querySelector('#m-nueva [style*="grid-template-columns:repeat(3"]');
+    if (grid) {
+      grid.classList.add('paquete-grid');
+      grid.innerHTML = html;
+    }
+    
+    if (typeof adminResumenUpdate === 'function') adminResumenUpdate();
+  } catch(e) { console.error('Error refreshing packages', e); }
+}
+
+const oldLoadPaquetes2 = window.loadPaquetes;
+window.loadPaquetes = async function() {
+  if (oldLoadPaquetes2) await oldLoadPaquetes2();
+  await refreshGlobalPackages();
+};
+
+document.addEventListener('DOMContentLoaded', refreshGlobalPackages);
+refreshGlobalPackages();
+
+
+/* ════════ DYNAMIC CABANAS IN RESERVATION ════════ */
+async function refreshGlobalCabanas() {
+  try {
+    const data = await req('/cabanas');
+    const cabanas = data.data || [];
+    
+    for (const key in CABANAS) delete CABANAS[key];
+    
+    let html = '';
+    let firstCab = null;
+    cabanas.forEach(c => {
+      if (!c.Estado && c.Estado !== 1) return; // Active only
+      if (!firstCab) firstCab = c.IDCabana;
+      CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima };
+      
+      const isSelected = ADMIN_NUEVA_RES.cabana == c.IDCabana;
+      html += `<option value="\${c.IDCabana}" \${isSelected?'selected':''}>\${c.Nombre} (\${c.CapacidadMaxima} pers.) — \${fCop(c.Costo)}</option>`;
+    });
+    
+    if (!CABANAS[ADMIN_NUEVA_RES.cabana] && firstCab) {
+      ADMIN_NUEVA_RES.cabana = firstCab;
+    }
+    
+    const select = document.getElementById('mn-cab');
+    if (select) {
+      if (html) select.innerHTML = html;
+      else select.innerHTML = '<option value="">No hay cabañas registradas</option>';
+    }
+    
+    if (typeof adminResumenUpdate === 'function') adminResumenUpdate();
+  } catch(e) { console.error('Error refreshing cabanas', e); }
+}
+
+const oldLoadCabanas3 = window.loadCabanas;
+window.loadCabanas = async function() {
+  if (oldLoadCabanas3) await oldLoadCabanas3();
+  await refreshGlobalCabanas();
+};
+
+document.addEventListener('DOMContentLoaded', refreshGlobalCabanas);
+refreshGlobalCabanas();
+
+
+/* ════════ ROOM PHOTO LOGIC ════════ */
+window._currentHabFoto = null;
+window.adminPreviewHabFoto = function(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      window._currentHabFoto = e.target.result;
+      const preview = document.getElementById('m-hab-foto-preview');
+      if (preview) {
+        preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%; height:auto; display:block;" />';
+        preview.style.display = 'block';
+      }
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+};
+
+
+/* ════════ DYNAMIC CLIENTS IN RESERVATION ════════ */
+async function refreshGlobalClients() {
+  try {
+    const data = await ClientesAPI.listar();
+    const clients = data.clientes || data.data || [];
+    
+    const select = document.getElementById('mn-doc');
+    if (!select) return;
+
+    let html = '<option value="">— Selecciona un cliente —</option>';
+    clients.forEach(c => {
+      // Ignorar administradores si la API los devuelve
+      if (c.IDRol === 1 || c.IdRol === 1 || c.rol === 'admin') return; 
+      
+      const doc = c.NroDocumento || c.numeroDocumento || '';
+      const nom = c.Nombre || c.nombre || '';
+      const ape = c.Apellido || c.apellido || '';
+      const label = `${doc} - ${nom} ${ape}`.trim();
+      
+      html += `<option value="${doc}">${label}</option>`;
+    });
+
+    select.innerHTML = html;
+  } catch(e) { console.error('Error refreshing clients', e); }
+}
+
+// Intercept modal open to refresh clients if needed
+const oldAdminNuevaReserva = window.adminNuevaReserva;
+window.adminNuevaReserva = function() {
+  refreshGlobalClients();
+  if (oldAdminNuevaReserva) oldAdminNuevaReserva();
+};
+
+document.addEventListener('DOMContentLoaded', refreshGlobalClients);
+refreshGlobalClients();
+
+
+/* ════════ SEARCH CLIENT BY EMAIL OR NAME ════════ */
+async function modalSearchClientByEmail() {
+  const q = document.getElementById('modal-cli-email').value.trim();
+  const msg = document.getElementById('modal-cli-msg');
+  const sel = document.getElementById('mn-doc');
+  
+  if (!q) {
+    // Si vacían la búsqueda, recargar todos
+    msg.innerHTML = '';
+    msg.style.color = 'var(--mist)';
+    return refreshGlobalClients();
+  }
+  
+  msg.innerHTML = 'Buscando...';
+  msg.style.color = 'var(--mist)';
+  
+  try {
+    const data = await ClientesAPI.buscar(q);
+    const clis = data.clientes || data.data || [];
+    
+    // Filtrar admins y poblar selector
+    let count = 0;
+    let html = '<option value="">— Selecciona un cliente —</option>';
+    clis.forEach(c => {
+      if (c.IDRol === 1 || c.IdRol === 1 || c.rol === 'admin') return; 
+      count++;
+      const doc = c.NroDocumento || c.numeroDocumento || '';
+      const nom = c.Nombre || c.nombre || '';
+      const ape = c.Apellido || c.apellido || '';
+      html += `<option value="${doc}">${doc} - ${nom} ${ape}</option>`;
+    });
+    
+    sel.innerHTML = html;
+    
+    if (count > 0) {
+      msg.innerHTML = `Se encontraron ${count} cliente(s)`;
+      msg.style.color = '#4caf50'; // green
+      // Autoseleccionar el primero si solo hay 1
+      if (count === 1) {
+        sel.selectedIndex = 1;
+        adminResumenUpdate();
+      }
+    } else {
+      msg.innerHTML = 'No se encontró ningún cliente con esos datos';
+      msg.style.color = 'var(--fire)';
+    }
+  } catch(e) {
+    msg.innerHTML = 'Error al buscar el cliente';
+    msg.style.color = 'var(--fire)';
+  }
+}
+window.modalSearchClientByEmail = modalSearchClientByEmail;

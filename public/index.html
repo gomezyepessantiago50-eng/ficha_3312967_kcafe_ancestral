@@ -583,13 +583,7 @@ let _resetToken = '';
 })();
 
 /* ── Sesión activa → redirigir directo ─────────────── */
-(function() {
-  const token = localStorage.getItem('kafe_token');
-  const user  = JSON.parse(localStorage.getItem('kafe_user') || 'null');
-  if (token && token !== 'token-demo' && user) {
-    window.location.href = user.idRol === 1 ? 'admin.html' : 'cliente.html';
-  }
-})();
+// Removido para forzar el login siempre como solicitó el usuario.
 </script>
 </body>
 </html>

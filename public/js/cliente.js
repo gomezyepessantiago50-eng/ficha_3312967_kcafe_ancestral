@@ -96,6 +96,22 @@ function goPanel(panel) {
   if (panel === 'disponibilidad') loadDisponibilidad();
 }
 
+/* ════════ TOGGLE PANEL (botón header) ════════ */
+let _currentPanel = 'reservar';
+function togglePanel() {
+  if (_currentPanel === 'reservar') {
+    _currentPanel = 'mis-reservas';
+    goPanel('mis-reservas');
+    const btn = document.getElementById('toggle-panel-btn');
+    if (btn) { btn.textContent = 'Nueva Reserva'; }
+  } else {
+    _currentPanel = 'reservar';
+    goPanel('reservar');
+    const btn = document.getElementById('toggle-panel-btn');
+    if (btn) { btn.textContent = 'Mis Reservas'; }
+  }
+}
+
 /* FIX 6: disponibilidad con calendario real */
 async function loadDisponibilidad() {
   const calEl = document.getElementById('cli-cal');
@@ -352,3 +368,483 @@ window.addEventListener('pageshow', (event) => {
     }
   }
 });
+
+
+/* ════════ DYNAMIC SERVICES IN RESERVATION ════════ */
+async function refreshGlobalServices() {
+  try {
+    const data = await req('/servicios');
+    const srvs = data.servicios || data.data || [];
+    
+    for (const key in SERVICIOS) delete SERVICIOS[key];
+    
+    let html = '';
+    srvs.forEach(s => {
+      if (!s.Estado && s.Estado !== 1) return; // Only show active services
+      SERVICIOS[s.IDServicio] = { label: s.NombreServicio, precio: s.Costo };
+      html += `
+        <button type="button" class="srv-chip" id="srv-\${s.IDServicio}" onclick="toggleSrv('\${s.IDServicio}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M5 12l5 5L20 7"/></svg> \${s.NombreServicio} <span class="srv-price">+$\${s.Costo/1000}k</span>
+        </button>`;
+    });
+
+    const srvGrid = document.querySelector('#section-reservar .srv-grid');
+    if (srvGrid) srvGrid.innerHTML = html;
+  } catch(e) { console.error('Error refreshing services', e); }
+}
+
+document.addEventListener('DOMContentLoaded', refreshGlobalServices);
+refreshGlobalServices();
+
+
+/* ════════ DYNAMIC PACKAGES IN RESERVATION ════════ */
+async function refreshGlobalPackages() {
+  try {
+    const data = await req('/paquetes');
+    const paqs = data.paquetes || data.data || [];
+    
+    for (const key in PAQUETES) delete PAQUETES[key];
+    
+    let html = '';
+    let firstPaq = null;
+    paqs.forEach(p => {
+      if (!p.Estado && p.Estado !== 1) return;
+      if (!firstPaq) firstPaq = p.IDPaquete;
+      PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion };
+    });
+    
+    if (!PAQUETES[CLIENTE_UI.paquete] && firstPaq) {
+      CLIENTE_UI.paquete = firstPaq;
+    }
+
+    paqs.forEach((p) => {
+      if (!PAQUETES[p.IDPaquete]) return;
+      const isSelected = CLIENTE_UI.paquete == p.IDPaquete;
+      
+      html += `
+        <button type="button" class="paq-opt \${isSelected?'selected':''}" id="p-\${p.IDPaquete}" onclick="selectPaquete('\${p.IDPaquete}')">
+          <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div class="paq-name">\${p.NombrePaquete}</div>
+          <div class="paq-desc">\${p.Descripcion||''}</div>
+          <div class="paq-price">\${p.Precio>0 ? '+'+fCop(p.Precio) : 'Incluido'}</div>
+        </button>`;
+    });
+
+    const grid = document.getElementById('p-basico')?.parentNode || document.querySelector('#section-reservar .paquete-grid');
+    if (grid) grid.innerHTML = html;
+    
+    if (typeof updateResumen === 'function') updateResumen();
+  } catch(e) { console.error('Error refreshing packages', e); }
+}
+
+document.addEventListener('DOMContentLoaded', refreshGlobalPackages);
+refreshGlobalPackages();
+
+
+/* ════════ DYNAMIC CABANAS IN RESERVATION ════════ */
+async function refreshGlobalCabanas() {
+  try {
+    const data = await req('/cabanas');
+    const cabanas = data.data || [];
+    
+    for (const key in CABANAS) delete CABANAS[key];
+    
+    let html = '';
+    let firstCab = null;
+    cabanas.forEach(c => {
+      if (!c.Estado && c.Estado !== 1) return;
+      if (!firstCab) firstCab = c.IDCabana;
+      CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima };
+    });
+    
+    if (!CABANAS[CLIENTE_UI.cabana] && firstCab) {
+      CLIENTE_UI.cabana = firstCab;
+    }
+
+    cabanas.forEach((c) => {
+      if (!CABANAS[c.IDCabana]) return;
+      const isSelected = CLIENTE_UI.cabana == c.IDCabana;
+      
+      html += `
+        <button type="button" class="cabana-opt \${isSelected?'selected':''}" id="cab-\${c.IDCabana}" onclick="selectCabana('\${c.IDCabana}')">
+          <div class="cabana-img">
+            <img src="assets/images/cabana-roble.jpg" alt="\${c.Nombre}">
+            <span class="cabana-action" onclick="event.stopPropagation(); openCabanaDetails('\${c.IDCabana}')">✕</span>
+          </div>
+          <div class="cabana-info">
+            <div class="cabana-title-row"><h4>\${c.Nombre}</h4><span class="cabana-price-inline">\${fCop(c.Costo)}</span></div>
+            <p>\${c.Descripcion || ''}</p>
+            <div style="font-size:0.72rem;color:var(--mist);margin-top:0.2rem;">Hasta \${c.CapacidadMaxima} pers.</div>
+          </div>
+        </button>`;
+    });
+
+    const grid = document.getElementById('cab-roble')?.parentNode || document.querySelector('#section-reservar .cabana-grid');
+    if (grid) grid.innerHTML = html;
+    
+    if (typeof updateResumen === 'function') updateResumen();
+  } catch(e) { console.error('Error refreshing cabanas', e); }
+}
+
+document.addEventListener('DOMContentLoaded', refreshGlobalCabanas);
+refreshGlobalCabanas();
+
+
+/* ════════ DYNAMIC SERVICES IN RESERVATION ════════ */
+async function refreshGlobalServices() {
+  try {
+    const data = await req('/servicios');
+    const srvs = data.servicios || data.data || [];
+    
+    for (const key in SERVICIOS) delete SERVICIOS[key];
+    
+    let html = '';
+    srvs.forEach(s => {
+      if (!s.Estado && s.Estado !== 1) return; // Only show active services
+      SERVICIOS[s.IDServicio] = { label: s.NombreServicio, precio: s.Costo };
+      html += `
+        <button type="button" class="srv-chip" id="srv-\${s.IDServicio}" onclick="toggleSrv('\${s.IDServicio}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M5 12l5 5L20 7"/></svg> \${s.NombreServicio} <span class="srv-price">+$\${s.Costo/1000}k</span>
+        </button>`;
+    });
+
+    const srvGrid = document.querySelector('#section-reservar .srv-grid');
+    if (srvGrid) srvGrid.innerHTML = html;
+  } catch(e) { console.error('Error refreshing services', e); }
+}
+
+document.addEventListener('DOMContentLoaded', refreshGlobalServices);
+refreshGlobalServices();
+
+
+/* ════════ DYNAMIC PACKAGES IN RESERVATION ════════ */
+async function refreshGlobalPackages() {
+  try {
+    const data = await req('/paquetes');
+    const paqs = data.paquetes || data.data || [];
+    
+    for (const key in PAQUETES) delete PAQUETES[key];
+    
+    let html = '';
+    let firstPaq = null;
+    paqs.forEach(p => {
+      if (!p.Estado && p.Estado !== 1) return;
+      if (!firstPaq) firstPaq = p.IDPaquete;
+      PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion };
+    });
+    
+    if (!PAQUETES[CLIENTE_UI.paquete] && firstPaq) {
+      CLIENTE_UI.paquete = firstPaq;
+    }
+
+    paqs.forEach((p) => {
+      if (!PAQUETES[p.IDPaquete]) return;
+      const isSelected = CLIENTE_UI.paquete == p.IDPaquete;
+      
+      html += `
+        <button type="button" class="paq-opt \${isSelected?'selected':''}" id="p-\${p.IDPaquete}" onclick="selectPaquete('\${p.IDPaquete}')">
+          <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div class="paq-name">\${p.NombrePaquete}</div>
+          <div class="paq-desc">\${p.Descripcion||''}</div>
+          <div class="paq-price">\${p.Precio>0 ? '+'+fCop(p.Precio) : 'Incluido'}</div>
+        </button>`;
+    });
+
+    const grid = document.getElementById('p-basico')?.parentNode || document.querySelector('#section-reservar .paquete-grid');
+    if (grid) grid.innerHTML = html;
+    
+    if (typeof updateResumen === 'function') updateResumen();
+  } catch(e) { console.error('Error refreshing packages', e); }
+}
+
+document.addEventListener('DOMContentLoaded', refreshGlobalPackages);
+refreshGlobalPackages();
+
+
+/* ════════ DYNAMIC CABANAS IN RESERVATION ════════ */
+async function refreshGlobalCabanas() {
+  try {
+    const data = await req('/cabanas');
+    const cabanas = data.data || [];
+    
+    for (const key in CABANAS) delete CABANAS[key];
+    
+    let html = '';
+    let firstCab = null;
+    cabanas.forEach(c => {
+      if (!c.Estado && c.Estado !== 1) return;
+      if (!firstCab) firstCab = c.IDCabana;
+      CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima };
+    });
+    
+    if (!CABANAS[CLIENTE_UI.cabana] && firstCab) {
+      CLIENTE_UI.cabana = firstCab;
+    }
+
+    cabanas.forEach((c) => {
+      if (!CABANAS[c.IDCabana]) return;
+      const isSelected = CLIENTE_UI.cabana == c.IDCabana;
+      
+      html += `
+        <button type="button" class="cabana-opt \${isSelected?'selected':''}" id="cab-\${c.IDCabana}" onclick="selectCabana('\${c.IDCabana}')">
+          <div class="cabana-img">
+            <img src="assets/images/cabana-roble.jpg" alt="\${c.Nombre}">
+            <span class="cabana-action" onclick="event.stopPropagation(); openCabanaDetails('\${c.IDCabana}')">✕</span>
+          </div>
+          <div class="cabana-info">
+            <div class="cabana-title-row"><h4>\${c.Nombre}</h4><span class="cabana-price-inline">\${fCop(c.Costo)}</span></div>
+            <p>\${c.Descripcion || ''}</p>
+            <div style="font-size:0.72rem;color:var(--mist);margin-top:0.2rem;">Hasta \${c.CapacidadMaxima} pers.</div>
+          </div>
+        </button>`;
+    });
+
+    const grid = document.getElementById('cab-roble')?.parentNode || document.querySelector('#section-reservar .cabana-grid');
+    if (grid) grid.innerHTML = html;
+    
+    if (typeof updateResumen === 'function') updateResumen();
+  } catch(e) { console.error('Error refreshing cabanas', e); }
+}
+
+document.addEventListener('DOMContentLoaded', refreshGlobalCabanas);
+refreshGlobalCabanas();
+
+
+/* ════════ DYNAMIC SERVICES IN RESERVATION ════════ */
+async function refreshGlobalServices() {
+  try {
+    const data = await req('/servicios');
+    const srvs = data.servicios || data.data || [];
+    
+    for (const key in SERVICIOS) delete SERVICIOS[key];
+    
+    let html = '';
+    srvs.forEach(s => {
+      if (!s.Estado && s.Estado !== 1) return; // Only show active services
+      SERVICIOS[s.IDServicio] = { label: s.NombreServicio, precio: s.Costo };
+      html += `
+        <button type="button" class="srv-chip" id="srv-\${s.IDServicio}" onclick="toggleSrv('\${s.IDServicio}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M5 12l5 5L20 7"/></svg> \${s.NombreServicio} <span class="srv-price">+$\${s.Costo/1000}k</span>
+        </button>`;
+    });
+
+    const srvGrid = document.querySelector('#section-reservar .srv-grid');
+    if (srvGrid) srvGrid.innerHTML = html;
+  } catch(e) { console.error('Error refreshing services', e); }
+}
+
+document.addEventListener('DOMContentLoaded', refreshGlobalServices);
+refreshGlobalServices();
+
+
+/* ════════ DYNAMIC PACKAGES IN RESERVATION ════════ */
+async function refreshGlobalPackages() {
+  try {
+    const data = await req('/paquetes');
+    const paqs = data.paquetes || data.data || [];
+    
+    for (const key in PAQUETES) delete PAQUETES[key];
+    
+    let html = '';
+    let firstPaq = null;
+    paqs.forEach(p => {
+      if (!p.Estado && p.Estado !== 1) return;
+      if (!firstPaq) firstPaq = p.IDPaquete;
+      PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion };
+    });
+    
+    if (!PAQUETES[CLIENTE_UI.paquete] && firstPaq) {
+      CLIENTE_UI.paquete = firstPaq;
+    }
+
+    paqs.forEach((p) => {
+      if (!PAQUETES[p.IDPaquete]) return;
+      const isSelected = CLIENTE_UI.paquete == p.IDPaquete;
+      
+      html += `
+        <button type="button" class="paq-opt \${isSelected?'selected':''}" id="p-\${p.IDPaquete}" onclick="selectPaquete('\${p.IDPaquete}')">
+          <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div class="paq-name">\${p.NombrePaquete}</div>
+          <div class="paq-desc">\${p.Descripcion||''}</div>
+          <div class="paq-price">\${p.Precio>0 ? '+'+fCop(p.Precio) : 'Incluido'}</div>
+        </button>`;
+    });
+
+    const grid = document.getElementById('p-basico')?.parentNode || document.querySelector('#section-reservar .paquete-grid');
+    if (grid) grid.innerHTML = html;
+    
+    if (typeof updateResumen === 'function') updateResumen();
+  } catch(e) { console.error('Error refreshing packages', e); }
+}
+
+document.addEventListener('DOMContentLoaded', refreshGlobalPackages);
+refreshGlobalPackages();
+
+
+/* ════════ DYNAMIC CABANAS IN RESERVATION ════════ */
+async function refreshGlobalCabanas() {
+  try {
+    const data = await req('/cabanas');
+    const cabanas = data.data || [];
+    
+    for (const key in CABANAS) delete CABANAS[key];
+    
+    let html = '';
+    let firstCab = null;
+    cabanas.forEach(c => {
+      if (!c.Estado && c.Estado !== 1) return;
+      if (!firstCab) firstCab = c.IDCabana;
+      CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima };
+    });
+    
+    if (!CABANAS[CLIENTE_UI.cabana] && firstCab) {
+      CLIENTE_UI.cabana = firstCab;
+    }
+
+    cabanas.forEach((c) => {
+      if (!CABANAS[c.IDCabana]) return;
+      const isSelected = CLIENTE_UI.cabana == c.IDCabana;
+      
+      html += `
+        <button type="button" class="cabana-opt \${isSelected?'selected':''}" id="cab-\${c.IDCabana}" onclick="selectCabana('\${c.IDCabana}')">
+          <div class="cabana-img">
+            <img src="assets/images/cabana-roble.jpg" alt="\${c.Nombre}">
+            <span class="cabana-action" onclick="event.stopPropagation(); openCabanaDetails('\${c.IDCabana}')">✕</span>
+          </div>
+          <div class="cabana-info">
+            <div class="cabana-title-row"><h4>\${c.Nombre}</h4><span class="cabana-price-inline">\${fCop(c.Costo)}</span></div>
+            <p>\${c.Descripcion || ''}</p>
+            <div style="font-size:0.72rem;color:var(--mist);margin-top:0.2rem;">Hasta \${c.CapacidadMaxima} pers.</div>
+          </div>
+        </button>`;
+    });
+
+    const grid = document.getElementById('cab-roble')?.parentNode || document.querySelector('#section-reservar .cabana-grid');
+    if (grid) grid.innerHTML = html;
+    
+    if (typeof updateResumen === 'function') updateResumen();
+  } catch(e) { console.error('Error refreshing cabanas', e); }
+}
+
+document.addEventListener('DOMContentLoaded', refreshGlobalCabanas);
+refreshGlobalCabanas();
+
+
+/* ════════ DYNAMIC SERVICES IN RESERVATION ════════ */
+async function refreshGlobalServices() {
+  try {
+    const data = await req('/servicios');
+    const srvs = data.servicios || data.data || [];
+    
+    for (const key in SERVICIOS) delete SERVICIOS[key];
+    
+    let html = '';
+    srvs.forEach(s => {
+      if (!s.Estado && s.Estado !== 1) return; // Only show active services
+      SERVICIOS[s.IDServicio] = { label: s.NombreServicio, precio: s.Costo };
+      html += `
+        <button type="button" class="srv-chip" id="srv-\${s.IDServicio}" onclick="toggleSrv('\${s.IDServicio}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M5 12l5 5L20 7"/></svg> \${s.NombreServicio} <span class="srv-price">+$\${s.Costo/1000}k</span>
+        </button>`;
+    });
+
+    const srvGrid = document.querySelector('#section-reservar .srv-grid');
+    if (srvGrid) srvGrid.innerHTML = html;
+  } catch(e) { console.error('Error refreshing services', e); }
+}
+
+document.addEventListener('DOMContentLoaded', refreshGlobalServices);
+refreshGlobalServices();
+
+
+/* ════════ DYNAMIC PACKAGES IN RESERVATION ════════ */
+async function refreshGlobalPackages() {
+  try {
+    const data = await req('/paquetes');
+    const paqs = data.paquetes || data.data || [];
+    
+    for (const key in PAQUETES) delete PAQUETES[key];
+    
+    let html = '';
+    let firstPaq = null;
+    paqs.forEach(p => {
+      if (!p.Estado && p.Estado !== 1) return;
+      if (!firstPaq) firstPaq = p.IDPaquete;
+      PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion };
+    });
+    
+    if (!PAQUETES[CLIENTE_UI.paquete] && firstPaq) {
+      CLIENTE_UI.paquete = firstPaq;
+    }
+
+    paqs.forEach((p) => {
+      if (!PAQUETES[p.IDPaquete]) return;
+      const isSelected = CLIENTE_UI.paquete == p.IDPaquete;
+      
+      html += `
+        <button type="button" class="paq-opt \${isSelected?'selected':''}" id="p-\${p.IDPaquete}" onclick="selectPaquete('\${p.IDPaquete}')">
+          <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div class="paq-name">\${p.NombrePaquete}</div>
+          <div class="paq-desc">\${p.Descripcion||''}</div>
+          <div class="paq-price">\${p.Precio>0 ? '+'+fCop(p.Precio) : 'Incluido'}</div>
+        </button>`;
+    });
+
+    const grid = document.getElementById('p-basico')?.parentNode || document.querySelector('#section-reservar .paquete-grid');
+    if (grid) grid.innerHTML = html;
+    
+    if (typeof updateResumen === 'function') updateResumen();
+  } catch(e) { console.error('Error refreshing packages', e); }
+}
+
+document.addEventListener('DOMContentLoaded', refreshGlobalPackages);
+refreshGlobalPackages();
+
+
+/* ════════ DYNAMIC CABANAS IN RESERVATION ════════ */
+async function refreshGlobalCabanas() {
+  try {
+    const data = await req('/cabanas');
+    const cabanas = data.data || [];
+    
+    for (const key in CABANAS) delete CABANAS[key];
+    
+    let html = '';
+    let firstCab = null;
+    cabanas.forEach(c => {
+      if (!c.Estado && c.Estado !== 1) return;
+      if (!firstCab) firstCab = c.IDCabana;
+      CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima };
+    });
+    
+    if (!CABANAS[CLIENTE_UI.cabana] && firstCab) {
+      CLIENTE_UI.cabana = firstCab;
+    }
+
+    cabanas.forEach((c) => {
+      if (!CABANAS[c.IDCabana]) return;
+      const isSelected = CLIENTE_UI.cabana == c.IDCabana;
+      
+      html += `
+        <button type="button" class="cabana-opt \${isSelected?'selected':''}" id="cab-\${c.IDCabana}" onclick="selectCabana('\${c.IDCabana}')">
+          <div class="cabana-img">
+            <img src="assets/images/cabana-roble.jpg" alt="\${c.Nombre}">
+            <span class="cabana-action" onclick="event.stopPropagation(); openCabanaDetails('\${c.IDCabana}')">✕</span>
+          </div>
+          <div class="cabana-info">
+            <div class="cabana-title-row"><h4>\${c.Nombre}</h4><span class="cabana-price-inline">\${fCop(c.Costo)}</span></div>
+            <p>\${c.Descripcion || ''}</p>
+            <div style="font-size:0.72rem;color:var(--mist);margin-top:0.2rem;">Hasta \${c.CapacidadMaxima} pers.</div>
+          </div>
+        </button>`;
+    });
+
+    const grid = document.getElementById('cab-roble')?.parentNode || document.querySelector('#section-reservar .cabana-grid');
+    if (grid) grid.innerHTML = html;
+    
+    if (typeof updateResumen === 'function') updateResumen();
+  } catch(e) { console.error('Error refreshing cabanas', e); }
+}
+
+document.addEventListener('DOMContentLoaded', refreshGlobalCabanas);
+refreshGlobalCabanas();

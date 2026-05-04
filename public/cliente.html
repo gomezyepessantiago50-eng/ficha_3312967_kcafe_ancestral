@@ -314,19 +314,19 @@
 <!-- MODAL: Detalle reserva -->
 <div class="modal-backdrop" id="m-detalle" onclick="if(event.target===this)closeM('m-detalle')">
   <div class="modal">
-    <div class="modal-hd"><h3>Detalle de Reserva</h3><button class="modal-close" onclick="closeM('m-detalle')">✕</button></div>
+    <div class="modal-hd"><h3>Detalle de Reserva</h3></div>
     <div class="modal-body" id="m-detalle-body"></div>
-    <div class="modal-ft"><button class="btn btn-outline" onclick="closeM('m-detalle')">Cerrar</button></div>
+    <div class="modal-ft"><button type="button" class="btn btn-outline" onclick="closeM('m-detalle')">Cerrar</button></div>
   </div>
 </div>
 
 <!-- MODAL: Confirmar cancelación -->
 <div class="modal-backdrop" id="m-cancel" onclick="if(event.target===this)closeM('m-cancel')">
   <div class="modal modal-sm">
-    <div class="modal-hd"><h3>Cancelar Reserva <span id="m-cancel-id"></span></h3><button class="modal-close" onclick="closeM('m-cancel')">✕</button></div>
+    <div class="modal-hd"><h3>Cancelar Reserva <span id="m-cancel-id"></span></h3></div>
     <div class="modal-body"><p style="color:var(--mist);">¿Seguro que deseas cancelar esta reserva?</p></div>
     <div class="modal-ft">
-      <button class="btn btn-outline" onclick="closeM('m-cancel')">No, volver</button>
+      <button type="button" class="btn btn-outline" onclick="closeM('m-cancel')">No, volver</button>
       <button class="btn btn-danger" onclick="doCancelReserva()">Sí, cancelar</button>
     </div>
   </div>

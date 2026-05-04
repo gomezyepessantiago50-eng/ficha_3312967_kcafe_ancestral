@@ -1,4 +1,4 @@
-const sequelize      = require('../database/connection');
+const { sequelize }      = require('../database/connection');
 const { QueryTypes } = require('sequelize');
 
 const findAllServices = async () => {

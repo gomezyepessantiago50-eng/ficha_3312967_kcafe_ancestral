@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeScrollIndicator();
   initializeButtonInteractions();
   initializeLazyImages();
+  loadLandingPaquetes();
 });
 
 // ── MENÚ MOBILE ──────────────────────────────────────────────────────────────
@@ -121,6 +122,51 @@ function initializeButtonInteractions() {
       window.location.href = 'index.html';
     });
   });
+}
+
+// ── CARGAR PAQUETES DINÁMICAMENTE ─────────────────────────────────────────────
+async function loadLandingPaquetes() {
+  const grid = document.getElementById('landing-paquetes-grid');
+  if (!grid) return;
+  try {
+    const res = await fetch('/api/paquetes');
+    const data = await res.json();
+    let paqs = data.paquetes || data.data || [];
+    paqs = paqs.filter(p => p.Estado); // Solo mostrar activos
+
+    if (paqs.length === 0) {
+      grid.innerHTML = '<div style="grid-column: 1/-1;text-align:center;color:var(--dark-muted);padding:2rem;">No hay paquetes disponibles en este momento</div>';
+      return;
+    }
+
+    grid.innerHTML = paqs.map(p => {
+      // Determinar precio para mostrar
+      const isFree = !p.Precio || p.Precio <= 0;
+      const priceText = isFree ? 'Incluido' : (p.Precio / 1000) + 'K';
+      
+      return `
+        <div class="paquete-card">
+          <div class="paquete-header">
+            <h3>${p.NombrePaquete}</h3>
+            ${p.NombreServicio ? `<p class="paquete-subtitle">Incluye: ${p.NombreServicio}</p>` : ''}
+          </div>
+          <div class="paquete-price">
+            <span class="currency">${isFree ? '' : '$'}</span>
+            <span class="amount">${priceText}</span>
+            <span class="period">${isFree ? '' : '/noche'}</span>
+          </div>
+          <p class="paquete-description">${p.Descripcion || 'Vive una experiencia inigualable en nuestro Glamping.'}</p>
+          <button class="btn btn-outline btn-block" onclick="window.location.href='index.html'">Seleccionar</button>
+        </div>
+      `;
+    }).join('');
+
+    // Re-bind listeners si es necesario
+    initializeButtonInteractions();
+
+  } catch (error) {
+    grid.innerHTML = '<div style="grid-column: 1/-1;text-align:center;color:#f44336;padding:2rem;">Error al cargar los paquetes</div>';
+  }
 }
 
 // ── LAZY LOADING ──────────────────────────────────────────────────────────────

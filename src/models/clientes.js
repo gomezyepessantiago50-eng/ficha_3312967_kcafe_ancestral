@@ -31,11 +31,11 @@ module.exports = (sequelize) => {
         type:      DataTypes.STRING(50),
         allowNull: true,
       },
-      TipoDocumento: {
-        type:      DataTypes.INTEGER,
-        allowNull: true,
-        field:     'Tipo de Documento',
-      },
+      // TipoDocumento: {
+      //   type:      DataTypes.INTEGER,
+      //   allowNull: true,
+      //   field:     'Tipo de Documento',
+      // },
       Estado: {
         type:         DataTypes.BOOLEAN,
         allowNull:    true,

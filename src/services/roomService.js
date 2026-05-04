@@ -1,97 +1,117 @@
-const { Habitacion, Cabanas } = require('../models');
+const { sequelize }      = require('../database/connection');
+const { QueryTypes } = require('sequelize');
 
-/**
- * Retorna todas las habitaciones
- */
 const findAllRooms = async () => {
-  return Habitacion.findAll({
-    attributes: ['IDHabitacion', 'NombreHabitacion', 'Descripcion', 'Costo', 'Estado'],
-    order:      [['NombreHabitacion', 'ASC']],
-  });
+  return await sequelize.query(
+    `SELECT h.IDHabitacion, h.NombreHabitacion, h.IDCabana, h.Estado, h.ImagenHabitacion,
+            c.Nombre AS NombreCabaña
+     FROM Habitacion h
+     LEFT JOIN Cabanas c ON h.IDCabana = c.IDCabana
+     ORDER BY h.NombreHabitacion ASC`,
+    { type: QueryTypes.SELECT }
+  );
 };
 
-/**
- * Retorna una habitación por ID, incluyendo sus cabañas
- * @param {number} id
- */
 const findRoomById = async (id) => {
-  return Habitacion.findByPk(id, {
-    attributes: ['IDHabitacion', 'NombreHabitacion', 'Descripcion', 'Costo', 'Estado'],
-    include: [
-      {
-        model:      Cabanas,
-        as:         'cabanas',
-        attributes: ['IDCabana', 'NombreCabana', 'Capacidad', 'Ubicacion', 'PrecioNoche', 'Estado'],
-      },
-    ],
-  });
+  const [habitacion] = await sequelize.query(
+    `SELECT h.IDHabitacion, h.NombreHabitacion, h.IDCabana, h.Estado, h.ImagenHabitacion,
+            c.Nombre AS NombreCabaña
+     FROM Habitacion h
+     LEFT JOIN Cabanas c ON h.IDCabana = c.IDCabana
+     WHERE h.IDHabitacion = :id`,
+    { replacements: { id }, type: QueryTypes.SELECT }
+  );
+  return habitacion || null;
 };
 
-/**
- * Crea una nueva habitación con Estado=true por defecto
- * @param {object} data — { NombreHabitacion, Descripcion, Costo }
- */
 const createRoom = async (data) => {
-  const { NombreHabitacion, Descripcion, Costo } = data;
-  return Habitacion.create({
-    NombreHabitacion,
-    Descripcion,
-    Costo,
-    Estado: true,
-  });
+  const { NombreHabitacion, IDCabana } = data;
+  const [result] = await sequelize.query(
+    `INSERT INTO Habitacion (NombreHabitacion, IDCabana, Estado)
+     VALUES (:nombre, :idCabana, true)`,
+    {
+      replacements: { nombre: NombreHabitacion, idCabana: IDCabana, imagen: data.ImagenHabitacion || null },
+      type: QueryTypes.INSERT,
+    }
+  );
+  return findRoomById(result);
 };
 
-/**
- * Actualiza datos generales de una habitación
- * @param {number} id
- * @param {object} data
- */
 const updateRoom = async (id, data) => {
-  const habitacion = await Habitacion.findByPk(id);
-  if (!habitacion) return null;
+  const existing = await findRoomById(id);
+  if (!existing) return null;
 
-  const { NombreHabitacion, Descripcion, Costo } = data;
-  await habitacion.update({
-    ...(NombreHabitacion && { NombreHabitacion }),
-    ...(Descripcion      && { Descripcion }),
-    ...(Costo            && { Costo }),
-  });
+  const { NombreHabitacion, IDCabana, ImagenHabitacion } = data;
+  await sequelize.query(
+    `UPDATE Habitacion
+     SET NombreHabitacion = :nombre, IDCabana = :idCabana
+         ${ImagenHabitacion !== undefined ? ', ImagenHabitacion = :imagen' : ''}
+     WHERE IDHabitacion = :id`,
+    {
+      replacements: {
+        id,
+        nombre: NombreHabitacion ?? existing.NombreHabitacion,
+        idCabana: IDCabana ?? existing.IDCabana,
+        imagen: ImagenHabitacion ?? existing.ImagenHabitacion,
+      },
+      type: QueryTypes.UPDATE,
+    }
+  );
 
-  return habitacion;
+  return findRoomById(id);
 };
 
-/**
- * Elimina una habitación si no tiene cabañas activas
- * Retorna: { deleted: true } | { deleted: false, reason: string } | null (no encontrada)
- * @param {number} id
- */
 const deleteRoom = async (id) => {
-  const habitacion = await Habitacion.findByPk(id, {
-    include: [{ model: Cabanas, as: 'cabanas', attributes: ['IDCabana', 'Estado'] }],
-  });
+  const existing = await findRoomById(id);
+  if (!existing) return null;
 
-  if (!habitacion) return null;
-
-  const cabanasActivas = habitacion.cabanas?.filter((c) => c.Estado === true);
-  if (cabanasActivas && cabanasActivas.length > 0) {
-    return { deleted: false, reason: 'Tiene cabañas activas asociadas.' };
-  }
-
-  await habitacion.destroy();
+  await sequelize.query(
+    'DELETE FROM Habitacion WHERE IDHabitacion = :id',
+    { replacements: { id }, type: QueryTypes.DELETE }
+  );
   return { deleted: true };
 };
 
-/**
- * Cambia el estado de una habitación (true/false)
- * @param {number} id
- * @param {boolean} Estado
- */
 const changeStatus = async (id, Estado) => {
-  const habitacion = await Habitacion.findByPk(id);
-  if (!habitacion) return null;
+  const existing = await findRoomById(id);
+  if (!existing) return null;
 
-  await habitacion.update({ Estado });
-  return habitacion;
+  const transaction = await sequelize.transaction();
+  try {
+    await sequelize.query(
+      'UPDATE Habitacion SET Estado = :estado WHERE IDHabitacion = :id',
+      { replacements: { id, estado: Estado }, type: QueryTypes.UPDATE, transaction }
+    );
+
+    // Business Logic: If room becomes inactive, the parent Cabana also becomes inactive.
+    if (!Estado) {
+      await sequelize.query(
+        'UPDATE Cabanas SET Estado = false WHERE IDCabana = :idCabana',
+        { replacements: { idCabana: existing.IDCabana }, type: QueryTypes.UPDATE, transaction }
+      );
+    } else {
+      // If room becomes active, check if all rooms in that cabana are active. 
+      // Actually the user said "hasta que se vuelva a modificar el estado de la habitacion", 
+      // let's just reactivate the cabana if ANY room is active, or if ALL are active.
+      // Let's activate cabana if all its rooms are active.
+      const inactiveRooms = await sequelize.query(
+        'SELECT count(*) as count FROM Habitacion WHERE IDCabana = :idCabana AND Estado = false AND IDHabitacion != :id',
+        { replacements: { idCabana: existing.IDCabana, id }, type: QueryTypes.SELECT, transaction }
+      );
+      if (inactiveRooms[0].count === 0) {
+        await sequelize.query(
+          'UPDATE Cabanas SET Estado = true WHERE IDCabana = :idCabana',
+          { replacements: { idCabana: existing.IDCabana }, type: QueryTypes.UPDATE, transaction }
+        );
+      }
+    }
+
+    await transaction.commit();
+    return findRoomById(id);
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
 };
 
 module.exports = {

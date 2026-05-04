@@ -73,10 +73,23 @@ p  { line-height: 1.7; }
 
 /* ── DARK BUTTON VARIANTS ─────────────────────────── */
 .btn-dark-outline {
-  background: transparent; color: var(--dark-text);
-  border-color: var(--dark-border);
+  background: transparent; color: var(--mist);
+  border-color: var(--sand-mid);
 }
 .btn-dark-outline:hover { border-color: var(--fire); color: var(--fire); background: rgba(232,93,4,0.08); }
+
+/* Dark context: restore light text/border for dark backgrounds */
+.admin-shell .btn-dark-outline,
+.modal-dark .btn-dark-outline {
+  color: rgba(255,255,255,0.7);
+  border-color: rgba(255,255,255,0.18);
+}
+.admin-shell .btn-dark-outline:hover,
+.modal-dark .btn-dark-outline:hover {
+  color: var(--fire);
+  border-color: var(--fire);
+  background: rgba(232,93,4,0.08);
+}
 
 /* ── INPUTS ──────────────────────────────────────── */
 .field { margin-bottom: 1.1rem; }

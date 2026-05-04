@@ -4,7 +4,7 @@ const { Op } = require('sequelize');
 const findAllClients = async () => {
   try {
     const result = await Clientes.findAll({
-      attributes: ['NroDocumento', 'Nombre', 'Apellido', 'Email', 'Telefono', 'Direccion', 'Estado', 'TipoDocumento'],
+      attributes: ['NroDocumento', 'Nombre', 'Apellido', 'Email', 'Telefono', 'Direccion', 'Estado'],
       order: [['Nombre', 'ASC']],
     });
     return result;
@@ -23,7 +23,7 @@ const searchByQuery = async (q) => {
         { Email:    { [Op.like]: `%${q}%` } },
       ],
     },
-    attributes: ['NroDocumento', 'Nombre', 'Apellido', 'Email', 'Telefono', 'Estado', 'TipoDocumento'],
+    attributes: ['NroDocumento', 'Nombre', 'Apellido', 'Email', 'Telefono', 'Estado'],
     order: [['Nombre', 'ASC']],
   });
 };
@@ -32,7 +32,7 @@ const findClientWithReservations = async (nroDocumento) => {
   return Clientes.findByPk(nroDocumento, {
     attributes: [
       'NroDocumento', 'Nombre', 'Apellido', 'Email',
-      'Telefono', 'Direccion', 'Estado', 'TipoDocumento',
+      'Telefono', 'Direccion', 'Estado',
     ],
   });
 };

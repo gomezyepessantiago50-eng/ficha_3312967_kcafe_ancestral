@@ -78,6 +78,36 @@ const CabanasAPI = {
 const PaquetesAPI = {
   listar : ()    => req('/paquetes'),
   uno    : (id)  => req(`/paquetes/${id}`),
+  crear  : (body)=> req('/paquetes', { method: 'POST', body: JSON.stringify(body) }),
+  actualizar: (id, b) => req(`/paquetes/${id}`, { method: 'PUT', body: JSON.stringify(b) }),
+  estado : (id, estado) => req(`/paquetes/${id}/estado`, { method: 'PATCH', body: JSON.stringify({ estado }) }),
+  eliminar: (id) => req(`/paquetes/${id}`, { method: 'DELETE' }),
+};
+
+const HabitacionesAPI = {
+  listar : ()    => req('/habitaciones'),
+  uno    : (id)  => req(`/habitaciones/${id}`),
+  crear  : (body)=> req('/habitaciones', { method: 'POST', body: JSON.stringify(body) }),
+  actualizar: (id, b) => req(`/habitaciones/${id}`, { method: 'PUT', body: JSON.stringify(b) }),
+  estado : (id, estado) => req(`/habitaciones/${id}/estado`, { method: 'PATCH', body: JSON.stringify({ estado }) }),
+  eliminar: (id) => req(`/habitaciones/${id}`, { method: 'DELETE' }),
+};
+
+const ServiciosAPI = {
+  listar : ()    => req('/servicios'),
+  uno    : (id)  => req(`/servicios/${id}`),
+  crear  : (body)=> req('/servicios', { method: 'POST', body: JSON.stringify(body) }),
+  actualizar: (id, b) => req(`/servicios/${id}`, { method: 'PUT', body: JSON.stringify(b) }),
+  estado : (id, estado) => req(`/servicios/${id}/estado`, { method: 'PATCH', body: JSON.stringify({ estado }) }),
+  eliminar: (id) => req(`/servicios/${id}`, { method: 'DELETE' }),
+};
+
+const ClientesAPI = {
+  listar : ()      => req('/clientes'),
+  buscar : (query) => req(`/clientes/search?q=${encodeURIComponent(query)}`),
+  uno    : (doc)   => req(`/clientes/${doc}`),
+  historial: (doc) => req(`/clientes/${doc}/historial`),
+  actualizar: (doc, b) => req(`/clientes/${doc}`, { method: 'PUT', body: JSON.stringify(b) }),
 };
 
 /* ── Usuarios (admin) ───────────────────────────── */
