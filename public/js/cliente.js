@@ -10,7 +10,7 @@
 ═══════════════════════════════════════════════════════════ */
 
 const CLIENTE_UI = {
-  cabana:'roble', paquete:'basico', servicios:new Set(),
+  cabana:'roble', paquete:null, servicios:new Set(),
   fechaInicio:'', fechaFin:'', personas:2, notas:'',
   usuarioId:null, usuarioDoc:null,
 };
@@ -44,7 +44,7 @@ function calcMontos(sub) {
 }
 
 /* ════════ INIT ════════ */
-function initClientePage() {
+async function initClientePage() {
   const user = Auth.getUser();
   if (!user || !user.id) { window.location.replace('landing.html'); return; }
 
@@ -65,7 +65,8 @@ function initClientePage() {
   setMinDateInputs();
   goPanel('reservar');
   updateResumen();
-  loadMisReservas();
+  await Promise.all([refreshGlobalCabanas(), refreshGlobalPackages(), refreshGlobalServices()]);
+  await loadMisReservas();
   /* FIX 6 */
   loadDisponibilidad();
 }
@@ -158,12 +159,103 @@ function closeCabanaDetails() {
 /* ════════ SELECCIONES ════════ */
 function highlightSelection() {
   document.querySelectorAll('.cabana-opt').forEach(btn=>btn.classList.toggle('selected',btn.id===`cab-${CLIENTE_UI.cabana}`));
-  document.querySelectorAll('.paq-opt').forEach(btn=>btn.classList.toggle('selected',btn.id===`p-${CLIENTE_UI.paquete}`));
-  document.querySelectorAll('.srv-chip').forEach(btn=>btn.classList.toggle('selected',CLIENTE_UI.servicios.has(btn.id.replace('srv-',''))));
+  document.querySelectorAll('.paq-opt').forEach(btn=>btn.classList.toggle('selected', CLIENTE_UI.paquete !== null && btn.id===`p-${CLIENTE_UI.paquete}`));
+  document.querySelectorAll('.srv-chip').forEach(btn=> {
+    const key = btn.id.replace('srv-','');
+    btn.classList.toggle('selected', CLIENTE_UI.servicios.has(key));
+    btn.classList.toggle('disabled', btn.disabled);
+  });
 }
+
+function getPackageIncludedServices(packageKey) {
+  const pkg = PAQUETES[packageKey];
+  if (!pkg) return [];
+  return Array.isArray(pkg.includedServices) ? pkg.includedServices.map(String) : [];
+}
+
+function updateServiceAvailability() {
+  const included = new Set(getPackageIncludedServices(CLIENTE_UI.paquete));
+  included.forEach(id => CLIENTE_UI.servicios.delete(String(id)));
+
+  document.querySelectorAll('.srv-chip').forEach(btn => {
+    const key = btn.id.replace('srv-','');
+    const disabled = included.has(key);
+    btn.disabled = disabled;
+    btn.classList.toggle('disabled', disabled);
+    if (disabled) {
+      btn.title = 'Incluido en el paquete seleccionado';
+      btn.classList.remove('selected');
+    } else {
+      btn.title = '';
+    }
+  });
+}
+
 function selectCabana(key) { CLIENTE_UI.cabana=key; highlightSelection(); updateResumen(); }
-function selectPaquete(key){ CLIENTE_UI.paquete=key; highlightSelection(); updateResumen(); }
-function toggleSrv(key)    { CLIENTE_UI.servicios.has(key)?CLIENTE_UI.servicios.delete(key):CLIENTE_UI.servicios.add(key); highlightSelection(); updateResumen(); }
+function selectPaquete(key){
+  if (CLIENTE_UI.paquete === key) {
+    CLIENTE_UI.paquete = null;
+  } else {
+    CLIENTE_UI.paquete = key;
+  }
+  const included = getPackageIncludedServices(CLIENTE_UI.paquete);
+  included.forEach(id => CLIENTE_UI.servicios.delete(String(id)));
+  highlightSelection();
+  updateServiceAvailability();
+  updateResumen();
+}
+
+function openPaqueteDetails(packageId) {
+  const pkg = PAQUETES[packageId];
+  if (!pkg) return;
+  
+  const includedIds = getPackageIncludedServices(packageId);
+  const includedServices = includedIds
+    .map(id => SERVICIOS[id])
+    .filter(Boolean)
+    .map(s => `<li style="margin-bottom:0.5rem;"><strong>${s.label}</strong></li>`)
+    .join('');
+  
+  const modal = document.getElementById('m-paquete-detalle');
+  if (!modal) return;
+  
+  const body = modal.querySelector('.modal-body');
+  if (body) {
+    body.innerHTML = `
+      <div style="margin-bottom:1.5rem;">
+        <h4 style="color:var(--bark);margin-bottom:0.5rem;">${pkg.label}</h4>
+        <p style="color:var(--mist);line-height:1.6;margin-bottom:1rem;">${pkg.descripcion||''}</p>
+        
+        <div style="background:var(--sand-soft);padding:1rem;border-radius:8px;margin-bottom:1rem;">
+          <div style="font-size:0.9rem;color:var(--mist);margin-bottom:0.25rem;">Precio del paquete:</div>
+          <div style="font-size:1.8rem;font-weight:700;color:var(--fire);">${pkg.precio>0 ? '+'+fCop(pkg.precio) : 'Incluido en cabaña'}</div>
+        </div>
+        
+        ${includedServices ? `
+          <div>
+            <h5 style="color:var(--bark);margin-bottom:0.5rem;font-size:1rem;">Servicios incluidos:</h5>
+            <ul style="list-style:none;padding:0;margin:0;">
+              ${includedServices}
+            </ul>
+          </div>
+        ` : '<p style="color:var(--mist);font-style:italic;">Sin servicios incluidos</p>'}
+      </div>
+    `;
+  }
+  
+  openM('m-paquete-detalle');
+}
+
+function toggleSrv(key) {
+  const included = getPackageIncludedServices(CLIENTE_UI.paquete);
+  if (included.includes(String(key))) {
+    if (typeof toast === 'function') toast('Este servicio ya está incluido en el paquete seleccionado','warn');
+    return;
+  }
+  CLIENTE_UI.servicios.has(key) ? CLIENTE_UI.servicios.delete(key) : CLIENTE_UI.servicios.add(key);
+  highlightSelection();
+  updateResumen();
+}
 
 /* ════════ FORMULARIO ════════ */
 function onForm() {
@@ -188,7 +280,7 @@ function updateResumen() {
   const body=document.getElementById('price-body');
   const noches=nights(CLIENTE_UI.fechaInicio,CLIENTE_UI.fechaFin);
   const cab=CABANAS[CLIENTE_UI.cabana];
-  const paquete=PAQUETES[CLIENTE_UI.paquete];
+  const paquete=CLIENTE_UI.paquete ? PAQUETES[CLIENTE_UI.paquete] : { label: 'Ninguno', precio: 0, descripcion: 'Sin paquete adicional' };
   const srvs=Array.from(CLIENTE_UI.servicios).map(s=>SERVICIOS[s]);
   const srvP=srvs.reduce((acc,s)=>acc+(s?.precio||0),0);
   const rawSub=(cab.precio+paquete.precio)*Math.max(noches,1)+srvP*CLIENTE_UI.personas;
@@ -227,15 +319,28 @@ async function confirmarReserva() {
   const errores=[];
   if (!fIni.value.trim()) errores.push('Fecha llegada: campo necesario');
   if (!fFin.value.trim()) errores.push('Fecha salida: campo necesario');
+  
+  const tNum = document.getElementById('mn-tarjeta-num')?.value.replace(/\s+/g,'');
+  const tTitular = document.getElementById('mn-tarjeta-titular')?.value.trim();
+  const tExp = document.getElementById('mn-tarjeta-exp')?.value.trim();
+  const tCvv = document.getElementById('mn-tarjeta-cvv')?.value.trim();
+
+  if (!tNum || tNum.length < 14 || !/^\d+$/.test(tNum)) errores.push('Número de tarjeta inválido');
+  if (!tTitular) errores.push('Ingresa el titular de la tarjeta');
+  if (!tExp) errores.push('Ingresa la fecha de vencimiento');
+  if (!tCvv || tCvv.length < 3) errores.push('CVV inválido');
+
   if (errores.length) {
     document.getElementById('form-alert').innerHTML=`<div style="background:#fee;color:#c33;padding:0.75rem;border-radius:4px;margin-bottom:1rem;font-size:0.9rem;">${errores.join('<br>')}</div>`;
     return;
   }
   document.getElementById('form-alert').innerHTML='';
 
+  const comprobante = 'XXXX-XXXX-XXXX-' + tNum.slice(-4);
+
   const noches  = nights(fIni.value, fFin.value);
   const cab     = CABANAS[CLIENTE_UI.cabana];
-  const paq     = PAQUETES[CLIENTE_UI.paquete];
+  const paq     = CLIENTE_UI.paquete ? PAQUETES[CLIENTE_UI.paquete] : { precio: 0 };
   const srvArr  = Array.from(CLIENTE_UI.servicios);
   const srvP    = srvArr.reduce((acc,k)=>acc+(SERVICIOS[k]?.precio||0),0);
   const rawSub  = (cab.precio+paq.precio)*Math.max(noches,1)+srvP*CLIENTE_UI.personas;
@@ -253,7 +358,9 @@ async function confirmarReserva() {
       Descuento:           0,
       IVA:                 iva,
       MontoTotal:          total,
-      MetodoPago:          1,
+      MetodoPago:          'tarjeta',
+      monto_pagado:        total,
+      comprobante_pago:    comprobante,
       num_personas:        cab.capacidad,
       cabana:              CLIENTE_UI.cabana,
       paquete:             CLIENTE_UI.paquete,
@@ -263,8 +370,16 @@ async function confirmarReserva() {
     toast('Reserva creada con éxito','ok');
     loadMisReservas();
     fIni.value=''; fFin.value='';
+    
+    // Limpiar campos de tarjeta
+    ['mn-tarjeta-num', 'mn-tarjeta-titular', 'mn-tarjeta-exp', 'mn-tarjeta-cvv'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.value = '';
+    });
+
     CLIENTE_UI.fechaInicio=''; CLIENTE_UI.fechaFin=''; CLIENTE_UI.servicios.clear();
     highlightSelection(); updateResumen();
+    goPanel('mis-reservas');
   } catch(err) {
     toast(err.message||'Error al crear reserva','err');
   } finally {
@@ -383,13 +498,15 @@ async function refreshGlobalServices() {
       if (!s.Estado && s.Estado !== 1) return; // Only show active services
       SERVICIOS[s.IDServicio] = { label: s.NombreServicio, precio: s.Costo };
       html += `
-        <button type="button" class="srv-chip" id="srv-\${s.IDServicio}" onclick="toggleSrv('\${s.IDServicio}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M5 12l5 5L20 7"/></svg> \${s.NombreServicio} <span class="srv-price">+$\${s.Costo/1000}k</span>
+        <button type="button" class="srv-chip" id="srv-${s.IDServicio}" onclick="toggleSrv('${s.IDServicio}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M5 12l5 5L20 7"/></svg> ${s.NombreServicio} <span class="srv-price">+${s.Costo/1000}k</span>
         </button>`;
     });
 
     const srvGrid = document.querySelector('#section-reservar .srv-grid');
     if (srvGrid) srvGrid.innerHTML = html;
+    if (typeof updateServiceAvailability === 'function') updateServiceAvailability();
+    if (typeof highlightSelection === 'function') highlightSelection();
   } catch(e) { console.error('Error refreshing services', e); }
 }
 
@@ -410,29 +527,49 @@ async function refreshGlobalPackages() {
     paqs.forEach(p => {
       if (!p.Estado && p.Estado !== 1) return;
       if (!firstPaq) firstPaq = p.IDPaquete;
-      PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion };
+      const included = new Set();
+      if (p.IDServicio) included.add(String(p.IDServicio));
+      if (p.ServiciosIncluidos) {
+        try {
+          const parsed = typeof p.ServiciosIncluidos === 'string' ? JSON.parse(p.ServiciosIncluidos) : p.ServiciosIncluidos;
+          if (Array.isArray(parsed)) parsed.forEach(s => included.add(String(s)));
+        } catch (error) {
+          // ignore malformed included services
+        }
+      }
+      PAQUETES[p.IDPaquete] = {
+        label: p.NombrePaquete,
+        precio: p.Precio,
+        descripcion: p.Descripcion,
+        includedServices: [...included],
+        includedLabel: p.NombreServicio || null,
+      };
     });
     
-    if (!PAQUETES[CLIENTE_UI.paquete] && firstPaq) {
-      CLIENTE_UI.paquete = firstPaq;
-    }
+    // Don't auto-select: paquete is optional
 
     paqs.forEach((p) => {
       if (!PAQUETES[p.IDPaquete]) return;
+      const pkg = PAQUETES[p.IDPaquete];
       const isSelected = CLIENTE_UI.paquete == p.IDPaquete;
       
       html += `
-        <button type="button" class="paq-opt \${isSelected?'selected':''}" id="p-\${p.IDPaquete}" onclick="selectPaquete('\${p.IDPaquete}')">
-          <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-          <div class="paq-name">\${p.NombrePaquete}</div>
-          <div class="paq-desc">\${p.Descripcion||''}</div>
-          <div class="paq-price">\${p.Precio>0 ? '+'+fCop(p.Precio) : 'Incluido'}</div>
-        </button>`;
+        <div class="paq-opt ${isSelected?'selected':''}" id="p-${p.IDPaquete}" style="display:flex;flex-direction:column;justify-content:space-between;position:relative;">
+          <div onclick="selectPaquete('${p.IDPaquete}')" style="cursor:pointer;flex:1;display:flex;flex-direction:column;">
+            <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+            <div class="paq-name">${p.NombrePaquete}</div>
+            <div class="paq-price">${p.Precio>0 ? '+'+fCop(p.Precio) : 'Incluido'}</div>
+          </div>
+          <button type="button" class="btn btn-fire btn-block" style="margin-top:0.8rem;" onclick="event.stopPropagation();openPaqueteDetails('${p.IDPaquete}')">Ver</button>
+          ${isSelected ? '<span style="position:absolute;top:0.6rem;right:0.6rem;width:20px;height:20px;border-radius:50%;background:var(--fire);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:700;">✓</span>' : ''}
+        </div>`;
     });
 
     const grid = document.getElementById('p-basico')?.parentNode || document.querySelector('#section-reservar .paquete-grid');
     if (grid) grid.innerHTML = html;
     
+    if (typeof updateServiceAvailability === 'function') updateServiceAvailability();
+    if (typeof highlightSelection === 'function') highlightSelection();
     if (typeof updateResumen === 'function') updateResumen();
   } catch(e) { console.error('Error refreshing packages', e); }
 }
@@ -464,377 +601,18 @@ async function refreshGlobalCabanas() {
     cabanas.forEach((c) => {
       if (!CABANAS[c.IDCabana]) return;
       const isSelected = CLIENTE_UI.cabana == c.IDCabana;
+      const imgSrc = c.ImagenCabana || c.ImagenHabitacion || c.Foto || 'assets/images/cabana-roble.jpg';
       
       html += `
-        <button type="button" class="cabana-opt \${isSelected?'selected':''}" id="cab-\${c.IDCabana}" onclick="selectCabana('\${c.IDCabana}')">
+        <button type="button" class="cabana-opt ${isSelected?'selected':''}" id="cab-${c.IDCabana}" onclick="selectCabana('${c.IDCabana}')">
           <div class="cabana-img">
-            <img src="assets/images/cabana-roble.jpg" alt="\${c.Nombre}">
-            <span class="cabana-action" onclick="event.stopPropagation(); openCabanaDetails('\${c.IDCabana}')">✕</span>
+            <img src="${imgSrc}" alt="${c.Nombre}" onerror="this.src='assets/images/cabana-roble.jpg'">
+            <span class="cabana-action" onclick="event.stopPropagation(); openCabanaDetails('${c.IDCabana}')">✕</span>
           </div>
           <div class="cabana-info">
-            <div class="cabana-title-row"><h4>\${c.Nombre}</h4><span class="cabana-price-inline">\${fCop(c.Costo)}</span></div>
-            <p>\${c.Descripcion || ''}</p>
-            <div style="font-size:0.72rem;color:var(--mist);margin-top:0.2rem;">Hasta \${c.CapacidadMaxima} pers.</div>
-          </div>
-        </button>`;
-    });
-
-    const grid = document.getElementById('cab-roble')?.parentNode || document.querySelector('#section-reservar .cabana-grid');
-    if (grid) grid.innerHTML = html;
-    
-    if (typeof updateResumen === 'function') updateResumen();
-  } catch(e) { console.error('Error refreshing cabanas', e); }
-}
-
-document.addEventListener('DOMContentLoaded', refreshGlobalCabanas);
-refreshGlobalCabanas();
-
-
-/* ════════ DYNAMIC SERVICES IN RESERVATION ════════ */
-async function refreshGlobalServices() {
-  try {
-    const data = await req('/servicios');
-    const srvs = data.servicios || data.data || [];
-    
-    for (const key in SERVICIOS) delete SERVICIOS[key];
-    
-    let html = '';
-    srvs.forEach(s => {
-      if (!s.Estado && s.Estado !== 1) return; // Only show active services
-      SERVICIOS[s.IDServicio] = { label: s.NombreServicio, precio: s.Costo };
-      html += `
-        <button type="button" class="srv-chip" id="srv-\${s.IDServicio}" onclick="toggleSrv('\${s.IDServicio}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M5 12l5 5L20 7"/></svg> \${s.NombreServicio} <span class="srv-price">+$\${s.Costo/1000}k</span>
-        </button>`;
-    });
-
-    const srvGrid = document.querySelector('#section-reservar .srv-grid');
-    if (srvGrid) srvGrid.innerHTML = html;
-  } catch(e) { console.error('Error refreshing services', e); }
-}
-
-document.addEventListener('DOMContentLoaded', refreshGlobalServices);
-refreshGlobalServices();
-
-
-/* ════════ DYNAMIC PACKAGES IN RESERVATION ════════ */
-async function refreshGlobalPackages() {
-  try {
-    const data = await req('/paquetes');
-    const paqs = data.paquetes || data.data || [];
-    
-    for (const key in PAQUETES) delete PAQUETES[key];
-    
-    let html = '';
-    let firstPaq = null;
-    paqs.forEach(p => {
-      if (!p.Estado && p.Estado !== 1) return;
-      if (!firstPaq) firstPaq = p.IDPaquete;
-      PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion };
-    });
-    
-    if (!PAQUETES[CLIENTE_UI.paquete] && firstPaq) {
-      CLIENTE_UI.paquete = firstPaq;
-    }
-
-    paqs.forEach((p) => {
-      if (!PAQUETES[p.IDPaquete]) return;
-      const isSelected = CLIENTE_UI.paquete == p.IDPaquete;
-      
-      html += `
-        <button type="button" class="paq-opt \${isSelected?'selected':''}" id="p-\${p.IDPaquete}" onclick="selectPaquete('\${p.IDPaquete}')">
-          <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-          <div class="paq-name">\${p.NombrePaquete}</div>
-          <div class="paq-desc">\${p.Descripcion||''}</div>
-          <div class="paq-price">\${p.Precio>0 ? '+'+fCop(p.Precio) : 'Incluido'}</div>
-        </button>`;
-    });
-
-    const grid = document.getElementById('p-basico')?.parentNode || document.querySelector('#section-reservar .paquete-grid');
-    if (grid) grid.innerHTML = html;
-    
-    if (typeof updateResumen === 'function') updateResumen();
-  } catch(e) { console.error('Error refreshing packages', e); }
-}
-
-document.addEventListener('DOMContentLoaded', refreshGlobalPackages);
-refreshGlobalPackages();
-
-
-/* ════════ DYNAMIC CABANAS IN RESERVATION ════════ */
-async function refreshGlobalCabanas() {
-  try {
-    const data = await req('/cabanas');
-    const cabanas = data.data || [];
-    
-    for (const key in CABANAS) delete CABANAS[key];
-    
-    let html = '';
-    let firstCab = null;
-    cabanas.forEach(c => {
-      if (!c.Estado && c.Estado !== 1) return;
-      if (!firstCab) firstCab = c.IDCabana;
-      CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima };
-    });
-    
-    if (!CABANAS[CLIENTE_UI.cabana] && firstCab) {
-      CLIENTE_UI.cabana = firstCab;
-    }
-
-    cabanas.forEach((c) => {
-      if (!CABANAS[c.IDCabana]) return;
-      const isSelected = CLIENTE_UI.cabana == c.IDCabana;
-      
-      html += `
-        <button type="button" class="cabana-opt \${isSelected?'selected':''}" id="cab-\${c.IDCabana}" onclick="selectCabana('\${c.IDCabana}')">
-          <div class="cabana-img">
-            <img src="assets/images/cabana-roble.jpg" alt="\${c.Nombre}">
-            <span class="cabana-action" onclick="event.stopPropagation(); openCabanaDetails('\${c.IDCabana}')">✕</span>
-          </div>
-          <div class="cabana-info">
-            <div class="cabana-title-row"><h4>\${c.Nombre}</h4><span class="cabana-price-inline">\${fCop(c.Costo)}</span></div>
-            <p>\${c.Descripcion || ''}</p>
-            <div style="font-size:0.72rem;color:var(--mist);margin-top:0.2rem;">Hasta \${c.CapacidadMaxima} pers.</div>
-          </div>
-        </button>`;
-    });
-
-    const grid = document.getElementById('cab-roble')?.parentNode || document.querySelector('#section-reservar .cabana-grid');
-    if (grid) grid.innerHTML = html;
-    
-    if (typeof updateResumen === 'function') updateResumen();
-  } catch(e) { console.error('Error refreshing cabanas', e); }
-}
-
-document.addEventListener('DOMContentLoaded', refreshGlobalCabanas);
-refreshGlobalCabanas();
-
-
-/* ════════ DYNAMIC SERVICES IN RESERVATION ════════ */
-async function refreshGlobalServices() {
-  try {
-    const data = await req('/servicios');
-    const srvs = data.servicios || data.data || [];
-    
-    for (const key in SERVICIOS) delete SERVICIOS[key];
-    
-    let html = '';
-    srvs.forEach(s => {
-      if (!s.Estado && s.Estado !== 1) return; // Only show active services
-      SERVICIOS[s.IDServicio] = { label: s.NombreServicio, precio: s.Costo };
-      html += `
-        <button type="button" class="srv-chip" id="srv-\${s.IDServicio}" onclick="toggleSrv('\${s.IDServicio}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M5 12l5 5L20 7"/></svg> \${s.NombreServicio} <span class="srv-price">+$\${s.Costo/1000}k</span>
-        </button>`;
-    });
-
-    const srvGrid = document.querySelector('#section-reservar .srv-grid');
-    if (srvGrid) srvGrid.innerHTML = html;
-  } catch(e) { console.error('Error refreshing services', e); }
-}
-
-document.addEventListener('DOMContentLoaded', refreshGlobalServices);
-refreshGlobalServices();
-
-
-/* ════════ DYNAMIC PACKAGES IN RESERVATION ════════ */
-async function refreshGlobalPackages() {
-  try {
-    const data = await req('/paquetes');
-    const paqs = data.paquetes || data.data || [];
-    
-    for (const key in PAQUETES) delete PAQUETES[key];
-    
-    let html = '';
-    let firstPaq = null;
-    paqs.forEach(p => {
-      if (!p.Estado && p.Estado !== 1) return;
-      if (!firstPaq) firstPaq = p.IDPaquete;
-      PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion };
-    });
-    
-    if (!PAQUETES[CLIENTE_UI.paquete] && firstPaq) {
-      CLIENTE_UI.paquete = firstPaq;
-    }
-
-    paqs.forEach((p) => {
-      if (!PAQUETES[p.IDPaquete]) return;
-      const isSelected = CLIENTE_UI.paquete == p.IDPaquete;
-      
-      html += `
-        <button type="button" class="paq-opt \${isSelected?'selected':''}" id="p-\${p.IDPaquete}" onclick="selectPaquete('\${p.IDPaquete}')">
-          <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-          <div class="paq-name">\${p.NombrePaquete}</div>
-          <div class="paq-desc">\${p.Descripcion||''}</div>
-          <div class="paq-price">\${p.Precio>0 ? '+'+fCop(p.Precio) : 'Incluido'}</div>
-        </button>`;
-    });
-
-    const grid = document.getElementById('p-basico')?.parentNode || document.querySelector('#section-reservar .paquete-grid');
-    if (grid) grid.innerHTML = html;
-    
-    if (typeof updateResumen === 'function') updateResumen();
-  } catch(e) { console.error('Error refreshing packages', e); }
-}
-
-document.addEventListener('DOMContentLoaded', refreshGlobalPackages);
-refreshGlobalPackages();
-
-
-/* ════════ DYNAMIC CABANAS IN RESERVATION ════════ */
-async function refreshGlobalCabanas() {
-  try {
-    const data = await req('/cabanas');
-    const cabanas = data.data || [];
-    
-    for (const key in CABANAS) delete CABANAS[key];
-    
-    let html = '';
-    let firstCab = null;
-    cabanas.forEach(c => {
-      if (!c.Estado && c.Estado !== 1) return;
-      if (!firstCab) firstCab = c.IDCabana;
-      CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima };
-    });
-    
-    if (!CABANAS[CLIENTE_UI.cabana] && firstCab) {
-      CLIENTE_UI.cabana = firstCab;
-    }
-
-    cabanas.forEach((c) => {
-      if (!CABANAS[c.IDCabana]) return;
-      const isSelected = CLIENTE_UI.cabana == c.IDCabana;
-      
-      html += `
-        <button type="button" class="cabana-opt \${isSelected?'selected':''}" id="cab-\${c.IDCabana}" onclick="selectCabana('\${c.IDCabana}')">
-          <div class="cabana-img">
-            <img src="assets/images/cabana-roble.jpg" alt="\${c.Nombre}">
-            <span class="cabana-action" onclick="event.stopPropagation(); openCabanaDetails('\${c.IDCabana}')">✕</span>
-          </div>
-          <div class="cabana-info">
-            <div class="cabana-title-row"><h4>\${c.Nombre}</h4><span class="cabana-price-inline">\${fCop(c.Costo)}</span></div>
-            <p>\${c.Descripcion || ''}</p>
-            <div style="font-size:0.72rem;color:var(--mist);margin-top:0.2rem;">Hasta \${c.CapacidadMaxima} pers.</div>
-          </div>
-        </button>`;
-    });
-
-    const grid = document.getElementById('cab-roble')?.parentNode || document.querySelector('#section-reservar .cabana-grid');
-    if (grid) grid.innerHTML = html;
-    
-    if (typeof updateResumen === 'function') updateResumen();
-  } catch(e) { console.error('Error refreshing cabanas', e); }
-}
-
-document.addEventListener('DOMContentLoaded', refreshGlobalCabanas);
-refreshGlobalCabanas();
-
-
-/* ════════ DYNAMIC SERVICES IN RESERVATION ════════ */
-async function refreshGlobalServices() {
-  try {
-    const data = await req('/servicios');
-    const srvs = data.servicios || data.data || [];
-    
-    for (const key in SERVICIOS) delete SERVICIOS[key];
-    
-    let html = '';
-    srvs.forEach(s => {
-      if (!s.Estado && s.Estado !== 1) return; // Only show active services
-      SERVICIOS[s.IDServicio] = { label: s.NombreServicio, precio: s.Costo };
-      html += `
-        <button type="button" class="srv-chip" id="srv-\${s.IDServicio}" onclick="toggleSrv('\${s.IDServicio}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M5 12l5 5L20 7"/></svg> \${s.NombreServicio} <span class="srv-price">+$\${s.Costo/1000}k</span>
-        </button>`;
-    });
-
-    const srvGrid = document.querySelector('#section-reservar .srv-grid');
-    if (srvGrid) srvGrid.innerHTML = html;
-  } catch(e) { console.error('Error refreshing services', e); }
-}
-
-document.addEventListener('DOMContentLoaded', refreshGlobalServices);
-refreshGlobalServices();
-
-
-/* ════════ DYNAMIC PACKAGES IN RESERVATION ════════ */
-async function refreshGlobalPackages() {
-  try {
-    const data = await req('/paquetes');
-    const paqs = data.paquetes || data.data || [];
-    
-    for (const key in PAQUETES) delete PAQUETES[key];
-    
-    let html = '';
-    let firstPaq = null;
-    paqs.forEach(p => {
-      if (!p.Estado && p.Estado !== 1) return;
-      if (!firstPaq) firstPaq = p.IDPaquete;
-      PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion };
-    });
-    
-    if (!PAQUETES[CLIENTE_UI.paquete] && firstPaq) {
-      CLIENTE_UI.paquete = firstPaq;
-    }
-
-    paqs.forEach((p) => {
-      if (!PAQUETES[p.IDPaquete]) return;
-      const isSelected = CLIENTE_UI.paquete == p.IDPaquete;
-      
-      html += `
-        <button type="button" class="paq-opt \${isSelected?'selected':''}" id="p-\${p.IDPaquete}" onclick="selectPaquete('\${p.IDPaquete}')">
-          <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-          <div class="paq-name">\${p.NombrePaquete}</div>
-          <div class="paq-desc">\${p.Descripcion||''}</div>
-          <div class="paq-price">\${p.Precio>0 ? '+'+fCop(p.Precio) : 'Incluido'}</div>
-        </button>`;
-    });
-
-    const grid = document.getElementById('p-basico')?.parentNode || document.querySelector('#section-reservar .paquete-grid');
-    if (grid) grid.innerHTML = html;
-    
-    if (typeof updateResumen === 'function') updateResumen();
-  } catch(e) { console.error('Error refreshing packages', e); }
-}
-
-document.addEventListener('DOMContentLoaded', refreshGlobalPackages);
-refreshGlobalPackages();
-
-
-/* ════════ DYNAMIC CABANAS IN RESERVATION ════════ */
-async function refreshGlobalCabanas() {
-  try {
-    const data = await req('/cabanas');
-    const cabanas = data.data || [];
-    
-    for (const key in CABANAS) delete CABANAS[key];
-    
-    let html = '';
-    let firstCab = null;
-    cabanas.forEach(c => {
-      if (!c.Estado && c.Estado !== 1) return;
-      if (!firstCab) firstCab = c.IDCabana;
-      CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima };
-    });
-    
-    if (!CABANAS[CLIENTE_UI.cabana] && firstCab) {
-      CLIENTE_UI.cabana = firstCab;
-    }
-
-    cabanas.forEach((c) => {
-      if (!CABANAS[c.IDCabana]) return;
-      const isSelected = CLIENTE_UI.cabana == c.IDCabana;
-      
-      html += `
-        <button type="button" class="cabana-opt \${isSelected?'selected':''}" id="cab-\${c.IDCabana}" onclick="selectCabana('\${c.IDCabana}')">
-          <div class="cabana-img">
-            <img src="assets/images/cabana-roble.jpg" alt="\${c.Nombre}">
-            <span class="cabana-action" onclick="event.stopPropagation(); openCabanaDetails('\${c.IDCabana}')">✕</span>
-          </div>
-          <div class="cabana-info">
-            <div class="cabana-title-row"><h4>\${c.Nombre}</h4><span class="cabana-price-inline">\${fCop(c.Costo)}</span></div>
-            <p>\${c.Descripcion || ''}</p>
-            <div style="font-size:0.72rem;color:var(--mist);margin-top:0.2rem;">Hasta \${c.CapacidadMaxima} pers.</div>
+            <div class="cabana-title-row"><h4>${c.Nombre}</h4><span class="cabana-price-inline">${fCop(c.Costo)}</span></div>
+            <p>${c.Descripcion || ''}</p>
+            <div style="font-size:0.72rem;color:var(--mist);margin-top:0.2rem;">Hasta ${c.CapacidadMaxima} pers.</div>
           </div>
         </button>`;
     });

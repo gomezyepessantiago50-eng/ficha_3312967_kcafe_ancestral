@@ -56,3 +56,27 @@
 
 /* ── Auth.user() alias ───────────────────────────── */
 /* El api.js exporta Auth.getUser() pero app.js llama Auth.user() — parche en JS abajo */
+
+/* ── Fix text visibility in white modals inside .admin-shell ── */
+.admin-shell .modal .input,
+.admin-shell .modal .select,
+.admin-shell .modal .textarea {
+  color: var(--bark) !important;
+  background: var(--white) !important;
+  border-color: var(--sand-mid) !important;
+}
+.admin-shell .modal .input:focus,
+.admin-shell .modal .select:focus,
+.admin-shell .modal .textarea:focus {
+  border-color: var(--fire) !important;
+}
+.admin-shell .modal .input::placeholder,
+.admin-shell .modal .textarea::placeholder {
+  color: var(--mist-light) !important;
+}
+.admin-shell .modal .label {
+  color: var(--mist) !important;
+}
+.admin-shell .modal {
+  color: var(--bark);
+}

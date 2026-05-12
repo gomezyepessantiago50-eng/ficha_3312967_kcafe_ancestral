@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeScrollIndicator();
   initializeButtonInteractions();
   initializeLazyImages();
+  loadLandingCabanas();
   loadLandingPaquetes();
 });
 
@@ -124,14 +125,121 @@ function initializeButtonInteractions() {
   });
 }
 
+// ── CARGAR CABAÑAS DINÁMICAMENTE ─────────────────────────────────────────────
+async function loadLandingCabanas() {
+  const cGrid = document.getElementById('landing-cabanas-grid');
+  const gGrid = document.getElementById('landing-gallery-grid');
+  if (!cGrid) return;
+  
+  try {
+    const res = await fetch('/api/cabanas');
+    const data = await res.json();
+    let cabanas = data.data || [];
+    cabanas = cabanas.filter(c => c.Estado == 1); // Solo activas
+
+    if (cabanas.length === 0) {
+      cGrid.innerHTML = '<div style="grid-column: 1/-1;text-align:center;color:var(--dark-muted);padding:2rem;">No hay cabañas disponibles en este momento</div>';
+      if (gGrid) gGrid.innerHTML = '<div style="grid-column: 1/-1;text-align:center;color:var(--dark-muted);padding:2rem;">No hay fotos disponibles en la galería</div>';
+      return;
+    }
+
+    // 1. Renderizar tarjetas de cabañas
+    cGrid.innerHTML = cabanas.map(c => {
+      const img = c.ImagenCabana || 'https://images.unsplash.com/photo-1518991669915-32c39c6f5981?w=500&h=400&fit=crop';
+      return `
+        <div class="cabaña-card">
+          <div class="cabaña-image">
+            <img src="${img}" alt="${c.Nombre}"/>
+          </div>
+          <div class="cabaña-content">
+            <h3>${c.Nombre}</h3>
+            <p class="cabaña-description">${c.Descripcion || 'Experimenta la naturaleza y el confort.'}</p>
+            <ul class="cabaña-features">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Capacidad: ${c.CapacidadMaxima} huéspedes</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M3 22v-8"/><path d="M21 22v-8"/><path d="M3 14h18"/><path d="M7 14v-4a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v4"/><path d="M12 6V2"/></svg> Habitaciones: ${c.NumeroHabitaciones}</li>
+            </ul>
+            <div class="cabaña-footer">
+              <span class="price">$${Number(c.Costo).toLocaleString('es-CO')}<small>/noche</small></span>
+              <button class="btn btn-outline btn-sm" onclick="window.location.href='index.html'">Ver detalles</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // 2. Renderizar Galería (Extraer todas las fotos de las cabañas activas)
+    if (gGrid) {
+      let galleryHTML = '';
+      cabanas.forEach((c, index) => {
+        // La primera imagen de cada iteración podría ser grande para variedad
+        const sizeClass = (index % 3 === 0) ? 'large' : '';
+        if (c.ImagenCabana) {
+          galleryHTML += `
+            <div class="gallery-item ${sizeClass}">
+              <img src="${c.ImagenCabana}" alt="${c.Nombre}"/>
+            </div>
+          `;
+        }
+        if (c.ImagenHabitacion) {
+          galleryHTML += `
+            <div class="gallery-item">
+              <img src="${c.ImagenHabitacion}" alt="Interior de ${c.Nombre}"/>
+            </div>
+          `;
+        }
+      });
+
+      if (galleryHTML) {
+        gGrid.innerHTML = galleryHTML;
+      } else {
+        gGrid.innerHTML = '<div style="grid-column: 1/-1;text-align:center;color:var(--dark-muted);padding:2rem;">Aún no hay fotos en la galería</div>';
+      }
+    }
+
+    // Asegurar que lazyloading se aplique a las nuevas imágenes
+    initializeLazyImages();
+    // Animaciones
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+    
+    document.querySelectorAll('#landing-cabanas-grid .cabaña-card').forEach((card, i) => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(24px)';
+      card.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+      setTimeout(() => observer.observe(card), i * 100);
+    });
+
+  } catch (error) {
+    console.error(error);
+    cGrid.innerHTML = '<div style="grid-column: 1/-1;text-align:center;color:#f44336;padding:2rem;">Error al cargar las cabañas</div>';
+  }
+}
+
 // ── CARGAR PAQUETES DINÁMICAMENTE ─────────────────────────────────────────────
 async function loadLandingPaquetes() {
   const grid = document.getElementById('landing-paquetes-grid');
   if (!grid) return;
   try {
-    const res = await fetch('/api/paquetes');
-    const data = await res.json();
-    let paqs = data.paquetes || data.data || [];
+    const [resPaq, resSrv] = await Promise.all([
+      fetch('/api/paquetes'),
+      fetch('/api/servicios')
+    ]);
+    const dataPaq = await resPaq.json();
+    const dataSrv = await resSrv.json();
+    
+    const serviciosMap = {};
+    const serviciosArray = dataSrv.data || dataSrv || [];
+    serviciosArray.forEach(s => {
+      serviciosMap[s.IDServicio] = s.NombreServicio;
+    });
+
+    let paqs = dataPaq.paquetes || dataPaq.data || [];
     paqs = paqs.filter(p => p.Estado); // Solo mostrar activos
 
     if (paqs.length === 0) {
@@ -144,19 +252,34 @@ async function loadLandingPaquetes() {
       const isFree = !p.Precio || p.Precio <= 0;
       const priceText = isFree ? 'Incluido' : (p.Precio / 1000) + 'K';
       
+      let srvsIds = [];
+      try {
+        if (p.ServiciosIncluidos) {
+          srvsIds = typeof p.ServiciosIncluidos === 'string' ? JSON.parse(p.ServiciosIncluidos) : p.ServiciosIncluidos;
+        }
+      } catch (e) {}
+      
+      let srvsNames = srvsIds.map(id => serviciosMap[id]).filter(Boolean);
+      let srvsHtml = '';
+      if (srvsNames.length > 0) {
+        srvsHtml = `<ul style="list-style:none; padding:0; margin: 1rem 0; font-size:0.85rem; color:var(--mist); text-align:left;">` + 
+          srvsNames.map(n => `<li style="margin-bottom:0.4rem; border-bottom:1px solid rgba(46,26,14,0.05); padding-bottom:0.4rem;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--fire)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:6px;"><polyline points="20 6 9 17 4 12"></polyline></svg> ${n}</li>`).join('') +
+          `</ul>`;
+      }
+      
       return `
-        <div class="paquete-card">
+        <div class="paquete-card" style="display:flex; flex-direction:column;">
           <div class="paquete-header">
             <h3>${p.NombrePaquete}</h3>
-            ${p.NombreServicio ? `<p class="paquete-subtitle">Incluye: ${p.NombreServicio}</p>` : ''}
           </div>
           <div class="paquete-price">
             <span class="currency">${isFree ? '' : '$'}</span>
             <span class="amount">${priceText}</span>
             <span class="period">${isFree ? '' : '/noche'}</span>
           </div>
-          <p class="paquete-description">${p.Descripcion || 'Vive una experiencia inigualable en nuestro Glamping.'}</p>
-          <button class="btn btn-outline btn-block" onclick="window.location.href='index.html'">Seleccionar</button>
+          <p class="paquete-description" style="margin-bottom:0;">${p.Descripcion || 'Vive una experiencia inigualable en nuestro Glamping.'}</p>
+          ${srvsHtml}
+          <button class="btn btn-outline btn-block" style="margin-top:auto;" onclick="window.location.href='index.html'">Seleccionar</button>
         </div>
       `;
     }).join('');
@@ -165,6 +288,7 @@ async function loadLandingPaquetes() {
     initializeButtonInteractions();
 
   } catch (error) {
+    console.error("Error cargando paquetes:", error);
     grid.innerHTML = '<div style="grid-column: 1/-1;text-align:center;color:#f44336;padding:2rem;">Error al cargar los paquetes</div>';
   }
 }

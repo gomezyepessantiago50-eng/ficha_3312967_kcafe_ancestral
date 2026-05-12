@@ -68,7 +68,7 @@ const crearReservaValidator = [
 
   body('MetodoPago')
     .optional()
-    .isInt({ min: 1 }).withMessage('Método de pago inválido'),
+    .isString().withMessage('Método de pago inválido'),
 
   body('SubTotal')
     .optional()
@@ -107,7 +107,7 @@ const editarReservaValidator = [
 
   body('MetodoPago')
     .optional()
-    .isInt({ min: 1 }).withMessage('Método de pago inválido'),
+    .isString().withMessage('Método de pago inválido'),
 ];
 
 const idParamValidator = [

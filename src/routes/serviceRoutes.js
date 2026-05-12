@@ -8,7 +8,7 @@ const {
   changeServiceStatus,
   deleteService,
 } = require('../controllers/serviceController');
-const { validateCreateService, validateUpdateService, validateServiceStatus } = require('../validator/serviceValidator');
+const { validateCreateService, validateUpdateService, validateServiceStatus } = require('../validators/serviceValidator');
 
 router.get('/',          getAllServices);
 router.get('/:id',       getServiceById);

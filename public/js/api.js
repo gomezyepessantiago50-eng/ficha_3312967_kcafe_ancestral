@@ -103,7 +103,13 @@ const ServiciosAPI = {
 };
 
 const ClientesAPI = {
-  listar : ()      => req('/clientes'),
+  listar : ({ page = 1, limit = 10, q = '' } = {}) => {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    params.append('limit', limit);
+    if (q) params.append('q', q);
+    return req(`/clientes?${params}`);
+  },
   buscar : (query) => req(`/clientes/search?q=${encodeURIComponent(query)}`),
   uno    : (doc)   => req(`/clientes/${doc}`),
   historial: (doc) => req(`/clientes/${doc}/historial`),

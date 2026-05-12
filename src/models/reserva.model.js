@@ -81,6 +81,18 @@ const Reserva = sequelize.define('Reserva', {
     type: DataTypes.STRING(200),
     allowNull: true,
   },
+  metodo_pago: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+  },
+  comprobante_pago: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+  },
+  monto_pagado: {
+    type: DataTypes.FLOAT,
+    defaultValue: 0,
+  },
 }, {
   tableName: 'Reserva',
   timestamps: false,

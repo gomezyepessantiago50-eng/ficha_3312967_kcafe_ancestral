@@ -15,11 +15,15 @@ const buscarPorEmail = async (req, res) => {
   }
 };
 
-// ── Listar todos ──────────────────────────────────────────────
+// ── Listar todos con paginación ───────────────────────────────
 const listarUsuarios = async (req, res) => {
   try {
-    const usuarios = await UsuarioService.listarUsuarios();
-    return res.status(200).json({ ok: true, total: usuarios.length, data: usuarios });
+    const page  = parseInt(req.query.page)  || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const q     = req.query.q || '';
+
+    const result = await UsuarioService.listarUsuarios({ page, limit, q });
+    return res.status(200).json({ ok: true, ...result });
   } catch (error) {
     return res.status(error.status || 500).json({ ok: false, mensaje: error.message });
   }

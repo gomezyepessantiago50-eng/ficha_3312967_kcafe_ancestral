@@ -1,70 +1,140 @@
-const { Clientes } = require('../models');
+const Usuario = require('../models/usuario.model');
 const { Op } = require('sequelize');
 
-const findAllClients = async () => {
-  try {
-    const result = await Clientes.findAll({
-      attributes: ['NroDocumento', 'Nombre', 'Apellido', 'Email', 'Telefono', 'Direccion', 'Estado'],
-      order: [['Nombre', 'ASC']],
-    });
-    return result;
-  } catch (error) {
-    console.error('Error en findAllClients:', error.message);
-    throw error;
+/**
+ * Encuentra todos los clientes (usuarios con rol 2) con paginación
+ */
+const findAllClients = async ({ page = 1, limit = 10, q = '' } = {}) => {
+  const offset = (page - 1) * limit;
+
+  const where = { IDRol: 2 }; // Solo clientes, no admins
+
+  if (q) {
+    where[Op.or] = [
+      { NombreUsuario: { [Op.like]: `%${q}%` } },
+      { Apellido: { [Op.like]: `%${q}%` } },
+      { Email: { [Op.like]: `%${q}%` } },
+      { NumeroDocumento: { [Op.like]: `%${q}%` } },
+    ];
   }
+
+  const { count, rows } = await Usuario.findAndCountAll({
+    where,
+    attributes: [
+      'IDUsuario', 'NombreUsuario', 'Apellido', 'Email',
+      'Telefono', 'TipoDocumento', 'NumeroDocumento',
+      'Pais', 'Direccion', 'IDRol',
+    ],
+    order: [['NombreUsuario', 'ASC']],
+    limit,
+    offset,
+  });
+
+  return {
+    clientes: rows.map(normalizeCliente),
+    total: count,
+    totalPages: Math.ceil(count / limit),
+    currentPage: page,
+  };
 };
 
+/**
+ * Busca clientes por nombre, apellido o correo (sin paginación, para el modal de reservas)
+ */
 const searchByQuery = async (q) => {
-  return Clientes.findAll({
+  const clientes = await Usuario.findAll({
     where: {
+      IDRol: 2,
       [Op.or]: [
-        { Nombre:   { [Op.like]: `%${q}%` } },
+        { NombreUsuario: { [Op.like]: `%${q}%` } },
         { Apellido: { [Op.like]: `%${q}%` } },
-        { Email:    { [Op.like]: `%${q}%` } },
+        { Email: { [Op.like]: `%${q}%` } },
+        { NumeroDocumento: { [Op.like]: `%${q}%` } },
       ],
     },
-    attributes: ['NroDocumento', 'Nombre', 'Apellido', 'Email', 'Telefono', 'Estado'],
-    order: [['Nombre', 'ASC']],
+    attributes: [
+      'IDUsuario', 'NombreUsuario', 'Apellido', 'Email',
+      'Telefono', 'TipoDocumento', 'NumeroDocumento',
+      'Pais', 'Direccion', 'IDRol',
+    ],
+    order: [['NombreUsuario', 'ASC']],
+    limit: 50,
   });
+
+  return clientes.map(normalizeCliente);
 };
 
-const findClientWithReservations = async (nroDocumento) => {
-  return Clientes.findByPk(nroDocumento, {
+/**
+ * Encuentra un cliente por su ID de usuario
+ */
+const findClientWithReservations = async (id) => {
+  const usuario = await Usuario.findOne({
+    where: { IDUsuario: id, IDRol: 2 },
     attributes: [
-      'NroDocumento', 'Nombre', 'Apellido', 'Email',
-      'Telefono', 'Direccion', 'Estado',
+      'IDUsuario', 'NombreUsuario', 'Apellido', 'Email',
+      'Telefono', 'TipoDocumento', 'NumeroDocumento',
+      'Pais', 'Direccion', 'IDRol',
     ],
   });
+
+  if (!usuario) return null;
+  return normalizeCliente(usuario);
 };
 
-const findClientHistory = async (nroDocumento) => {
-  const cliente = await Clientes.findByPk(nroDocumento, {
-    attributes: ['NroDocumento', 'Nombre', 'Apellido', 'Email'],
+/**
+ * Encuentra historial de un cliente
+ */
+const findClientHistory = async (id) => {
+  const usuario = await Usuario.findOne({
+    where: { IDUsuario: id, IDRol: 2 },
+    attributes: ['IDUsuario', 'NombreUsuario', 'Apellido', 'Email'],
   });
 
-  if (!cliente) return null;
-
-  return { cliente, reservas: [] };
+  if (!usuario) return null;
+  return { cliente: normalizeCliente(usuario), reservas: [] };
 };
 
-const updateClientData = async (nroDocumento, data) => {
-  const cliente = await Clientes.findByPk(nroDocumento);
-  if (!cliente) return null;
+/**
+ * Actualiza datos de un cliente (usuario)
+ */
+const updateClientData = async (id, data) => {
+  const usuario = await Usuario.findOne({
+    where: { IDUsuario: id, IDRol: 2 },
+  });
+  if (!usuario) return null;
 
-  const { Nombre, Apellido, Direccion, Email, Telefono, TipoDocumento, Estado } = data;
+  const { Nombre, Apellido, Direccion, Email, Telefono, TipoDocumento, Pais } = data;
 
-  await cliente.update({
-    ...(Nombre         !== undefined && { Nombre }),
-    ...(Apellido       !== undefined && { Apellido }),
-    ...(Direccion      !== undefined && { Direccion }),
-    ...(Email          !== undefined && { Email }),
-    ...(Telefono      !== undefined && { Telefono }),
-    ...(TipoDocumento  !== undefined && { TipoDocumento }),
-    ...(Estado         !== undefined && { Estado }),
+  await usuario.update({
+    ...(Nombre !== undefined && { NombreUsuario: Nombre }),
+    ...(Apellido !== undefined && { Apellido }),
+    ...(Direccion !== undefined && { Direccion }),
+    ...(Email !== undefined && { Email }),
+    ...(Telefono !== undefined && { Telefono }),
+    ...(TipoDocumento !== undefined && { TipoDocumento }),
+    ...(Pais !== undefined && { Pais }),
   });
 
-  return cliente;
+  return normalizeCliente(usuario);
 };
+
+/**
+ * Normaliza un usuario a formato de "cliente" para el frontend
+ */
+const normalizeCliente = (u) => ({
+  NroDocumento: u.NumeroDocumento ? String(u.NumeroDocumento) : String(u.IDUsuario),
+  IDUsuario: u.IDUsuario,
+  Nombre: u.NombreUsuario,
+  Apellido: u.Apellido || '',
+  Email: u.Email,
+  Telefono: u.Telefono || '',
+  TipoDocumento: u.TipoDocumento || '',
+  NumeroDocumento: u.NumeroDocumento || '',
+  Pais: u.Pais || '',
+  Direccion: u.Direccion || '',
+  Estado: true,
+  IDRol: u.IDRol,
+});
 
 module.exports = {
   findAllClients,

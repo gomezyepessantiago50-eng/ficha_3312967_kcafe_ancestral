@@ -4,13 +4,13 @@ const { QueryTypes } = require('sequelize');
 const getDashboardStats = async () => {
   // 1. Total Sales (MontoTotal from Reserva)
   const [salesResult] = await sequelize.query(
-    'SELECT SUM(MontoTotal) as totalSales FROM Reserva WHERE IdEstadoReserva != 3', // Assuming 3 is Cancelada, if applicable. We'll just sum all for now.
+    'SELECT SUM(MontoTotal) as totalSales FROM Reserva WHERE IdEstadoReserva NOT IN (3, 5)',
     { type: QueryTypes.SELECT }
   );
 
   // 2. Count of reservations
   const [reservationsCount] = await sequelize.query(
-    'SELECT COUNT(*) as totalReservations FROM Reserva',
+    'SELECT COUNT(*) as totalReservations FROM Reserva WHERE IdEstadoReserva NOT IN (3, 5)',
     { type: QueryTypes.SELECT }
   );
 

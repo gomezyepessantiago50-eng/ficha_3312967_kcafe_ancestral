@@ -63,13 +63,40 @@ const generarResetAdmin = async (id) => {
   };
 };
 
-// ── Listar todos los usuarios ─────────────────────────────────
-const listarUsuarios = async () => {
-  const usuarios = await Usuario.findAll({
+// ── Listar todos los usuarios (paginado, con búsqueda) ───────
+const listarUsuarios = async ({ page = 1, limit = 10, q = '' } = {}) => {
+  const offset = (page - 1) * limit;
+
+  const where = {};
+  if (q) {
+    where[Op.or] = [
+      { NombreUsuario:   { [Op.like]: `%${q}%` } },
+      { Apellido:        { [Op.like]: `%${q}%` } },
+      { Email:           { [Op.like]: `%${q}%` } },
+      { NumeroDocumento: { [Op.like]: `%${q}%` } },
+    ];
+  }
+
+  const { count, rows } = await Usuario.findAndCountAll({
+    where,
     attributes: { exclude: ['Contrasena', 'ResetToken', 'ResetTokenExpira'] },
-    order: [['IDUsuario', 'ASC']],
+    order: [['IDRol', 'ASC'], ['NombreUsuario', 'ASC']],
+    limit,
+    offset,
   });
-  return usuarios.map(normalizeUsuario);
+
+  const todos = rows.map(normalizeUsuario);
+  const admins   = todos.filter(u => u.idRol === 1);
+  const clientes = todos.filter(u => u.idRol !== 1);
+
+  return {
+    data:        todos,
+    admins,
+    clientes,
+    total:       count,
+    totalPages:  Math.ceil(count / limit),
+    currentPage: page,
+  };
 };
 
 // ── Helper normalizar ─────────────────────────────────────────

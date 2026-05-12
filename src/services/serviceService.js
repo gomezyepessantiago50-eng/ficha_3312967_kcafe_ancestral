@@ -40,7 +40,7 @@ const createService = async ({ NombreServicio, Descripcion, Duracion, CantidadMa
   return findServiceById(result);
 };
 
-const updateService = async (id, { NombreServicio, Descripcion, Duracion, CantidadMaximaPersonas, Costo }) => {
+const updateService = async (id, { NombreServicio, Descripcion, Duracion, CantidadMaximaPersonas, Costo, Estado }) => {
   const existing = await findServiceById(id);
   if (!existing) return null;
 
@@ -50,7 +50,8 @@ const updateService = async (id, { NombreServicio, Descripcion, Duracion, Cantid
          Descripcion           = :descripcion,
          Duracion              = :duracion,
          CantidadMaximaPersonas= :cantidad,
-         Costo                 = :costo
+         Costo                 = :costo,
+         Estado                = :estado
      WHERE IDServicio = :id`,
     {
       replacements: {
@@ -60,6 +61,7 @@ const updateService = async (id, { NombreServicio, Descripcion, Duracion, Cantid
         duracion:    Duracion              ?? existing.Duracion,
         cantidad:    CantidadMaximaPersonas?? existing.CantidadMaximaPersonas,
         costo:       Costo                 ?? existing.Costo,
+        estado:      Estado !== undefined  ? (Estado ? 1 : 0) : existing.Estado,
       },
       type: QueryTypes.UPDATE,
     }

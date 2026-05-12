@@ -6,13 +6,13 @@ const seedData = async () => {
   console.log('--- Iniciando Seeding de Módulos ---');
   
   try {
-    // 1. Habitaciones
-    console.log('Insertando Habitaciones...');
+    // 1. Cabañas
+    console.log('Insertando Cabañas...');
     await sequelize.query(
-      `INSERT IGNORE INTO habitacion (IDHabitacion, NombreHabitacion, Descripcion, Costo, Estado) VALUES
-       (1, 'El Roble', 'Cabaña familiar de dos pisos', 280000, 1),
-       (2, 'La Ceiba', 'Ideal para parejas', 420000, 1),
-       (3, 'Ancestral', 'Lujo y comodidad', 650000, 1)`,
+      `INSERT IGNORE INTO cabanas (IDCabana, NombreCabana, Descripcion, Capacidad, NumeroHabitaciones, PrecioNoche, Estado) VALUES
+       (1, 'El Roble', 'Cabaña familiar de dos pisos', 4, 2, 280000, 1),
+       (2, 'La Ceiba', 'Ideal para parejas', 2, 1, 420000, 1),
+       (3, 'Ancestral', 'Lujo y comodidad', 6, 3, 650000, 1)`,
       { type: QueryTypes.INSERT }
     );
 

@@ -49,9 +49,7 @@ const statusBadge = s => {
 /* ── Validación de fechas ───────────────────────── */
 function setMinDateInputs() {
   const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDate = tomorrow.toISOString().split('T')[0];
+  const minDate = today.toISOString().split('T')[0];
   
   // Aplicar a cliente
   const fIni = document.getElementById('f-ini');

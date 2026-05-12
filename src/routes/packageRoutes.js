@@ -12,7 +12,7 @@ const {
   validateCreatePackage,
   validateUpdatePackage,
   validatePackageStatus,
-} = require('../validator/packageValidator');
+} = require('../validators/packageValidator');
 
 router.get('/',               getAllPackages);
 router.get('/:id',            getPackageById);

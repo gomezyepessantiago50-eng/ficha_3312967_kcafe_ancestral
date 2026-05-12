@@ -8,7 +8,7 @@ const {
   updateClient,
 } = require('../controllers/clientController');
 
-const { validateUpdateClient } = require('../validator/clientValidator');
+const { validateUpdateClient } = require('../validators/clientValidator');
 
 // ─── Rutas de Clientes ──────────────────────────────────────────────────────
 

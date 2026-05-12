@@ -1,0 +1,34 @@
+# Habilitar Reservas del Mismo Día y Horarios de Check-in/Check-out
+
+Se modificará el sistema actual para permitir reservas el mismo día de la llegada, aplicando la regla de facturación por noche con horarios de entrada y salida estrictos.
+
+## Propósito
+Permitir que un cliente o el administrador reserven para "hoy" mismo, siempre y cuando la cabaña esté disponible. Se establecerá visualmente que la hora de entrada es a la 1:00 PM y la hora de salida a las 12:00 PM del día siguiente, garantizando el lapso de 1 hora.
+
+## User Review Required
+
+> [!IMPORTANT]
+> El sistema actual obliga a que la "fecha de fin" sea mínimo un día después de la "fecha de inicio". Por tanto, si se reserva para hoy (Ej: 8 de Mayo), el sistema obligará a que la fecha de salida sea mínimo el 9 de Mayo. Esto cuenta como **1 noche**. ¿Estás de acuerdo con mantener esta validación para evitar que elijan el mismo día de entrada y salida?
+
+## Proposed Changes
+
+### Archivos de Interfaz y Lógica Compartida
+
+#### [MODIFY] public/js/app.js
+- Se modificará la función `setMinDateInputs()` para que la fecha mínima (`min`) de los calendarios HTML nativos sea la fecha de **hoy** (en lugar de mañana).
+
+#### [MODIFY] public/js/admin.js
+- Se modificará la configuración de **Flatpickr** (`setupPickerPair`) para que `minDate` sea la fecha de **hoy**.
+- En la función que calcula el resumen de la reserva del administrador, se añadirá un aviso visual indicando: *"Check-in: 1:00 PM | Check-out: 12:00 PM"*.
+
+#### [MODIFY] public/js/cliente.js
+- En la función `updateResumen()` (que muestra la cotización en vivo al cliente), se añadirá un texto descriptivo indicando claramente las horas de entrada (1:00 PM) y salida (12:00 PM) para que el cliente esté al tanto de las reglas.
+- Se asegurará de que el cálculo de `noches` siga cobrando mínimo 1 noche al escoger fechas consecutivas.
+
+## Verification Plan
+
+### Manual Verification
+1. Abrir la página del cliente y verificar que en el selector de fechas se puede elegir la fecha actual (hoy).
+2. Seleccionar hoy como entrada y mañana como salida, verificando que se cobré 1 noche y aparezca el aviso de "Check-in: 1:00 PM | Check-out: 12:00 PM".
+3. Abrir el panel de administrador, dar clic en "Nueva Reserva" y verificar que el calendario de Flatpickr permite seleccionar el día actual.
+4. Confirmar que la reserva se procesa correctamente en la base de datos sin romper la lógica existente.

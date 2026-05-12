@@ -4,11 +4,9 @@ const { QueryTypes } = require('sequelize');
 const findAllPackages = async () => {
   return await sequelize.query(
     `SELECT p.IDPaquete, p.NombrePaquete, p.Descripcion, p.Precio, p.Estado,
-            p.IDHabitacion, p.IDServicio,
-            h.NombreHabitacion,
+            p.IDServicio, p.ServiciosIncluidos,
             s.NombreServicio
      FROM paquetes p
-     LEFT JOIN habitacion h ON p.IDHabitacion = h.IDHabitacion
      LEFT JOIN servicios  s ON p.IDServicio   = s.IDServicio
      ORDER BY p.NombrePaquete ASC`,
     { type: QueryTypes.SELECT }
@@ -18,11 +16,9 @@ const findAllPackages = async () => {
 const findPackageById = async (id) => {
   const [paquete] = await sequelize.query(
     `SELECT p.IDPaquete, p.NombrePaquete, p.Descripcion, p.Precio, p.Estado,
-            p.IDHabitacion, p.IDServicio,
-            h.NombreHabitacion,
+            p.IDServicio, p.ServiciosIncluidos,
             s.NombreServicio
      FROM paquetes p
-     LEFT JOIN habitacion h ON p.IDHabitacion = h.IDHabitacion
      LEFT JOIN servicios  s ON p.IDServicio   = s.IDServicio
      WHERE p.IDPaquete = :id`,
     { replacements: { id }, type: QueryTypes.SELECT }
@@ -30,16 +26,17 @@ const findPackageById = async (id) => {
   return paquete || null;
 };
 
-const createPackage = async ({ NombrePaquete, Descripcion, IDHabitacion, IDServicio, Precio, Estado = 1 }) => {
+const createPackage = async ({ NombrePaquete, Descripcion, IDServicio, ServiciosIncluidos, Precio, Estado = 1 }) => {
+  const srvs = Array.isArray(ServiciosIncluidos) ? JSON.stringify(ServiciosIncluidos) : null;
   const [result] = await sequelize.query(
-    `INSERT INTO paquetes (NombrePaquete, Descripcion, IDHabitacion, IDServicio, Precio, Estado)
-     VALUES (:nombre, :descripcion, :habitacion, :servicio, :precio, :estado)`,
+    `INSERT INTO paquetes (NombrePaquete, Descripcion, IDServicio, ServiciosIncluidos, Precio, Estado)
+     VALUES (:nombre, :descripcion, :servicio, :serviciosIncluidos, :precio, :estado)`,
     {
       replacements: {
         nombre:      NombrePaquete,
         descripcion: Descripcion,
-        habitacion:  IDHabitacion || null,
         servicio:    IDServicio   || null,
+        serviciosIncluidos: srvs,
         precio:      Precio,
         estado:      Estado,
       },
@@ -49,26 +46,32 @@ const createPackage = async ({ NombrePaquete, Descripcion, IDHabitacion, IDServi
   return findPackageById(result);
 };
 
-const updatePackage = async (id, { NombrePaquete, Descripcion, IDHabitacion, IDServicio, Precio }) => {
+const updatePackage = async (id, { NombrePaquete, Descripcion, IDServicio, ServiciosIncluidos, Precio, Estado }) => {
   const existing = await findPackageById(id);
   if (!existing) return null;
+
+  const srvs = ServiciosIncluidos !== undefined 
+      ? (Array.isArray(ServiciosIncluidos) ? JSON.stringify(ServiciosIncluidos) : null) 
+      : existing.ServiciosIncluidos;
 
   await sequelize.query(
     `UPDATE paquetes
      SET NombrePaquete = :nombre,
          Descripcion   = :descripcion,
-         IDHabitacion  = :habitacion,
          IDServicio    = :servicio,
-         Precio        = :precio
+         ServiciosIncluidos = :serviciosIncluidos,
+         Precio        = :precio,
+         Estado        = :estado
      WHERE IDPaquete = :id`,
     {
       replacements: {
         id,
         nombre:      NombrePaquete ?? existing.NombrePaquete,
         descripcion: Descripcion   ?? existing.Descripcion,
-        habitacion:  IDHabitacion  ?? existing.IDHabitacion,
         servicio:    IDServicio    ?? existing.IDServicio,
+        serviciosIncluidos: srvs,
         precio:      Precio        ?? existing.Precio,
+        estado:      Estado        ?? existing.Estado,
       },
       type: QueryTypes.UPDATE,
     }

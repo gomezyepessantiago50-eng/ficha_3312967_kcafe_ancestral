@@ -10,7 +10,7 @@ module.exports = (sequelize) => {
         primaryKey: true,
         autoIncrement: true,
       },
-      Nombre: {
+      NombreCabana: {
         type: DataTypes.STRING(100),
         allowNull: false,
       },
@@ -18,7 +18,7 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(255),
         allowNull: false,
       },
-      CapacidadMaxima: {
+      Capacidad: {
         type: DataTypes.INTEGER,
         allowNull: false,
         validate: { min: 1 },
@@ -29,7 +29,7 @@ module.exports = (sequelize) => {
         defaultValue: 1,
         validate: { min: 1 },
       },
-      Costo: {
+      PrecioNoche: {
         type: DataTypes.FLOAT,
         allowNull: false,
         validate: { min: 0 },
@@ -39,9 +39,17 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: true,
       },
+      ImagenCabana: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      ImagenHabitacion: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
     },
     {
-      tableName: 'Cabanas',
+      tableName: 'cabanas',
       timestamps: false,
     }
   );

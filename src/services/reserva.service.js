@@ -47,7 +47,7 @@ const rangeDates = (start, end) => {
 const normalizeReserva = (r) => ({
   id: r.IdReserva,
   documento: r.NroDocumentoCliente,
-  fecha_reserva: toDateString(r.FechaReserva),
+  fecha_reserva: r.FechaReserva, // Mantener fecha y hora completa
   fecha_inicio: toDateString(r.FechaInicio),
   fecha_fin: toDateString(r.FechaFinalizacion),
   subtotal: r.SubTotal,
@@ -63,6 +63,9 @@ const normalizeReserva = (r) => ({
   notas: r.notas,
   num_personas: r.num_personas,
   motivo: r.motivo,
+  metodo_pago: r.metodo_pago || r.MetodoPago,
+  comprobante_pago: r.comprobante_pago,
+  monto_pagado: r.monto_pagado,
 });
 
 const STATE_TO_ID = {
@@ -98,6 +101,9 @@ const parsePayload = (datos) => {
     notas: datos.notas,
     num_personas: datos.num_personas,
     motivo: datos.Motivo || datos.motivo,
+    metodo_pago: datos.metodo_pago || datos.MetodoPago || 'efectivo',
+    comprobante_pago: datos.comprobante_pago,
+    monto_pagado: datos.monto_pagado || 0,
   };
 
   const estadoValor = datos.estado || datos.Estado;
@@ -123,8 +129,8 @@ const verificarDisponibilidad = async (fechaInicio, fechaFin, cabana = null, exc
 
   const fechaOverlap = {
     [Op.and]: [
-      { FechaInicio: { [Op.lt]: fin } },
-      { FechaFinalizacion: { [Op.gt]: inicio } },
+      { FechaInicio: { [Op.lte]: fin } },
+      { FechaFinalizacion: { [Op.gte]: inicio } },
     ],
   };
 
@@ -170,8 +176,8 @@ const verDisponibilidad = async () => {
 
 const bloquearFechas = async (datos, usuarioId) => {
   const payload = parsePayload(datos);
-  const { FechaInicio, FechaFinalizacion, motivo } = payload;
-  const { disponible, conflictos } = await verificarDisponibilidad(FechaInicio, FechaFinalizacion);
+  const { FechaInicio, FechaFinalizacion, motivo, cabana } = payload;
+  const { disponible, conflictos } = await verificarDisponibilidad(FechaInicio, FechaFinalizacion, cabana);
   if (!disponible) {
     const error = new Error('Ya existen reservas o bloqueos en ese rango de fechas');
     error.status = 409;
@@ -192,6 +198,7 @@ const bloquearFechas = async (datos, usuarioId) => {
     MontoTotal: 0,
     MetodoPago: 1,
     motivo,
+    cabana: cabana || null
   });
 
   return normalizeBloqueo(bloqueo);

@@ -2,15 +2,22 @@ const clientService = require('../services/clientService');
 
 /**
  * GET /clientes
- * Lista todos los clientes
+ * Lista todos los clientes (usuarios registrados) con paginación
  */
 const getAllClients = async (req, res, next) => {
   try {
-    const clientes = await clientService.findAllClients();
+    const page  = parseInt(req.query.page)  || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const q     = req.query.q || '';
+
+    const result = await clientService.findAllClients({ page, limit, q });
 
     return res.status(200).json({
       success: true,
-      data:    clientes,
+      data: result.clientes,
+      total: result.total,
+      totalPages: result.totalPages,
+      currentPage: result.currentPage,
     });
   } catch (error) {
     next(error);
@@ -19,7 +26,7 @@ const getAllClients = async (req, res, next) => {
 
 /**
  * GET /clientes/search?q=texto
- * Busca clientes por nombre, apellido o correo
+ * Busca clientes por nombre, apellido o correo (para modal de reservas)
  */
 const searchClients = async (req, res, next) => {
   try {
@@ -36,7 +43,7 @@ const searchClients = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      data:    clientes,
+      data: clientes,
     });
   } catch (error) {
     next(error);
@@ -44,8 +51,8 @@ const searchClients = async (req, res, next) => {
 };
 
 /**
- * GET /clientes/:nroDocumento
- * Perfil del cliente: info personal + historial de reservas
+ * GET /clientes/:id
+ * Perfil del cliente
  */
 const getClientById = async (req, res, next) => {
   try {
@@ -62,7 +69,7 @@ const getClientById = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      data:    cliente,
+      data: cliente,
     });
   } catch (error) {
     next(error);
@@ -88,7 +95,7 @@ const getClientHistory = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      data:    resultado,
+      data: resultado,
     });
   } catch (error) {
     next(error);
@@ -115,7 +122,7 @@ const updateClient = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: 'Cliente actualizado correctamente.',
-      data:    cliente,
+      data: cliente,
     });
   } catch (error) {
     next(error);
