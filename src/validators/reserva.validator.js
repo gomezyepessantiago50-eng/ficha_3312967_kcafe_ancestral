@@ -21,8 +21,8 @@ const crearReservaValidator = [
       const start = new Date(Date.UTC(year, month - 1, day));
       const today = new Date();
       const todayUtc = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-      if (start <= todayUtc) {
-        throw new Error('La fecha de inicio debe ser a partir de mañana');
+      if (start < todayUtc) {
+        throw new Error('La fecha de inicio debe ser a partir de hoy');
       }
       return true;
     }),
@@ -36,8 +36,8 @@ const crearReservaValidator = [
       const start = new Date(Date.UTC(year, month - 1, day));
       const today = new Date();
       const todayUtc = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-      if (start <= todayUtc) {
-        throw new Error('La fecha de inicio debe ser a partir de mañana');
+      if (start < todayUtc) {
+        throw new Error('La fecha de inicio debe ser a partir de hoy');
       }
       return true;
     }),
@@ -48,8 +48,8 @@ const crearReservaValidator = [
     .isDate().withMessage('Formato de fecha inválido (YYYY-MM-DD)')
     .custom((value, { req }) => {
       const start = req.body.FechaInicio || req.body.fecha_inicio;
-      if (new Date(value) <= new Date(start)) {
-        throw new Error('La fecha de finalización debe ser posterior a la de inicio');
+      if (new Date(value) < new Date(start)) {
+        throw new Error('La fecha de finalización debe ser igual o posterior a la de inicio');
       }
       return true;
     }),
@@ -60,8 +60,8 @@ const crearReservaValidator = [
     .isDate().withMessage('Formato de fecha inválido (YYYY-MM-DD)')
     .custom((value, { req }) => {
       const start = req.body.FechaInicio || req.body.fecha_inicio;
-      if (new Date(value) <= new Date(start)) {
-        throw new Error('La fecha de finalización debe ser posterior a la de inicio');
+      if (new Date(value) < new Date(start)) {
+        throw new Error('La fecha de finalización debe ser igual o posterior a la de inicio');
       }
       return true;
     }),
@@ -95,8 +95,8 @@ const editarReservaValidator = [
       const start = new Date(Date.UTC(year, month - 1, day));
       const today = new Date();
       const todayUtc = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-      if (start <= todayUtc) {
-        throw new Error('La fecha de inicio debe ser a partir de mañana');
+      if (start < todayUtc) {
+        throw new Error('La fecha de inicio debe ser a partir de hoy');
       }
       return true;
     }),

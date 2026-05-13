@@ -147,6 +147,7 @@ function openCabanaDetails(key) {
         <div class="room-title"><h3>${info.title}</h3><small>${CABANAS[key].label}</small></div>
         <p>${info.descripcion}</p>
         <div class="room-price">${fCop(CABANAS[key].precio)}<small>/noche</small></div>
+        ${CABANAS[key].ubicacion ? `<div class="room-meta" style="margin-bottom:0.5rem;font-size:0.8rem;color:var(--mist);">📍 ${CABANAS[key].ubicacion}</div>` : ''}
         <div class="room-meta">${info.caracteristicas.map(i=>`<span>${i}</span>`).join('')}</div>
       </div>
     </div>`;
@@ -261,11 +262,10 @@ function toggleSrv(key) {
 function onForm() {
   document.getElementById('form-alert').innerHTML='';
   const ini=document.getElementById('f-ini').value, fin=document.getElementById('f-fin').value;
-  if (ini&&fin&&new Date(fin)<=new Date(ini)) { document.getElementById('f-fin').value=''; CLIENTE_UI.fechaFin=''; }
+  if (ini&&fin&&new Date(fin)<new Date(ini)) { document.getElementById('f-fin').value=''; CLIENTE_UI.fechaFin=''; }
   else CLIENTE_UI.fechaFin=fin;
   if (ini) {
-    const mf=new Date(ini); mf.setDate(mf.getDate()+1);
-    document.getElementById('f-fin').setAttribute('min',mf.toISOString().split('T')[0]);
+    document.getElementById('f-fin').setAttribute('min', ini);
   }
   CLIENTE_UI.fechaInicio=ini;
   CLIENTE_UI.personas=CABANAS[CLIENTE_UI.cabana].capacidad||2;
@@ -303,7 +303,10 @@ function updateResumen() {
     <div class="price-row"><span class="pk">Precio paquete</span><span class="pv">${paquete.precio?`+${fCop(paquete.precio)}`:'Incluido'}</span></div>
     ${srvs.map(s=>`<div class="price-row"><span class="pk">${s.label}</span><span class="pv">+${fCop(s.precio)} por persona</span></div>`).join('')}
     <div class="price-row" style="border-bottom:none;"><span class="pk">Subtotal</span><span class="pv">${fCop(subtotal)}</span></div>
-    <div class="price-row" style="border-bottom:none;color:var(--mist);font-size:0.78rem;"><span class="pk">IVA (19%)</span><span class="pv">${fCop(iva)}</span></div>`;
+    <div class="price-row" style="border-bottom:none;color:var(--mist);font-size:0.78rem;"><span class="pk">IVA (19%)</span><span class="pv">${fCop(iva)}</span></div>
+    <div style="margin-top:0.75rem;padding:0.75rem;background:var(--fire-soft);border-radius:6px;text-align:center;font-size:0.85rem;color:var(--fire);border:1px solid rgba(232,93,4,0.2);">
+      <strong>🕒 Check-in:</strong> 1:00 PM | <strong>Check-out:</strong> 12:00 PM
+    </div>`;
 
   const ptEl=document.getElementById('pt-val'); if(ptEl) ptEl.textContent=fCop(total);
   if(totalRow) totalRow.style.display='flex';
@@ -591,7 +594,7 @@ async function refreshGlobalCabanas() {
     cabanas.forEach(c => {
       if (!c.Estado && c.Estado !== 1) return;
       if (!firstCab) firstCab = c.IDCabana;
-      CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima };
+      CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima, ubicacion: c.Ubicacion };
     });
     
     if (!CABANAS[CLIENTE_UI.cabana] && firstCab) {
@@ -613,6 +616,7 @@ async function refreshGlobalCabanas() {
             <div class="cabana-title-row"><h4>${c.Nombre}</h4><span class="cabana-price-inline">${fCop(c.Costo)}</span></div>
             <p>${c.Descripcion || ''}</p>
             <div style="font-size:0.72rem;color:var(--mist);margin-top:0.2rem;">Hasta ${c.CapacidadMaxima} pers.</div>
+            ${c.Ubicacion ? `<div style="font-size:0.72rem;color:var(--mist);margin-top:0.2rem;">📍 ${c.Ubicacion}</div>` : ''}
           </div>
         </button>`;
     });

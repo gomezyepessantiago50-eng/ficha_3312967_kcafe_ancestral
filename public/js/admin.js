@@ -59,22 +59,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* FIX 2 */
   if (typeof _cals !== 'undefined') {
-    _cals['dash-cal']  = { y:new Date().getFullYear(), m:new Date().getMonth(), refresh:refreshDashCal };
     _cals['admin-cal'] = { y:new Date().getFullYear(), m:new Date().getMonth(), refresh:refreshAdminCal };
   }
 
   loadDashboard();
-  refreshDashCal();
+  refreshAdminCal();
   loadReservas();
   initNotificaciones();
 
-  // Establecer fecha mínima en inputs de bloqueo (mañana)
-  const tom = new Date(); tom.setDate(tom.getDate() + 1);
-  const tomStr = tom.toISOString().split('T')[0];
+  // Establecer fecha mínima en inputs de bloqueo (hoy)
+  const hoyStr = new Date().toISOString().split('T')[0];
   const bIni = document.getElementById('b-ini');
   const bFin = document.getElementById('b-fin');
-  if (bIni) bIni.setAttribute('min', tomStr);
-  if (bFin) bFin.setAttribute('min', tomStr);
+  if (bIni) bIni.setAttribute('min', hoyStr);
+  if (bFin) bFin.setAttribute('min', hoyStr);
 
   setInterval(() => {
     const cl = document.getElementById('footer-clock');
@@ -91,7 +89,6 @@ function showSec(name, btn) {
   document.getElementById('topbar-crumb').textContent = CRUMBS[name] || name;
   if (name === 'reservas')   loadReservas(1);
   if (name === 'bloqueos')   loadBloqueos();
-  if (name === 'calendario') refreshAdminCal();
 }
 
 /* ════════ CALENDARIOS ════════ */
@@ -100,11 +97,6 @@ async function fetchAvail() {
     const d = await ReservasAPI.disponibilidad();
     return { reservadas: d.data?.reservadas || d.reservadas || [], bloqueadas: d.data?.bloqueadas || d.bloqueadas || [] };
   } catch { return { reservadas:[], bloqueadas:[] }; }
-}
-async function refreshDashCal() {
-  const s = _cals?.['dash-cal']; if (!s) return;
-  const d = await fetchAvail();
-  buildCal('dash-cal', s.y, s.m, d.reservadas, d.bloqueadas);
 }
 async function refreshAdminCal() {
   const s = _cals?.['admin-cal']; if (!s) return;
@@ -256,6 +248,8 @@ window.loadDashboard = async function() {
         }
       }
     }
+
+    refreshAdminCal();
 
     // Métricas anteriores (pendientes, bloqueos, llegadas)
     const rs = rR.status==='fulfilled' ? (rR.value.data||[]) : [];
@@ -422,8 +416,8 @@ async function abrirDetalle(id) {
     document.getElementById('m-det-paquete').value  = reserva.paquete||'basico';
     document.getElementById('m-det-personas').value = reserva.num_personas||1;
     document.getElementById('m-det-notas').value    = reserva.notas||'';
-    const tom=new Date(); tom.setDate(tom.getDate()+1); const tomStr=tom.toISOString().split('T')[0];
-    document.getElementById('m-det-ini').setAttribute('min',tomStr);
+    const hoyStr=new Date().toISOString().split('T')[0];
+    document.getElementById('m-det-ini').setAttribute('min',hoyStr);
     if (reserva.fecha_inicio) {
       const mf=new Date(reserva.fecha_inicio); mf.setDate(mf.getDate()+1);
       document.getElementById('m-det-fin').setAttribute('min',mf.toISOString().split('T')[0]);
@@ -434,10 +428,10 @@ async function abrirDetalle(id) {
 
 function mDetRangeCheck() {
   const iniEl=document.getElementById('m-det-ini'), finEl=document.getElementById('m-det-fin');
-  const ini=iniEl.value; const tom=new Date(); tom.setDate(tom.getDate()+1); const tomStr=tom.toISOString().split('T')[0];
-  if (ini&&ini<tomStr) { iniEl.value=''; finEl.value=''; return; }
-  if (ini&&finEl.value&&new Date(finEl.value)<=new Date(ini)) finEl.value='';
-  if (ini) { const mf=new Date(ini); mf.setDate(mf.getDate()+1); finEl.setAttribute('min',mf.toISOString().split('T')[0]); }
+  const ini=iniEl.value; const hoyStr=new Date().toISOString().split('T')[0];
+  if (ini&&ini<hoyStr) { iniEl.value=''; finEl.value=''; return; }
+  if (ini&&finEl.value&&new Date(finEl.value)<new Date(ini)) finEl.value='';
+  if (ini) { finEl.setAttribute('min',ini); }
 }
 
 async function guardarDetalleReserva() {
@@ -447,10 +441,10 @@ async function guardarDetalleReserva() {
   const personas=Number(document.getElementById('m-det-personas').value)||1;
   const notas=document.getElementById('m-det-notas').value.trim();
   const alertEl=document.getElementById('m-det-alert');
-  const tom=new Date(); tom.setDate(tom.getDate()+1); const tomStr=tom.toISOString().split('T')[0];
+  const hoyStr=new Date().toISOString().split('T')[0];
   if (!ini||!fin) { alertEl.innerHTML=`<div class="alert alert-error">⚠ Selecciona fechas.</div>`; return; }
-  if (ini<tomStr)  { alertEl.innerHTML=`<div class="alert alert-error">⚠ Fecha inicio debe ser desde mañana.</div>`; return; }
-  if (new Date(fin)<=new Date(ini)) { alertEl.innerHTML=`<div class="alert alert-error">⚠ Fecha fin debe ser posterior.</div>`; return; }
+  if (ini<hoyStr)  { alertEl.innerHTML=`<div class="alert alert-error">⚠ Fecha inicio debe ser desde hoy.</div>`; return; }
+  if (new Date(fin)<new Date(ini)) { alertEl.innerHTML=`<div class="alert alert-error">⚠ Fecha fin debe ser igual o posterior.</div>`; return; }
   const srvs=_viewReservaData?.servicios||[];
   const srvP=Array.isArray(srvs)?srvs.reduce((s,k)=>s+(SERVICIOS[k]?.precio||0),0):0;
   const noches=nights(ini,fin);
@@ -528,24 +522,30 @@ function adminResumenUpdate() {
     // Si la fecha fin es menor, limpiar
   }
   const noches=nights(ini,fin);
-  const cab=CABANAS[ADMIN_NUEVA_RES.cabana]||CABANAS.roble;
+  const cabKey = ADMIN_NUEVA_RES.cabana || Object.keys(CABANAS)[0];
+  const cab = CABANAS[cabKey];
+  if (!cab) return; // Protección contra cab undefined si no han cargado aún
   const paq=ADMIN_NUEVA_RES.paquete ? PAQUETES[ADMIN_NUEVA_RES.paquete] : { label: 'Ninguno', precio: 0 };
   const srvs=Array.from(ADMIN_NUEVA_RES.servicios).map(s=>SERVICIOS[s]).filter(Boolean);
   const srvP=srvs.reduce((a,s)=>a+s.precio,0);
   const rawSub=(cab.precio+paq.precio)*Math.max(noches,1)+srvP*cab.capacidad;
   const {subtotal,iva,total}=calcMontos(rawSub);
-  const valido=ini&&fin&&new Date(fin)>new Date(ini);
+  const valido=ini&&fin&&new Date(fin)>=new Date(ini);
   const body=document.getElementById('admin-price-body'), totalRow=document.getElementById('admin-price-total');
   if (!valido) { body.innerHTML='<p style="color:rgba(100,80,60,0.6);text-align:center;font-size:0.85rem;">Selecciona fechas válidas</p>'; if(totalRow) totalRow.style.display='none'; return; }
   body.innerHTML=`
     <div class="price-row"><span class="pk">Cabaña</span><span class="pv">${cab.label} × ${noches} noche(s)</span></div>
+    ${cab.ubicacion ? `<div class="price-row" style="padding-top:0;"><span class="pk" style="font-size:0.75rem;">Ubicación</span><span class="pv" style="font-size:0.75rem;font-weight:normal;color:var(--dark-muted);">${cab.ubicacion}</span></div>` : ''}
     <div class="price-row"><span class="pk">Precio/noche</span><span class="pv">${fCop(cab.precio)}</span></div>
     <div class="price-row"><span class="pk">Paquete</span><span class="pv">${paq.label} ${paq.precio?`+${fCop(paq.precio)}`:''}</span></div>
     ${srvs.map(s=>`<div class="price-row"><span class="pk">${s.label}</span><span class="pv">+${fCop(s.precio)}</span></div>`).join('')}
     <div class="price-row" style="border-top:1px solid rgba(46,26,14,0.12);margin-top:0.4rem;padding-top:0.4rem;">
       <span class="pk">Subtotal</span><span class="pv">${fCop(subtotal)}</span>
     </div>
-    <div class="price-row"><span class="pk">IVA (19%)</span><span class="pv">${fCop(iva)}</span></div>`;
+    <div class="price-row"><span class="pk">IVA (19%)</span><span class="pv">${fCop(iva)}</span></div>
+    <div style="margin-top:0.5rem;padding:0.5rem;background:rgba(232,93,4,0.1);border-radius:4px;text-align:center;font-size:0.8rem;color:var(--fire);">
+      <strong>🕒 Check-in:</strong> 1:00 PM | <strong>Check-out:</strong> 12:00 PM
+    </div>`;
   const tEl=document.getElementById('admin-pt-val'); if(tEl) tEl.textContent=fCop(total);
   if(totalRow) totalRow.style.display='flex';
 }
@@ -577,7 +577,7 @@ async function doNuevaAdmin() {
 
   const [y,m,d]=ini.split('-').map(Number); const start=new Date(y,m-1,d);
   const hoy=new Date(); hoy.setHours(0,0,0,0);
-  if (start<=hoy) { alertEl.innerHTML=`<div class="alert alert-error">⚠ La fecha de inicio debe ser a partir de mañana.</div>`; return; }
+  if (start<hoy) { alertEl.innerHTML=`<div class="alert alert-error">⚠ La fecha de inicio debe ser a partir de hoy.</div>`; return; }
   try {
     const noches=nights(ini,fin); const cabData=CABANAS[cab]; const paqData=ADMIN_NUEVA_RES.paquete ? PAQUETES[ADMIN_NUEVA_RES.paquete] : { precio: 0 };
     const serviciosArr=Array.from(ADMIN_NUEVA_RES.servicios);
@@ -607,9 +607,10 @@ async function doNuevaAdmin() {
 }
 
 function adminResetNuevaRES() {
-  ADMIN_NUEVA_RES.cabana='roble'; ADMIN_NUEVA_RES.paquete=null; ADMIN_NUEVA_RES.servicios.clear();
+  const firstCab = Object.keys(window.CABANAS || {})[0] || 'roble';
+  ADMIN_NUEVA_RES.cabana=firstCab; ADMIN_NUEVA_RES.paquete=null; ADMIN_NUEVA_RES.servicios.clear();
   ['mn-ini','mn-fin'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('mn-cab').value='roble';
+  document.getElementById('mn-cab').value=firstCab;
   document.getElementById('mn-doc').value='';
   const searchInput = document.getElementById('mn-cli-search'); if(searchInput) searchInput.value='';
   const selDiv = document.getElementById('mn-cli-selected'); if(selDiv) { selDiv.style.display='none'; selDiv.innerHTML=''; }
@@ -645,18 +646,18 @@ async function doBloquear() {
   if (!cab) { alEl.innerHTML='<div class="alert alert-error">\u26a0 Selecciona una caba\u00f1a en el calendario antes de bloquear.</div>'; return; }
   if (!ini||!fin) { alEl.innerHTML='<div class="alert alert-error">⚠ Selecciona las fechas</div>'; return; }
 
-  // Validar que no sean fechas pasadas ni hoy
+  // Validar que no sean fechas pasadas
   const hoy = new Date(); hoy.setHours(0,0,0,0);
   const [yi,mi,di] = ini.split('-').map(Number);
   const fechaIni = new Date(yi, mi-1, di);
-  if (fechaIni <= hoy) {
-    alEl.innerHTML='<div class="alert alert-error">⚠ La fecha de inicio debe ser a partir de mañana</div>'; return;
+  if (fechaIni < hoy) {
+    alEl.innerHTML='<div class="alert alert-error">⚠ La fecha de inicio no puede ser en el pasado</div>'; return;
   }
   if (new Date(fin)<new Date(ini)) { alEl.innerHTML='<div class="alert alert-error">⚠ Fecha fin no puede ser anterior al inicio</div>'; return; }
   try {
     await BloqueosAPI.crear({ FechaInicio:ini, FechaFinalizacion:fin, Motivo:document.getElementById('b-motivo').value, cabana: cab });
     alEl.innerHTML=''; ['b-ini','b-fin','b-motivo'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=''});
-    toast('Fechas bloqueadas','ok'); loadBloqueos(); refreshAdminCal(); refreshDashCal();
+    toast('Fechas bloqueadas','ok'); loadBloqueos(); refreshAdminCal();
     loadDashboard();
   } catch(e) { alEl.innerHTML=`<div class="alert alert-error">⚠ ${e.message}</div>`; }
 }
@@ -673,7 +674,7 @@ async function loadBloqueos() {
 }
 
 async function doDesbloquear(id) {
-  try { await BloqueosAPI.eliminar(id); toast('Fecha desbloqueada','ok'); loadBloqueos(); refreshAdminCal(); refreshDashCal(); }
+  try { await BloqueosAPI.eliminar(id); toast('Fecha desbloqueada','ok'); loadBloqueos(); refreshAdminCal(); }
   catch(e) { toast(e.message,'err'); }
 }
 
@@ -687,11 +688,6 @@ function _usrRow(u) {
   const rolBadge = u.rol === 'admin'
     ? '<span class="badge" style="background:rgba(232,93,4,0.15);color:var(--fire);border:1px solid rgba(232,93,4,0.3);font-size:0.72rem;">Admin</span>'
     : '<span class="badge" style="background:rgba(45,122,79,0.15);color:#4caf50;border:1px solid rgba(45,122,79,0.3);font-size:0.72rem;">Cliente</span>';
-  const icoStyle = 'width:14px;height:14px;vertical-align:middle;';
-  const icoAttr  = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
-  const icoRol   = `<svg ${icoAttr} style="${icoStyle}"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>`;
-  const icoKey   = `<svg ${icoAttr} style="${icoStyle}"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>`;
-  const icoDel   = `<svg ${icoAttr} style="${icoStyle}"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`;
   const safeEmail = (u.email||'').replace(/'/g,"\\'");
   return `<tr>
     <td style="font-family:var(--font-display);font-weight:800;color:var(--fire);">#${u.id}</td>
@@ -701,9 +697,9 @@ function _usrRow(u) {
     <td>${u.pais || '\u2014'}</td>
     <td>${rolBadge}</td>
     <td><div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
-      <button class="btn btn-sm btn-fire" onclick="usrAbrirCambioRol(${u.id},'${u.rol}','${safeEmail}')" title="Cambiar rol">${icoRol}</button>
-      <button class="btn btn-sm" style="background:rgba(91,141,238,0.15);border:1px solid rgba(91,141,238,0.3);color:#7eb3ff;" onclick="usrAbrirReset(${u.id},'${safeEmail}')" title="Restablecer contrase\u00f1a">${icoKey}</button>
-      <button class="btn btn-sm btn-danger" onclick="usrAbrirEliminar(${u.id},'${safeEmail}')" title="Eliminar cuenta">${icoDel}</button>
+      <button class="btn btn-sm btn-dark-outline" onclick="usrAbrirCambioRol(${u.id},'${u.rol}','${safeEmail}')" title="Cambiar rol">Rol</button>
+      <button class="btn btn-sm btn-dark-outline" onclick="usrAbrirReset(${u.id},'${safeEmail}')" title="Restablecer contrase\u00f1a">Clave</button>
+      <button class="btn btn-sm btn-outline" style="color:var(--danger);border-color:rgba(239,83,80,0.3);" onclick="usrAbrirEliminar(${u.id},'${safeEmail}')" title="Eliminar cuenta">Eliminar</button>
     </div></td>
   </tr>`;
 }
@@ -1061,9 +1057,6 @@ async function loadCabanas() {
 
     grid.innerHTML = cabanas.map(c => `
       <div class="cab-card">
-        <div class="cab-img" style="background:linear-gradient(135deg,rgba(139,69,19,0.3),rgba(210,105,30,0.2));">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px;color:var(--amber);"><path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14"/><path d="m17 8 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 8"/><line x1="12" y1="22" x2="12" y2="19"/></svg>
-        </div>
         <div class="cab-body">
           <div style="display:flex; justify-content:space-between; align-items:flex-start;">
             <h3>${c.Nombre}</h3>
@@ -1073,6 +1066,7 @@ async function loadCabanas() {
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
             <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:12px;height:12px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${c.CapacidadMaxima} pers.</span>
             <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:12px;height:12px;"><path d="M3 22v-8"/><path d="M21 22v-8"/><path d="M3 14h18"/><path d="M7 14v-4a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v4"/><path d="M12 6V2"/></svg> ${c.NumeroHabitaciones} hab.</span>
+            ${c.Ubicacion ? `<span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:12px;height:12px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${c.Ubicacion}</span>` : ''}
           </div>
           <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--fire);">$${Number(c.Costo).toLocaleString('es-CO')}<small style="font-size:0.7rem;color:var(--mist);font-family:var(--font-body);font-weight:400;">/noche</small></div>
         </div>
@@ -1085,6 +1079,8 @@ async function loadCabanas() {
     `).join('');
   } catch (error) {
     console.error(error);
+    const grid = document.getElementById('cab-grid');
+    if (grid) grid.innerHTML = `<div style="grid-column: 1 / -1; color: red;">Error: ${error.message} - ${error.stack}</div>`;
   }
 }
 
@@ -1099,6 +1095,7 @@ window.adminVerCabana = async function(id) {
           <h4 style="color:var(--fire);font-size:1.4rem;margin-bottom:0.5rem;">${c.Nombre}</h4>
           ${c.Estado ? '<span class="badge badge-success">Activa</span>' : '<span class="badge badge-danger">Inactiva</span>'}
           <p style="color:var(--mist);margin-top:0.8rem;">${c.Descripcion || 'Sin descripción'}</p>
+          ${c.Ubicacion ? `<p style="color:var(--mist);margin-top:0.4rem;font-size:0.85rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${c.Ubicacion}</p>` : ''}
       </div>
       <div style="display:flex; gap: 1rem; margin-bottom:1.5rem;">
           <div style="flex:1; background:var(--sand); padding:1rem; border-radius:8px; border:1px solid var(--sand-mid);">
@@ -1136,6 +1133,7 @@ window.adminNuevaCabana = function() {
   document.getElementById('m-cab-id').value = '';
   document.getElementById('m-cab-nombre').value = '';
   document.getElementById('m-cab-desc').value = '';
+  document.getElementById('m-cab-ubica').value = '';
   document.getElementById('m-cab-cap').value = '';
   document.getElementById('m-cab-costo').value = '';
   document.getElementById('m-cab-numhab').value = '1';
@@ -1158,6 +1156,7 @@ window.adminEditarCabana = async function(id) {
     document.getElementById('m-cab-id').value = c.IDCabana;
     document.getElementById('m-cab-nombre').value = c.Nombre;
     document.getElementById('m-cab-desc').value = c.Descripcion || '';
+    document.getElementById('m-cab-ubica').value = c.Ubicacion || '';
     document.getElementById('m-cab-cap').value = c.CapacidadMaxima;
     document.getElementById('m-cab-costo').value = c.Costo;
     document.getElementById('m-cab-numhab').value = c.NumeroHabitaciones;
@@ -1180,6 +1179,7 @@ window.saveCabana = async function() {
   const data = {
     Nombre: document.getElementById('m-cab-nombre').value,
     Descripcion: document.getElementById('m-cab-desc').value,
+    Ubicacion: document.getElementById('m-cab-ubica').value,
     CapacidadMaxima: parseInt(document.getElementById('m-cab-cap').value),
     Costo: parseFloat(document.getElementById('m-cab-costo').value),
     NumeroHabitaciones: parseInt(document.getElementById('m-cab-numhab').value),
@@ -1366,7 +1366,7 @@ async function refreshGlobalCabanas() {
     cabanas.forEach(c => {
       if (!c.Estado && c.Estado !== 1) return; // Active only
       if (!firstCab) firstCab = c.IDCabana;
-      CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima };
+      CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima, ubicacion: c.Ubicacion };
       
       const isSelected = ADMIN_NUEVA_RES.cabana == c.IDCabana;
       html += `<option value="${c.IDCabana}" ${isSelected?'selected':''}>${c.Nombre} (${c.CapacidadMaxima} pers.) — ${fCop(c.Costo)}</option>`;
@@ -2356,13 +2356,13 @@ window.adminRefreshGlobalPackages = async function() {
       window.PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion };
     });
     
-    if (!window.NUEVA_RES.paquete && firstPaq) {
-      window.NUEVA_RES.paquete = firstPaq;
+    if (!ADMIN_NUEVA_RES.paquete && firstPaq) {
+      ADMIN_NUEVA_RES.paquete = firstPaq;
     }
 
     paqs.forEach((p) => {
       if (!window.PAQUETES[p.IDPaquete]) return;
-      const isSelected = window.NUEVA_RES.paquete == p.IDPaquete;
+      const isSelected = ADMIN_NUEVA_RES.paquete == p.IDPaquete;
       
       html += `
         <button type="button" class="paq-opt ${isSelected?'selected':''}" id="adm-p-${p.IDPaquete}" onclick="adminSelectPaquete('${p.IDPaquete}')" style="border:2px solid ${isSelected?'var(--fire)':'rgba(46,26,14,0.1)'};background:#fff;">
@@ -2393,7 +2393,7 @@ window.adminRefreshGlobalServices = async function() {
     srvs.forEach(s => {
       if (s.Estado !== 1 && s.Estado !== true) return; // Solo activos
       window.SERVICIOS[s.IDServicio] = { label: s.NombreServicio, precio: s.Costo };
-      const isSelected = window.NUEVA_RES && window.NUEVA_RES.servicios && window.NUEVA_RES.servicios.has(String(s.IDServicio));
+      const isSelected = ADMIN_NUEVA_RES && ADMIN_NUEVA_RES.servicios && ADMIN_NUEVA_RES.servicios.has(String(s.IDServicio));
       html += `
         <button type="button" class="srv-chip ${isSelected?'selected':''}" id="adm-srv-${s.IDServicio}" onclick="adminToggleSrv('${s.IDServicio}')" style="${isSelected?'background:var(--fire);color:#fff;border-color:var(--fire);':'background:#fff;color:var(--bark);border-color:rgba(46,26,14,0.15);'}">
           ${s.NombreServicio} <span style="font-weight:600; font-size:0.75rem; opacity:0.8;">+${fCop(s.Costo)}</span>
@@ -2431,14 +2431,14 @@ window.adminRefreshGlobalCabanas = async function() {
       window.CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima };
     });
     
-    if (!window.NUEVA_RES.cabana && firstCab) {
-      window.NUEVA_RES.cabana = firstCab;
+    if (!ADMIN_NUEVA_RES.cabana && firstCab) {
+      ADMIN_NUEVA_RES.cabana = firstCab;
     }
 
     cabanas.forEach((c) => {
       if (!window.CABANAS[c.IDCabana]) return;
       html += `
-        <option value="${c.IDCabana}" ${window.NUEVA_RES.cabana == c.IDCabana ? 'selected' : ''}>
+        <option value="${c.IDCabana}" ${ADMIN_NUEVA_RES.cabana == c.IDCabana ? 'selected' : ''}>
           ${c.Nombre} (${c.CapacidadMaxima} pers.) — ${fCop(c.Costo)}
         </option>`;
     });
@@ -2454,8 +2454,11 @@ window.adminRefreshGlobalCabanas = async function() {
     
     populateCalCabFilter();
     if (typeof adminResumenUpdate === 'function') adminResumenUpdate();
-    if (typeof updateAdminDatePickers === 'function') updateAdminDatePickers(); // Refrescar fechas según la cabaña inicial
-  } catch(e) {}
+  } catch(e) { 
+    console.error('Error in adminRefreshGlobalCabanas:', e); 
+  } finally {
+    if (typeof updateAdminDatePickers === 'function') updateAdminDatePickers(); // Refrescar fechas SIEMPRE
+  }
 };
 
 // ════════ FLATPICKR LOGIC ════════
@@ -2531,13 +2534,11 @@ function getDisabledDates(cab) {
 }
 
 function setupPickerPair(iniId, finId, cab, onChangeExtra) {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+  const hoyStr = new Date().toISOString().split('T')[0];
 
   const ranges = getOccupiedRanges(cab);
   const disabled = getDisabledDates(cab);
-  const commonOpts = { locale: 'es', minDate: tomorrowStr, dateFormat: 'Y-m-d' };
+  const commonOpts = { locale: 'es', minDate: hoyStr, dateFormat: 'Y-m-d' };
 
   // Destruir instancias previas
   const iniEl = document.getElementById(iniId);
@@ -2552,19 +2553,18 @@ function setupPickerPair(iniId, finId, cab, onChangeExtra) {
     disable: disabled,
     onChange: function(selectedDates, dateStr) {
       const finPicker = finEl._flatpickr;
-      if (!finPicker) return;
+      if (!finPicker || !selectedDates.length) return;
       // Calcular maxDate: no puede pasar por encima de la siguiente reserva
       const maxDate = getMaxDateAfter(selectedDates[0], ranges);
-      // minDate del fin: día siguiente al inicio
+      // minDate del fin: mismo día que el inicio
       const minFin = new Date(selectedDates[0]);
-      minFin.setDate(minFin.getDate() + 1);
       finPicker.set('minDate', minFin);
       if (maxDate) {
         finPicker.set('maxDate', maxDate);
       } else {
         finPicker.set('maxDate', null);
       }
-      if (finPicker.selectedDates[0] && finPicker.selectedDates[0] <= selectedDates[0]) finPicker.clear();
+      if (finPicker.selectedDates[0] && finPicker.selectedDates[0] < selectedDates[0]) finPicker.clear();
       if (onChangeExtra) onChangeExtra();
     }
   });
@@ -2581,13 +2581,14 @@ function setupPickerPair(iniId, finId, cab, onChangeExtra) {
 window.updateAdminDatePickers = function() {
   if (typeof flatpickr === 'undefined') return;
   const cabanaSel = document.getElementById('mn-cab')?.value;
-  const blqCabanaSel = document.getElementById('cal-cab-filter')?.value;
+  const blqCabanaSel = document.getElementById('b-cab')?.value;
 
   setupPickerPair('mn-ini', 'mn-fin', cabanaSel, adminResumenUpdate);
   setupPickerPair('b-ini', 'b-fin', blqCabanaSel, null);
 };
 
 document.getElementById('cal-cab-filter')?.addEventListener('change', updateAdminDatePickers);
+document.getElementById('b-cab')?.addEventListener('change', updateAdminDatePickers);
 
 function adminCabanaChange() { 
   ADMIN_NUEVA_RES.cabana = document.getElementById('mn-cab').value; 

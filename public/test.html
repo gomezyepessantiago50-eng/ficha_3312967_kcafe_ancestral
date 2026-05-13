@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+</head>
+<body>
+  <input type="text" id="mn-ini">
+  <input type="text" id="mn-fin">
+  <select id="mn-cab"><option value="1">Cabaña 1</option></select>
+  <select id="cal-cab-filter"></select>
+  <input type="text" id="b-ini">
+  <input type="text" id="b-fin">
+
+  <script>
+    window.Auth = {
+      getUser: () => ({ id: 1, rol: 'admin' }),
+      getToken: () => 'fake',
+      logout: () => {}
+    };
+    window.Chart = class { constructor() {} };
+    window.GLOBAL_RESERVAS = [
+      { cabana: '1', estado: 'confirmada', fecha_inicio: '2026-05-15', fecha_fin: '2026-05-18' }
+    ];
+    window.CABANAS = {
+      '1': { label: 'Cabana 1', precio: 100000, capacidad: 2 }
+    };
+  </script>
+  <script src="js/admin.js"></script>
+  <script>
+    setTimeout(() => {
+      console.log('Testing setupPickerPair...');
+      try {
+        window.updateAdminDatePickers();
+        console.log('updateAdminDatePickers completed');
+        const iniEl = document.getElementById('mn-ini');
+        console.log('Flatpickr instance on mn-ini:', !!iniEl._flatpickr);
+      } catch (e) {
+        console.error('Error during updateAdminDatePickers:', e);
+      }
+    }, 1000);
+  </script>
+</body>
+</html>

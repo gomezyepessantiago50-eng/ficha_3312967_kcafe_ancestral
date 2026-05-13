@@ -108,13 +108,7 @@ function initializeButtonInteractions() {
     });
   }
 
-  // Botones "Ver detalles" de cabañas → redirige al login
-  document.querySelectorAll('.cabaña-footer .btn').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      window.location.href = 'index.html';
-    });
-  });
+  // Los botones de cabañas ahora usan abrirModalCabana() definido globalmente
 
   // Botones de paquetes → redirige al login
   document.querySelectorAll('.paquete-card .btn').forEach(btn => {
@@ -136,6 +130,7 @@ async function loadLandingCabanas() {
     const data = await res.json();
     let cabanas = data.data || [];
     cabanas = cabanas.filter(c => c.Estado == 1); // Solo activas
+    window.cabanasDisponibles = cabanas;
 
     if (cabanas.length === 0) {
       cGrid.innerHTML = '<div style="grid-column: 1/-1;text-align:center;color:var(--dark-muted);padding:2rem;">No hay cabañas disponibles en este momento</div>';
@@ -157,10 +152,11 @@ async function loadLandingCabanas() {
             <ul class="cabaña-features">
               <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Capacidad: ${c.CapacidadMaxima} huéspedes</li>
               <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M3 22v-8"/><path d="M21 22v-8"/><path d="M3 14h18"/><path d="M7 14v-4a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v4"/><path d="M12 6V2"/></svg> Habitaciones: ${c.NumeroHabitaciones}</li>
+              ${c.Ubicacion ? `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ubicación: ${c.Ubicacion}</li>` : ''}
             </ul>
             <div class="cabaña-footer">
               <span class="price">$${Number(c.Costo).toLocaleString('es-CO')}<small>/noche</small></span>
-              <button class="btn btn-outline btn-sm" onclick="window.location.href='index.html'">Ver detalles</button>
+              <button class="btn btn-outline btn-sm" onclick="abrirModalCabana('${c.IDCabana}')">Ver detalles</button>
             </div>
           </div>
         </div>
@@ -317,6 +313,50 @@ function trackEvent(name, data = {}) {
 document.addEventListener('click', e => {
   if (e.target.classList.contains('btn-fire')) {
     trackEvent('click_cta', { text: e.target.textContent.trim() });
+  }
+});
+
+// ── MODAL DETALLES CABAÑA ───────────────────────────────────────────────────
+function abrirModalCabana(id) {
+  if (!window.cabanasDisponibles) return;
+  const cabana = window.cabanasDisponibles.find(c => c.IDCabana == id);
+  if (!cabana) return;
+
+  const modal = document.getElementById('modal-cabana-detalle');
+  if (!modal) return;
+
+  const img = cabana.ImagenCabana || 'https://images.unsplash.com/photo-1518991669915-32c39c6f5981?w=500&h=400&fit=crop';
+  
+  document.getElementById('modal-cabana-img').src = img;
+  document.getElementById('modal-cabana-img').alt = cabana.Nombre;
+  document.getElementById('modal-cabana-titulo').textContent = cabana.Nombre;
+  document.getElementById('modal-cabana-desc').textContent = cabana.Descripcion || 'Experimenta la naturaleza y el confort.';
+  document.getElementById('modal-cabana-capacidad').textContent = cabana.CapacidadMaxima;
+  document.getElementById('modal-cabana-habitaciones').textContent = cabana.NumeroHabitaciones;
+  
+  const ubEl = document.getElementById('modal-cabana-ubicacion');
+  if (cabana.Ubicacion) {
+    ubEl.textContent = cabana.Ubicacion;
+    ubEl.parentElement.style.display = 'block';
+  } else {
+    ubEl.parentElement.style.display = 'none';
+  }
+
+  document.getElementById('modal-cabana-precio').textContent = '$' + Number(cabana.Costo).toLocaleString('es-CO');
+
+  modal.classList.add('open');
+}
+
+function cerrarModalCabana() {
+  const modal = document.getElementById('modal-cabana-detalle');
+  if (modal) modal.classList.remove('open');
+}
+
+// Cerrar modal al hacer clic fuera del contenido
+window.addEventListener('click', function(e) {
+  const modal = document.getElementById('modal-cabana-detalle');
+  if (modal && e.target === modal) {
+    cerrarModalCabana();
   }
 });
 

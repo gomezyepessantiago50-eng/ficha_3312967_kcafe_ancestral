@@ -396,6 +396,53 @@
     </div>
   </footer>
 
+  <!-- ══════════════════════════════════════════
+       MODAL DETALLE CABAÑA
+  ══════════════════════════════════════════ -->
+  <div class="overlay" id="modal-cabana-detalle">
+    <div class="modal" style="padding: 0; overflow: hidden; position: relative;">
+      <button class="modal-close" onclick="cerrarModalCabana()" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.5); color: #fff; z-index: 10;">×</button>
+      <img id="modal-cabana-img" src="" alt="Cabaña" style="width: 100%; height: 300px; object-fit: cover; display: block;" />
+      
+      <div class="modal-body" style="padding: 2rem;">
+        <h3 id="modal-cabana-titulo" style="margin-top: 0; font-size: 1.5rem; color: var(--bark); margin-bottom: 0.5rem;"></h3>
+        <p id="modal-cabana-desc" style="color: var(--bark-light); line-height: 1.6; margin-bottom: 1.5rem;"></p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--bark);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--fire)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <div>
+              <span style="display: block; font-size: 0.8rem; color: var(--mist);">Capacidad</span>
+              <strong><span id="modal-cabana-capacidad"></span> huéspedes</strong>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--bark);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--fire)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M3 22v-8"/><path d="M21 22v-8"/><path d="M3 14h18"/><path d="M7 14v-4a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v4"/><path d="M12 6V2"/></svg>
+            <div>
+              <span style="display: block; font-size: 0.8rem; color: var(--mist);">Habitaciones</span>
+              <strong><span id="modal-cabana-habitaciones"></span></strong>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--bark);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--fire)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div>
+              <span style="display: block; font-size: 0.8rem; color: var(--mist);">Ubicación</span>
+              <strong><span id="modal-cabana-ubicacion"></span></strong>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--sand); padding-top: 1.5rem;">
+          <div>
+            <span style="display: block; font-size: 0.9rem; color: var(--mist);">Precio por noche</span>
+            <span id="modal-cabana-precio" style="font-size: 1.5rem; font-weight: 700; color: var(--fire);"></span>
+          </div>
+          <button class="btn btn-fire" onclick="window.location.href='index.html'">Reservar Ahora</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="js/landing.js"></script>
 </body>
 </html>

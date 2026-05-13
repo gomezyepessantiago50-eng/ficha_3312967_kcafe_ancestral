@@ -3,7 +3,7 @@ const { QueryTypes } = require('sequelize');
 
 const findAllCabanas = async () => {
   return await sequelize.query(
-    `SELECT IDCabana, NombreCabana AS Nombre, Descripcion, Capacidad AS CapacidadMaxima, NumeroHabitaciones, PrecioNoche AS Costo, Estado, ImagenCabana, ImagenHabitacion
+    `SELECT IDCabana, NombreCabana AS Nombre, Descripcion, Ubicacion, Capacidad AS CapacidadMaxima, NumeroHabitaciones, PrecioNoche AS Costo, Estado, ImagenCabana, ImagenHabitacion
      FROM cabanas
      ORDER BY NombreCabana ASC`,
     { type: QueryTypes.SELECT }
@@ -12,23 +12,24 @@ const findAllCabanas = async () => {
 
 const findCabanaById = async (id) => {
   const [cabana] = await sequelize.query(
-    `SELECT IDCabana, NombreCabana AS Nombre, Descripcion, Capacidad AS CapacidadMaxima, NumeroHabitaciones, PrecioNoche AS Costo, Estado, ImagenCabana, ImagenHabitacion
+    `SELECT IDCabana, NombreCabana AS Nombre, Descripcion, Ubicacion, Capacidad AS CapacidadMaxima, NumeroHabitaciones, PrecioNoche AS Costo, Estado, ImagenCabana, ImagenHabitacion
      FROM cabanas WHERE IDCabana = :id`,
     { replacements: { id }, type: QueryTypes.SELECT }
   );
   return cabana || null;
 };
 
-const createCabana = async ({ Nombre, Descripcion, CapacidadMaxima, NumeroHabitaciones, Costo, Estado = 1, ImagenCabana = null, ImagenHabitacion = null }) => {
+const createCabana = async ({ Nombre, Descripcion, Ubicacion, CapacidadMaxima, NumeroHabitaciones, Costo, Estado = 1, ImagenCabana = null, ImagenHabitacion = null }) => {
   const transaction = await sequelize.transaction();
   try {
     const [result] = await sequelize.query(
-      `INSERT INTO cabanas (NombreCabana, Descripcion, Capacidad, NumeroHabitaciones, PrecioNoche, Estado, ImagenCabana, ImagenHabitacion)
-       VALUES (:nombre, :descripcion, :capacidad, :numHabitaciones, :costo, :estado, :imagenCabana, :imagenHabitacion)`,
+      `INSERT INTO cabanas (NombreCabana, Descripcion, Ubicacion, Capacidad, NumeroHabitaciones, PrecioNoche, Estado, ImagenCabana, ImagenHabitacion)
+       VALUES (:nombre, :descripcion, :ubicacion, :capacidad, :numHabitaciones, :costo, :estado, :imagenCabana, :imagenHabitacion)`,
       {
         replacements: {
           nombre: Nombre,
           descripcion: Descripcion,
+          ubicacion: Ubicacion || null,
           capacidad: CapacidadMaxima,
           numHabitaciones: NumeroHabitaciones || 1,
           costo: Costo,
@@ -61,7 +62,7 @@ const updateCabana = async (id, data) => {
 
     await sequelize.query(
       `UPDATE cabanas
-       SET NombreCabana = :nombre, Descripcion = :descripcion, Capacidad = :capacidad, NumeroHabitaciones = :numHabitaciones,
+       SET NombreCabana = :nombre, Descripcion = :descripcion, Ubicacion = :ubicacion, Capacidad = :capacidad, NumeroHabitaciones = :numHabitaciones,
            PrecioNoche = :costo, Estado = :estado, ImagenCabana = :imagenCabana, ImagenHabitacion = :imagenHabitacion
        WHERE IDCabana = :id`,
       {
@@ -69,6 +70,7 @@ const updateCabana = async (id, data) => {
           id,
           nombre: Nombre,
           descripcion: data.Descripcion ?? existing.Descripcion,
+          ubicacion: data.Ubicacion !== undefined ? data.Ubicacion : existing.Ubicacion,
           capacidad: data.CapacidadMaxima ?? existing.CapacidadMaxima,
           numHabitaciones: data.NumeroHabitaciones ?? existing.NumeroHabitaciones,
           costo: data.Costo ?? existing.Costo,

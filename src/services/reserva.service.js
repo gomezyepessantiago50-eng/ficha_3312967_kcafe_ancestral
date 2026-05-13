@@ -115,12 +115,12 @@ const parsePayload = (datos) => {
   return payload;
 };
 
-const isTodayOrEarlier = (value) => {
+const isEarlierThanToday = (value) => {
   const dateString = toDateString(value);
   if (!dateString) return false;
   const today = new Date();
   const todayString = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, '0')}-${String(today.getUTCDate()).padStart(2, '0')}`;
-  return dateString <= todayString;
+  return dateString < todayString;
 };
 
 const verificarDisponibilidad = async (fechaInicio, fechaFin, cabana = null, excluirId = null) => {
@@ -220,8 +220,8 @@ const crearReserva = async (datos, usuarioId = 1) => {
   const payload = parsePayload(datos);
   const { FechaInicio, FechaFinalizacion, SubTotal, Descuento, IVA, cabana } = payload;
 
-  if (isTodayOrEarlier(FechaInicio)) {
-    const error = new Error('La fecha de inicio debe ser a partir de mañana');
+  if (isEarlierThanToday(FechaInicio)) {
+    const error = new Error('La fecha de inicio debe ser a partir de hoy');
     error.status = 400;
     throw error;
   }
@@ -332,8 +332,8 @@ const editarReserva = async (id, datos) => {
     const fin = payload.FechaFinalizacion || reserva.FechaFinalizacion;
     const cabana = payload.cabana || reserva.cabana;
 
-    if (payload.FechaInicio && isTodayOrEarlier(payload.FechaInicio)) {
-      const error = new Error('La fecha de inicio debe ser a partir de mañana');
+    if (payload.FechaInicio && isEarlierThanToday(payload.FechaInicio)) {
+      const error = new Error('La fecha de inicio debe ser a partir de hoy');
       error.status = 400;
       throw error;
     }
