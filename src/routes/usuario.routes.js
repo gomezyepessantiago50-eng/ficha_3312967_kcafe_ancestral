@@ -11,9 +11,13 @@ router.use(verifyToken, soloAdmin);
 // ── GET  /api/usuarios?email=xxx  → buscar por correo ────────
 router.get('/',       ctrl.listarUsuarios);
 router.get('/buscar', ctrl.buscarPorEmail);
+router.post('/',      ctrl.crearUsuario);
 
 // ── PUT  /api/usuarios/:id/rol   → cambiar rol ───────────────
 router.put('/:id/rol', ctrl.cambiarRol);
+
+// ── PUT  /api/usuarios/:id/estado → cambiar estado ────────────
+router.put('/:id/estado', ctrl.cambiarEstado);
 
 // ── POST /api/usuarios/:id/reset → generar reset password ────
 router.post('/:id/reset', ctrl.generarReset);

@@ -1,0 +1,4 @@
+- `[x]` Update `public/cliente.html` (Reorder sections)
+- `[x]` Update `public/js/cliente.js` (Dynamic cabin filtering logic)
+- `[x]` Update `public/admin.html` (Reorder modal inputs)
+- `[x]` Update `public/js/admin.js` (Dynamic cabin filtering logic)

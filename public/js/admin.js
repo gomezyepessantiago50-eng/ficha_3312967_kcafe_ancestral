@@ -39,7 +39,7 @@ const SERVICIOS = {
   fotografia: { label:'Fotografía', precio:120000 },
 };
 
-const ADMIN_NUEVA_RES = { cabana:'roble', paquete:null, servicios:new Set() };
+const ADMIN_NUEVA_RES = { cabana:null, paquete:null, servicios:new Set() };
 
 /* FIX 10 — cálculo correcto: subtotal + IVA */
 function calcMontos(sub) {
@@ -95,17 +95,20 @@ function showSec(name, btn) {
 async function fetchAvail() {
   try {
     const d = await ReservasAPI.disponibilidad();
-    return { reservadas: d.data?.reservadas || d.reservadas || [], bloqueadas: d.data?.bloqueadas || d.bloqueadas || [] };
-  } catch { return { reservadas:[], bloqueadas:[] }; }
+    return { reservadas: d.data?.reservadas || d.reservadas || [], bloqueadas: d.data?.bloqueadas || d.bloqueadas || [], registros: d.data?.registros || d.registros || [] };
+  } catch { return { reservadas:[], bloqueadas:[], registros:[] }; }
 }
 async function refreshAdminCal() {
   const s = _cals?.['admin-cal']; if (!s) return;
   const cabFilter = document.getElementById('cal-cab-filter')?.value || '';
   
-  if (cabFilter && window.GLOBAL_RESERVAS) {
-    // Filtrar por cabaña usando datos en memoria
+  // Always fetch from disponibilidad (includes blockages + reservations)
+  const d = await fetchAvail();
+  
+  if (cabFilter && d.registros) {
+    // Filter by cabin using the raw records from disponibilidad
     var reservadas = [], bloqueadas = [];
-    window.GLOBAL_RESERVAS.forEach(function(r) {
+    d.registros.forEach(function(r) {
       if (String(r.cabana) !== String(cabFilter)) return;
       var dates = rangeDatesClient(r.fecha_inicio, r.fecha_fin);
       if (r.estado === 'bloqueada') {
@@ -116,9 +119,13 @@ async function refreshAdminCal() {
     });
     buildCal('admin-cal', s.y, s.m, reservadas, bloqueadas, 'onCalDayClick');
   } else {
-    // Sin filtro: mostrar todo
-    const d = await fetchAvail();
+    // No filter: show everything
     buildCal('admin-cal', s.y, s.m, d.reservadas, d.bloqueadas, 'onCalDayClick');
+  }
+
+  // Keep GLOBAL_RESERVAS in sync with full availability (includes blockages)
+  if (d.registros && d.registros.length) {
+    window.GLOBAL_RESERVAS = d.registros;
   }
 }
 
@@ -322,7 +329,7 @@ async function loadReservas(page=1) {
               <td>${PAQUETES[r.paquete]?.label||r.paquete||'Básico'}</td>
               <td>${statusBadge(r.estado)}</td>
               <td><div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
-                <button class="btn btn-sm btn-outline" onclick="abrirVerReserva(${r.id})">Ver</button>
+                <button class="btn btn-sm btn-dark-outline" onclick="abrirVerReserva(${r.id})">Ver</button>
                 <button class="btn btn-sm btn-outline" ${bl?'disabled title="No editable"':`onclick="abrirDetalle(${r.id})"`}>Editar</button>
                 <button class="btn btn-sm btn-dark-outline" onclick="abrirEstado(${r.id},'${r.estado}')">Estado</button>
               </div></td>
@@ -515,30 +522,90 @@ function adminToggleSrv(key) {
 }
 
 
-function adminResumenUpdate() {
-  const ini=document.getElementById('mn-ini').value, fin=document.getElementById('mn-fin').value;
-  // La lógica de Flatpickr maneja la validación dinámica ahora, así que solo calculamos las noches
-  if (ini && fin && new Date(fin) <= new Date(ini)) {
-    // Si la fecha fin es menor, limpiar
+// Filtra cabañas disponibles según fechas seleccionadas y actualiza el select
+async function adminResumenUpdate() {
+  const ini = document.getElementById('mn-ini').value;
+  const fin = document.getElementById('mn-fin').value;
+  const select = document.getElementById('mn-cab');
+  const prompt = document.getElementById('mn-cab-prompt');
+  let valido = false;
+  let disponibles = [];
+
+  if (ini && fin && new Date(fin) >= new Date(ini)) {
+    valido = true;
+    // Obtener reservas y bloqueos globales
+    const reservas = window.GLOBAL_RESERVAS || [];
+    // Buscar cabañas ocupadas en el rango
+    const ocupadas = new Set();
+    reservas.forEach(r => {
+      // Si hay cruce de fechas
+      if (
+        (r.fecha_inicio <= fin && r.fecha_fin >= ini) &&
+        ['confirmada', 'pendiente', 'bloqueada'].includes(r.estado)
+      ) {
+        ocupadas.add(r.cabana);
+      }
+    });
+    // Filtrar cabañas disponibles
+    disponibles = Object.entries(CABANAS)
+      .filter(([key]) => !ocupadas.has(key))
+      .map(([key, cab]) => ({ key, ...cab }));
+    // Guardar la cabaña seleccionada antes de repoblar
+    const prevCab = ADMIN_NUEVA_RES.cabana;
+    // Actualizar select
+    if (select) {
+      select.innerHTML = disponibles.length
+        ? '<option value="">Selecciona una cabaña...</option>' +
+          disponibles.map(c => `<option value="${c.key}">${c.label} (${c.capacidad} pers.) — ${fCop(c.precio)}</option>`).join('')
+        : '<option value="">No hay cabañas disponibles</option>';
+      select.disabled = !disponibles.length;
+      // Si la cabaña anterior sigue disponible, mantenerla seleccionada
+      if (prevCab && disponibles.some(c => c.key === prevCab)) {
+        select.value = prevCab;
+        ADMIN_NUEVA_RES.cabana = prevCab;
+      } else {
+        // Solo limpiar la selección si la anterior ya no está disponible
+        ADMIN_NUEVA_RES.cabana = null;
+        select.value = '';
+      }
+    }
+    if (prompt) {
+      prompt.textContent = disponibles.length ? '' : '(No hay cabañas disponibles para esas fechas)';
+    }
+  } else {
+    // Fechas no válidas: deshabilitar select y mostrar prompt
+    if (select) {
+      select.innerHTML = '<option value="">Selecciona fechas...</option>';
+      select.disabled = true;
+      // No limpiar la selección de fechas aquí
+    }
+    if (prompt) {
+      prompt.textContent = '(Selecciona fechas primero)';
+    }
+    ADMIN_NUEVA_RES.cabana = null;
   }
-  const noches=nights(ini,fin);
-  const cabKey = ADMIN_NUEVA_RES.cabana || Object.keys(CABANAS)[0];
-  const cab = CABANAS[cabKey];
-  if (!cab) return; // Protección contra cab undefined si no han cargado aún
-  const paq=ADMIN_NUEVA_RES.paquete ? PAQUETES[ADMIN_NUEVA_RES.paquete] : { label: 'Ninguno', precio: 0 };
-  const srvs=Array.from(ADMIN_NUEVA_RES.servicios).map(s=>SERVICIOS[s]).filter(Boolean);
-  const srvP=srvs.reduce((a,s)=>a+s.precio,0);
-  const rawSub=(cab.precio+paq.precio)*Math.max(noches,1)+srvP*cab.capacidad;
-  const {subtotal,iva,total}=calcMontos(rawSub);
-  const valido=ini&&fin&&new Date(fin)>=new Date(ini);
-  const body=document.getElementById('admin-price-body'), totalRow=document.getElementById('admin-price-total');
-  if (!valido) { body.innerHTML='<p style="color:rgba(100,80,60,0.6);text-align:center;font-size:0.85rem;">Selecciona fechas válidas</p>'; if(totalRow) totalRow.style.display='none'; return; }
-  body.innerHTML=`
+
+  // Mostrar resumen de precio solo si hay selección válida
+  const cabKey = ADMIN_NUEVA_RES.cabana;
+  const cab = cabKey ? CABANAS[cabKey] : null;
+  const paq = ADMIN_NUEVA_RES.paquete ? PAQUETES[ADMIN_NUEVA_RES.paquete] : { label: 'Ninguno', precio: 0 };
+  const srvs = Array.from(ADMIN_NUEVA_RES.servicios).map(s => SERVICIOS[s]).filter(Boolean);
+  const srvP = srvs.reduce((a, s) => a + s.precio, 0);
+  const noches = (ini && fin && valido && cab) ? nights(ini, fin) : 0;
+  const rawSub = cab ? (cab.precio + paq.precio) * Math.max(noches, 1) + srvP * cab.capacidad : 0;
+  const { subtotal, iva, total } = calcMontos(rawSub);
+  const body = document.getElementById('admin-price-body'), totalRow = document.getElementById('admin-price-total');
+  if (!valido || !cab) {
+    body.innerHTML = '<p style="color:rgba(100,80,60,0.6);text-align:center;font-size:0.85rem;">Selecciona fechas y cabaña válidas</p>';
+    if (totalRow) totalRow.style.display = 'none';
+    return;
+  }
+  body.innerHTML = `
     <div class="price-row"><span class="pk">Cabaña</span><span class="pv">${cab.label} × ${noches} noche(s)</span></div>
     ${cab.ubicacion ? `<div class="price-row" style="padding-top:0;"><span class="pk" style="font-size:0.75rem;">Ubicación</span><span class="pv" style="font-size:0.75rem;font-weight:normal;color:var(--dark-muted);">${cab.ubicacion}</span></div>` : ''}
     <div class="price-row"><span class="pk">Precio/noche</span><span class="pv">${fCop(cab.precio)}</span></div>
-    <div class="price-row"><span class="pk">Paquete</span><span class="pv">${paq.label} ${paq.precio?`+${fCop(paq.precio)}`:''}</span></div>
-    ${srvs.map(s=>`<div class="price-row"><span class="pk">${s.label}</span><span class="pv">+${fCop(s.precio)}</span></div>`).join('')}
+    <div class="price-row"><span class="pk">Paquete</span><span class="pv">${paq.label} ${paq.precio ? `+${fCop(paq.precio)}` : ''}</span></div>
+    ${srvs.map(s => `<div class="price-row"><span class="pk">${s.label}</span><span class="pv">+${fCop(s.precio)}</span></div>`).join('')}
     <div class="price-row" style="border-top:1px solid rgba(46,26,14,0.12);margin-top:0.4rem;padding-top:0.4rem;">
       <span class="pk">Subtotal</span><span class="pv">${fCop(subtotal)}</span>
     </div>
@@ -546,8 +613,8 @@ function adminResumenUpdate() {
     <div style="margin-top:0.5rem;padding:0.5rem;background:rgba(232,93,4,0.1);border-radius:4px;text-align:center;font-size:0.8rem;color:var(--fire);">
       <strong>🕒 Check-in:</strong> 1:00 PM | <strong>Check-out:</strong> 12:00 PM
     </div>`;
-  const tEl=document.getElementById('admin-pt-val'); if(tEl) tEl.textContent=fCop(total);
-  if(totalRow) totalRow.style.display='flex';
+  const tEl = document.getElementById('admin-pt-val'); if (tEl) tEl.textContent = fCop(total);
+  if (totalRow) totalRow.style.display = 'flex';
 }
 
 async function doNuevaAdmin() {
@@ -607,21 +674,29 @@ async function doNuevaAdmin() {
 }
 
 function adminResetNuevaRES() {
-  const firstCab = Object.keys(window.CABANAS || {})[0] || 'roble';
-  ADMIN_NUEVA_RES.cabana=firstCab; ADMIN_NUEVA_RES.paquete=null; ADMIN_NUEVA_RES.servicios.clear();
-  ['mn-ini','mn-fin'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('mn-cab').value=firstCab;
-  document.getElementById('mn-doc').value='';
-  const searchInput = document.getElementById('mn-cli-search'); if(searchInput) searchInput.value='';
-  const selDiv = document.getElementById('mn-cli-selected'); if(selDiv) { selDiv.style.display='none'; selDiv.innerHTML=''; }
-  const resDiv = document.getElementById('mn-cli-results'); if(resDiv) { resDiv.style.display='none'; resDiv.innerHTML=''; }
-  document.getElementById('mn-alert').innerHTML='';
-  document.querySelectorAll('.paq-opt[id^="adm-p-"]').forEach(btn=>btn.classList.remove('selected'));
-  document.querySelectorAll('.srv-chip[id^="adm-srv-"]').forEach(btn=>btn.classList.remove('selected'));
-  
+  ADMIN_NUEVA_RES.cabana = null;
+  ADMIN_NUEVA_RES.paquete = null;
+  ADMIN_NUEVA_RES.servicios.clear();
+  ['mn-ini', 'mn-fin'].forEach(id => document.getElementById(id).value = '');
+  const cabSel = document.getElementById('mn-cab');
+  if (cabSel) {
+    cabSel.value = '';
+    cabSel.disabled = true;
+    cabSel.innerHTML = '<option value="">Selecciona fechas...</option>';
+  }
+  const cabPrompt = document.getElementById('mn-cab-prompt');
+  if (cabPrompt) cabPrompt.textContent = '(Selecciona fechas primero)';
+  document.getElementById('mn-doc').value = '';
+  const searchInput = document.getElementById('mn-cli-search'); if (searchInput) searchInput.value = '';
+  const selDiv = document.getElementById('mn-cli-selected'); if (selDiv) { selDiv.style.display = 'none'; selDiv.innerHTML = ''; }
+  const resDiv = document.getElementById('mn-cli-results'); if (resDiv) { resDiv.style.display = 'none'; resDiv.innerHTML = ''; }
+  document.getElementById('mn-alert').innerHTML = '';
+  document.querySelectorAll('.paq-opt[id^="adm-p-"]').forEach(btn => btn.classList.remove('selected'));
+  document.querySelectorAll('.srv-chip[id^="adm-srv-"]').forEach(btn => btn.classList.remove('selected'));
+
   ['mn-tarjeta-num', 'mn-tarjeta-titular', 'mn-tarjeta-exp', 'mn-tarjeta-cvv'].forEach(id => {
     const el = document.getElementById(id);
-    if(el) el.value = '';
+    if (el) el.value = '';
   });
 }
 
@@ -657,7 +732,8 @@ async function doBloquear() {
   try {
     await BloqueosAPI.crear({ FechaInicio:ini, FechaFinalizacion:fin, Motivo:document.getElementById('b-motivo').value, cabana: cab });
     alEl.innerHTML=''; ['b-ini','b-fin','b-motivo'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=''});
-    toast('Fechas bloqueadas','ok'); loadBloqueos(); refreshAdminCal();
+    closeM('m-bloqueo');
+    toast('Fechas bloqueadas','ok'); refreshAdminCal();
     loadDashboard();
   } catch(e) { alEl.innerHTML=`<div class="alert alert-error">⚠ ${e.message}</div>`; }
 }
@@ -685,24 +761,39 @@ const _usrPag = { currentPage: 1, totalPages: 1, total: 0, limit: 10 };
 
 // Helper: generar fila de usuario
 function _usrRow(u) {
-  const rolBadge = u.rol === 'admin'
-    ? '<span class="badge" style="background:rgba(232,93,4,0.15);color:var(--fire);border:1px solid rgba(232,93,4,0.3);font-size:0.72rem;">Admin</span>'
-    : '<span class="badge" style="background:rgba(45,122,79,0.15);color:#4caf50;border:1px solid rgba(45,122,79,0.3);font-size:0.72rem;">Cliente</span>';
-  const safeEmail = (u.email||'').replace(/'/g,"\\'");
-  return `<tr>
-    <td style="font-family:var(--font-display);font-weight:800;color:var(--fire);">#${u.id}</td>
-    <td><strong>${u.nombre || ''}</strong> ${u.apellido || ''}</td>
-    <td>${u.email || '\u2014'}</td>
-    <td>${u.telefono || '\u2014'}</td>
-    <td>${u.pais || '\u2014'}</td>
-    <td>${rolBadge}</td>
-    <td><div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
-      <button class="btn btn-sm btn-dark-outline" onclick="usrAbrirCambioRol(${u.id},'${u.rol}','${safeEmail}')" title="Cambiar rol">Rol</button>
-      <button class="btn btn-sm btn-dark-outline" onclick="usrAbrirReset(${u.id},'${safeEmail}')" title="Restablecer contrase\u00f1a">Clave</button>
-      <button class="btn btn-sm btn-outline" style="color:var(--danger);border-color:rgba(239,83,80,0.3);" onclick="usrAbrirEliminar(${u.id},'${safeEmail}')" title="Eliminar cuenta">Eliminar</button>
-    </div></td>
-  </tr>`;
-}
+    const isActivo = u.estado !== 'inactivo';
+    const isAdmin = u.rol === 'admin';
+    const safeEmail = (u.email||'').replace(/'/g,"\\'");
+    
+    return `<tr>
+      <td style="font-family:var(--font-display);font-weight:800;color:var(--fire);">#${u.id}</td>
+      <td><strong>${u.nombre || ''}</strong> ${u.apellido || ''}</td>
+      <td>${u.email || '\u2014'}</td>
+      <td>${u.telefono || '\u2014'}</td>
+      <td>
+        <label class="toggle-label" title="Cambiar rol">
+          <span style="font-size:0.75rem; color:${isAdmin ? 'var(--fire)' : '#4caf50'};">${isAdmin ? 'Admin' : 'Cliente'}</span>
+          <div class="toggle-switch" style="transform:scale(0.85); transform-origin:left center;">
+            <input type="checkbox" onchange="toggleUsuarioRol('${u.id}', this)" ${isAdmin ? 'checked' : ''}>
+            <span class="toggle-slider"></span>
+          </div>
+        </label>
+      </td>
+      <td>
+        <label class="toggle-label" title="Cambiar estado">
+          <span style="font-size:0.75rem; color:var(--dark-muted);">${isActivo ? 'Activo' : 'Inactivo'}</span>
+          <div class="toggle-switch" style="transform:scale(0.85); transform-origin:left center;">
+            <input type="checkbox" onchange="toggleEstadoGlobal('usuarios', '${u.id}', this)" ${isActivo ? 'checked' : ''}>
+            <span class="toggle-slider"></span>
+          </div>
+        </label>
+      </td>
+      <td><div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+        <button class="btn btn-sm btn-dark-outline" onclick="usrAbrirReset(${u.id},'${safeEmail}')" title="Restablecer contraseña">Clave</button>
+        <button class="btn btn-sm btn-outline" style="color:var(--danger);border-color:rgba(239,83,80,0.3);" onclick="usrAbrirEliminar(${u.id},'${safeEmail}')" title="Eliminar cuenta">Eliminar</button>
+      </div></td>
+    </tr>`;
+  }
 
 // Cargar listado de usuarios
 window.loadUsuariosAdmin = async function(page = 1) {
@@ -1060,7 +1151,13 @@ async function loadCabanas() {
         <div class="cab-body">
           <div style="display:flex; justify-content:space-between; align-items:flex-start;">
             <h3>${c.Nombre}</h3>
-            ${c.Estado ? '<span class="badge badge-success">Activa</span>' : '<span class="badge badge-danger">Inactiva</span>'}
+            <label class="toggle-label" title="Cambiar estado">
+              <span style="font-size:0.75rem; color:var(--dark-muted);">${c.Estado ? 'Activa' : 'Inactiva'}</span>
+              <div class="toggle-switch">
+                <input type="checkbox" onchange="toggleEstadoGlobal('cabanas', '${c.IDCabana}', this)" ${c.Estado ? 'checked' : ''}>
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
           </div>
           <p style="height: 40px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${c.Descripcion || 'Sin descripción'}</p>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
@@ -1098,27 +1195,27 @@ window.adminVerCabana = async function(id) {
           ${c.Ubicacion ? `<p style="color:var(--mist);margin-top:0.4rem;font-size:0.85rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${c.Ubicacion}</p>` : ''}
       </div>
       <div style="display:flex; gap: 1rem; margin-bottom:1.5rem;">
-          <div style="flex:1; background:var(--sand); padding:1rem; border-radius:8px; border:1px solid var(--sand-mid);">
-              <div style="font-size:0.8rem; color:var(--mist); margin-bottom:0.3rem;">Precio por Noche</div>
+          <div style="flex:1; background:var(--dark-bg); padding:1rem; border-radius:8px; border:1px solid var(--dark-border);">
+              <div style="font-size:0.8rem; color:var(--dark-muted); margin-bottom:0.3rem;">Precio por Noche</div>
               <div style="color:var(--fire); font-weight:bold; font-size:1.1rem;">$${Number(c.Costo).toLocaleString('es-CO')}</div>
           </div>
-          <div style="flex:1; background:var(--sand); padding:1rem; border-radius:8px; border:1px solid var(--sand-mid);">
-              <div style="font-size:0.8rem; color:var(--mist); margin-bottom:0.3rem;">Capacidad</div>
-              <div style="color:var(--bark); font-weight:bold; font-size:1.1rem;">${c.CapacidadMaxima} pers.</div>
+          <div style="flex:1; background:var(--dark-bg); padding:1rem; border-radius:8px; border:1px solid var(--dark-border);">
+              <div style="font-size:0.8rem; color:var(--dark-muted); margin-bottom:0.3rem;">Capacidad</div>
+              <div style="color:var(--dark-text); font-weight:bold; font-size:1.1rem;">${c.CapacidadMaxima} pers.</div>
           </div>
-          <div style="flex:1; background:var(--sand); padding:1rem; border-radius:8px; border:1px solid var(--sand-mid);">
-              <div style="font-size:0.8rem; color:var(--mist); margin-bottom:0.3rem;">Habitaciones</div>
-              <div style="color:var(--bark); font-weight:bold; font-size:1.1rem;">${c.NumeroHabitaciones}</div>
+          <div style="flex:1; background:var(--dark-bg); padding:1rem; border-radius:8px; border:1px solid var(--dark-border);">
+              <div style="font-size:0.8rem; color:var(--dark-muted); margin-bottom:0.3rem;">Habitaciones</div>
+              <div style="color:var(--dark-text); font-weight:bold; font-size:1.1rem;">${c.NumeroHabitaciones}</div>
           </div>
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
           <div>
-              <strong style="display:block;margin-bottom:0.5rem;color:var(--bark);">Foto de la Cabaña</strong>
-              ${c.ImagenCabana ? '<img src="'+c.ImagenCabana+'" style="width:100%; border-radius:8px; border:1px solid var(--sand-mid);"/>' : '<div style="padding:2rem; background:var(--sand); border-radius:8px; text-align:center; color:var(--mist);">Sin foto</div>'}
+              <strong style="display:block;margin-bottom:0.5rem;color:var(--dark-text);">Foto de la Cabaña</strong>
+              ${c.ImagenCabana ? '<img src="'+c.ImagenCabana+'" style="width:100%; border-radius:8px; border:1px solid var(--dark-border);"/>' : '<div style="padding:2rem; background:var(--dark-bg); border-radius:8px; text-align:center; color:var(--dark-muted);">Sin foto</div>'}
           </div>
           <div>
-              <strong style="display:block;margin-bottom:0.5rem;color:var(--bark);">Foto de las Habitaciones</strong>
-              ${c.ImagenHabitacion ? '<img src="'+c.ImagenHabitacion+'" style="width:100%; border-radius:8px; border:1px solid var(--sand-mid);"/>' : '<div style="padding:2rem; background:var(--sand); border-radius:8px; text-align:center; color:var(--mist);">Sin foto</div>'}
+              <strong style="display:block;margin-bottom:0.5rem;color:var(--dark-text);">Foto de las Habitaciones</strong>
+              ${c.ImagenHabitacion ? '<img src="'+c.ImagenHabitacion+'" style="width:100%; border-radius:8px; border:1px solid var(--dark-border);"/>' : '<div style="padding:2rem; background:var(--dark-bg); border-radius:8px; text-align:center; color:var(--dark-muted);">Sin foto</div>'}
           </div>
       </div>
     `;
@@ -1309,33 +1406,31 @@ async function refreshGlobalPackages() {
     for (const key in PAQUETES) delete PAQUETES[key];
     
     let html = '';
-    let firstPaq = null;
     paqs.forEach(p => {
-      if (!p.Estado && p.Estado !== 1) return; // Active only
-      if (!firstPaq) firstPaq = p.IDPaquete;
+      if (p.Estado !== 1 && p.Estado !== true) return;
       PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion, serviciosIncluidos: p.ServiciosIncluidos };
     });
     
-    // Fallback default selection
-    if (!PAQUETES[ADMIN_NUEVA_RES.paquete] && firstPaq) {
-      ADMIN_NUEVA_RES.paquete = firstPaq;
+    if (ADMIN_NUEVA_RES.paquete && !PAQUETES[ADMIN_NUEVA_RES.paquete]) {
+      ADMIN_NUEVA_RES.paquete = null;
     }
 
     paqs.forEach(p => {
       if (!PAQUETES[p.IDPaquete]) return;
       const isSelected = ADMIN_NUEVA_RES.paquete == p.IDPaquete;
-      html += `
-        <button type="button" class="paq-opt ${isSelected?'selected':''}" id="adm-p-${p.IDPaquete}" onclick="adminSelectPaquete('${p.IDPaquete}')" style="border:2px solid rgba(46,26,14,0.1);background:#fff;">
-          <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-          <div class="paq-name">${p.NombrePaquete}</div>
-          <div class="paq-desc" style="font-size:0.9rem;color:var(--mist);">${p.Descripcion||''}</div>
-          <div class="paq-price" style="font-size:0.75rem;color:var(--dark-text);">${p.Precio>0 ? '+'+fCop(p.Precio) : 'Incluido'}</div>
-        </button>`;
+      html += '<button type="button" class="paq-opt ' + (isSelected ? 'selected' : '') + '" id="adm-p-' + p.IDPaquete + '" onclick="adminSelectPaquete(\'' + p.IDPaquete + '\')" style="border:2px solid ' + (isSelected ? 'var(--fire)' : 'var(--dark-border)') + ';background:var(--dark-card);">'
+        + '<div class="paq-name" style="font-size:1.05rem;font-weight:700;color:var(--dark-text);margin-bottom:0.3rem;">' + p.NombrePaquete + '</div>'
+        + '<div class="paq-desc" style="font-size:0.8rem;color:var(--dark-muted);margin-bottom:0.4rem;">' + (p.Descripcion || '') + '</div>'
+        + '<div class="paq-price" style="font-size:0.85rem;font-weight:700;color:var(--fire);">' + (p.Precio > 0 ? '+' + fCop(p.Precio) : 'Incluido') + '</div>'
+        + '</button>';
     });
 
-    const grid = document.getElementById('adm-p-basico')?.parentNode || document.querySelector('#m-nueva .paquete-grid') || document.querySelector('#m-nueva [style*="grid-template-columns:repeat(3"]');
+    if (!html) {
+      html = '<div style="grid-column:1/-1;text-align:center;padding:1.5rem;color:var(--dark-muted);">No hay paquetes activos disponibles</div>';
+    }
+
+    const grid = document.getElementById('adm-paq-grid');
     if (grid) {
-      grid.classList.add('paquete-grid');
       grid.innerHTML = html;
     }
     
@@ -1585,7 +1680,13 @@ window.loadPaquetesAdmin = async function() {
         <div class="cab-body">
           <div style="display:flex; justify-content:space-between; align-items:flex-start;">
             <h3 style="color:#fff;">${p.NombrePaquete}</h3>
-            ${(p.Estado === 1 || p.Estado === true) ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>'}
+            <label class="toggle-label" title="Cambiar estado">
+              <span style="font-size:0.75rem; color:var(--dark-muted);">${(p.Estado === 1 || p.Estado === true) ? 'Activo' : 'Inactivo'}</span>
+              <div class="toggle-switch">
+                <input type="checkbox" onchange="toggleEstadoGlobal('paquetes', '${p.IDPaquete}', this)" ${(p.Estado === 1 || p.Estado === true) ? 'checked' : ''}>
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
           </div>
           <p style="margin-top:0.5rem;font-size:0.9rem;color:var(--dark-muted);">${p.Descripcion || 'Sin descripción'}</p>
           <div style="margin-top:1rem;font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--fire);">$${Number(p.Precio).toLocaleString('es-CO')}</div>
@@ -1649,7 +1750,15 @@ window.loadServiciosAdmin = async function() {
         <td><strong>${s.NombreServicio}</strong></td>
         <td>${s.Descripcion || '-'}</td>
         <td>$${Number(s.Costo).toLocaleString('es-CO')}</td>
-        <td>${(s.Estado === 1 || s.Estado === true) ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>'}</td>
+        <td>
+          <label class="toggle-label" title="Cambiar estado">
+            <span style="font-size:0.75rem; color:var(--dark-muted);">${(s.Estado === 1 || s.Estado === true) ? 'Activo' : 'Inactivo'}</span>
+            <div class="toggle-switch" style="transform:scale(0.85); transform-origin:left center;">
+              <input type="checkbox" onchange="toggleEstadoGlobal('servicios', '${s.IDServicio}', this)" ${(s.Estado === 1 || s.Estado === true) ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </div>
+          </label>
+        </td>
         <td><div style="display:flex;gap:0.4rem;"><button class="btn btn-sm btn-dark-outline" onclick="adminEditarServicio('${s.IDServicio}')">Editar</button><button class="btn btn-sm btn-danger" onclick="adminEliminarServicio('${s.IDServicio}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></td>
       </tr>
     `).join('');
@@ -2093,10 +2202,18 @@ window.loadHabitaciones = async function() {
       const isUnassigned = key === 'unassigned';
       
       let innerHtml = group.habitaciones.map(h => `
-        <div style="background:#fff; border:1px solid var(--sand); border-radius:8px; padding:1rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+        <div style="background:var(--dark-card); border:1px solid var(--dark-border); border-radius:8px; padding:1rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
           <div>
-            <h4 style="margin-bottom:0.3rem; color:var(--bark); font-size:1.1rem;">${h.NombreHabitacion}</h4>
-            <div style="font-size:0.85rem; color:var(--mist);">${fCop(h.Costo)} / noche &nbsp;&middot;&nbsp; ${h.Estado ? '<span style="color:var(--success)">Activa</span>' : '<span style="color:var(--danger)">Inactiva</span>'}</div>
+            <h4 style="margin-bottom:0.3rem; color:var(--dark-text); font-size:1.1rem;">${h.NombreHabitacion}</h4>
+            <div style="font-size:0.85rem; color:var(--dark-muted); display:flex; align-items:center; gap:0.5rem;">${fCop(h.Costo)} / noche &nbsp;&middot;&nbsp; 
+              <label class="toggle-label" style="display:inline-flex; margin:0;" title="Cambiar estado">
+                <span style="font-size:0.75rem;">${h.Estado ? 'Activa' : 'Inactiva'}</span>
+                <div class="toggle-switch" style="transform:scale(0.8); transform-origin:left center;">
+                  <input type="checkbox" onchange="toggleEstadoGlobal('habitaciones', '${h.IDHabitacion}', this)" ${h.Estado ? 'checked' : ''}>
+                  <span class="toggle-slider"></span>
+                </div>
+              </label>
+            </div>
           </div>
           <div style="display:flex; gap:0.5rem;">
             <button class="btn btn-sm btn-outline" style="padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="adminVerHabitacion('${h.IDHabitacion}')">Ver</button>
@@ -2107,12 +2224,12 @@ window.loadHabitaciones = async function() {
       `).join('');
 
       html += `
-        <div style="grid-column: 1 / -1; margin-bottom: 1rem; border-radius:8px; overflow:hidden; background:var(--sand); box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-          <div onclick="toggleAccordion('${key}')" style="cursor:pointer; padding:1rem 1.5rem; background:linear-gradient(135deg,rgba(139,69,19,0.05),rgba(210,105,30,0.02)); border-bottom:1px solid rgba(0,0,0,0.05); display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="margin:0; font-family:var(--font-display); color:var(--bark); font-size:1.2rem;">${isUnassigned ? '⚠️ Sin Asignar' : '🏕️ ' + group.cabana.Nombre} <span style="font-size:0.8rem; font-weight:400; color:var(--mist); margin-left:0.5rem;">(${group.habitaciones.length} habs)</span></h3>
-            <svg id="acc-icon-${key}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+        <div style="grid-column: 1 / -1; margin-bottom: 1rem; border-radius:8px; overflow:hidden; background:var(--dark-bg); box-shadow:0 2px 4px rgba(0,0,0,0.2);">
+          <div onclick="toggleAccordion('${key}')" style="cursor:pointer; padding:1rem 1.5rem; background:linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02)); border-bottom:1px solid var(--dark-border); display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-family:var(--font-display); color:var(--dark-text); font-size:1.2rem;">${isUnassigned ? '⚠️ Sin Asignar' : '🏕️ ' + group.cabana.Nombre} <span style="font-size:0.8rem; font-weight:400; color:var(--dark-muted); margin-left:0.5rem;">(${group.habitaciones.length} habs)</span></h3>
+            <svg id="acc-icon-${key}" viewBox="0 0 24 24" fill="none" stroke="var(--dark-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
           </div>
-          <div id="acc-${key}" style="display:flex; flex-direction:column; padding:1rem; background:rgba(255,255,255,0.5);">
+          <div id="acc-${key}" style="display:flex; flex-direction:column; padding:1rem; background:rgba(0,0,0,0.15);">
             ${innerHtml}
           </div>
         </div>
@@ -2254,11 +2371,11 @@ window.adminNuevoPaquete = async function() {
       srvDiv.innerHTML = res.data.map(s => `
         <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
           <input type="checkbox" name="paq-srv" value="${s.IDServicio}">
-          <span style="color:var(--bark); font-size:0.9rem;">${s.NombreServicio}</span>
+          <span style="color:var(--dark-text); font-size:0.9rem;">${s.NombreServicio}</span>
         </label>
       `).join('');
     } else {
-      srvDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--mist);">No hay servicios creados</div>';
+      srvDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--dark-muted);">No hay servicios creados</div>';
     }
   } catch(e) {}
 
@@ -2297,7 +2414,7 @@ window.adminEditarPaquete = async function(id) {
           return `
             <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
               <input type="checkbox" name="paq-srv" value="${s.IDServicio}" ${isChecked}>
-              <span style="color:var(--bark); font-size:0.9rem;">${s.NombreServicio}</span>
+              <span style="color:var(--dark-text); font-size:0.9rem;">${s.NombreServicio}</span>
             </label>
           `;
         }).join('');
@@ -2349,33 +2466,33 @@ window.adminRefreshGlobalPackages = async function() {
     for (const key in window.PAQUETES) delete window.PAQUETES[key];
     
     let html = '';
-    let firstPaq = null;
     paqs.forEach(p => {
-      if (!p.Estado && p.Estado !== 1) return;
-      if (!firstPaq) firstPaq = p.IDPaquete;
+      if (p.Estado !== 1 && p.Estado !== true) return;
       window.PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion };
     });
     
-    if (!ADMIN_NUEVA_RES.paquete && firstPaq) {
-      ADMIN_NUEVA_RES.paquete = firstPaq;
+    if (ADMIN_NUEVA_RES.paquete && !window.PAQUETES[ADMIN_NUEVA_RES.paquete]) {
+      ADMIN_NUEVA_RES.paquete = null;
     }
 
     paqs.forEach((p) => {
       if (!window.PAQUETES[p.IDPaquete]) return;
       const isSelected = ADMIN_NUEVA_RES.paquete == p.IDPaquete;
       
-      html += `
-        <button type="button" class="paq-opt ${isSelected?'selected':''}" id="adm-p-${p.IDPaquete}" onclick="adminSelectPaquete('${p.IDPaquete}')" style="border:2px solid ${isSelected?'var(--fire)':'rgba(46,26,14,0.1)'};background:#fff;">
-          <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M3.5 21L12 3l8.5 18"/><path d="M20.5 21H3.5"/><path d="M12 6v15"/></svg></div>
-          <div class="paq-name">${p.NombrePaquete}</div>
-          <div class="paq-desc" style="font-size:0.9rem;color:var(--mist);">${p.Descripcion||''}</div>
-          <div class="paq-price" style="font-size:0.75rem;color:var(--dark-text);">${p.Precio>0 ? '+'+fCop(p.Precio) : 'Incluido'}</div>
-        </button>`;
+      html += '<button type="button" class="paq-opt ' + (isSelected ? 'selected' : '') + '" id="adm-p-' + p.IDPaquete + '" onclick="adminSelectPaquete(\'' + p.IDPaquete + '\')" style="border:2px solid ' + (isSelected ? 'var(--fire)' : 'var(--dark-border)') + ';background:var(--dark-card);">'
+        + '<div class="paq-name" style="font-size:1.05rem;font-weight:700;color:var(--dark-text);margin-bottom:0.3rem;">' + p.NombrePaquete + '</div>'
+        + '<div class="paq-desc" style="font-size:0.8rem;color:var(--dark-muted);margin-bottom:0.4rem;">' + (p.Descripcion || '') + '</div>'
+        + '<div class="paq-price" style="font-size:0.85rem;font-weight:700;color:var(--fire);">' + (p.Precio > 0 ? '+' + fCop(p.Precio) : 'Incluido') + '</div>'
+        + '</button>';
     });
 
-    const btn = document.getElementById('adm-p-basico');
-    if (btn && btn.parentNode) {
-      btn.parentNode.innerHTML = html;
+    if (!html) {
+      html = '<div style="grid-column:1/-1;text-align:center;padding:1.5rem;color:var(--dark-muted);">No hay paquetes activos disponibles</div>';
+    }
+
+    const grid = document.getElementById('adm-paq-grid');
+    if (grid) {
+      grid.innerHTML = html;
     }
     
     if (typeof adminResumenUpdate === 'function') adminResumenUpdate();
@@ -2590,10 +2707,11 @@ window.updateAdminDatePickers = function() {
 document.getElementById('cal-cab-filter')?.addEventListener('change', updateAdminDatePickers);
 document.getElementById('b-cab')?.addEventListener('change', updateAdminDatePickers);
 
-function adminCabanaChange() { 
-  ADMIN_NUEVA_RES.cabana = document.getElementById('mn-cab').value; 
+function adminCabanaChange() {
+  const val = document.getElementById('mn-cab').value;
+  ADMIN_NUEVA_RES.cabana = val || null;
   updateAdminDatePickers();
-  adminResumenUpdate(); 
+  adminResumenUpdate();
 }
 
 
@@ -2613,3 +2731,295 @@ document.addEventListener('DOMContentLoaded', () => {
   if(window.adminRefreshGlobalCabanas) adminRefreshGlobalCabanas();
 });
 
+
+window.toggleEstadoGlobal = async function(modulo, idValue, elem) {
+  const isChecked = elem.checked;
+  elem.disabled = true;
+  try {
+    let method = 'PATCH';
+    let url = '/' + modulo + '/' + idValue + '/estado';
+    let body = { Estado: isChecked };
+
+    if (modulo === 'usuarios') {
+      method = 'PUT';
+      body = { estado: isChecked };
+    }
+
+    const res = await req(url, { method, body: JSON.stringify(body) });
+    if (!res.success && !res.ok) throw new Error(res.message || res.mensaje || 'Error guardando estado');
+    
+    // Actualizar la etiqueta visual
+    const labelSpan = elem.parentElement.previousElementSibling;
+    if (labelSpan && labelSpan.tagName === 'SPAN') {
+      if (modulo === 'cabanas' || modulo === 'habitaciones') {
+        labelSpan.textContent = isChecked ? 'Activa' : 'Inactiva';
+      } else {
+        labelSpan.textContent = isChecked ? 'Activo' : 'Inactivo';
+      }
+    }
+
+    // === LIVE SYNC: refrescar datos globales y la reserva ===
+    if (modulo === 'paquetes') {
+      if (typeof refreshGlobalPackages === 'function') refreshGlobalPackages();
+      if (typeof window.adminRefreshGlobalPackages === 'function') window.adminRefreshGlobalPackages();
+    } else if (modulo === 'cabanas') {
+      if (typeof refreshGlobalCabanas === 'function') refreshGlobalCabanas();
+    } else if (modulo === 'servicios') {
+      if (typeof refreshGlobalServices === 'function') refreshGlobalServices();
+      if (typeof window.adminRefreshGlobalServices === 'function') window.adminRefreshGlobalServices();
+    } else if (modulo === 'habitaciones') {
+      // Habitaciones no tienen grid en reserva, pero recargamos la lista
+      if (typeof window.loadHabitaciones === 'function') window.loadHabitaciones();
+    } else if (modulo === 'usuarios') {
+      if (typeof window.loadUsuariosAdmin === 'function') window.loadUsuariosAdmin();
+    }
+  } catch (err) {
+    console.error(err);
+    alert(err.message || 'Error al cambiar estado');
+    elem.checked = !isChecked;
+  } finally {
+    elem.disabled = false;
+  }
+};
+
+window.toggleUsuarioRol = async function(idValue, elem) {
+  const isChecked = elem.checked;
+  elem.disabled = true;
+  try {
+    // Si esta marcado (true) es Admin, sino (false) es Cliente
+    const nuevoRol = isChecked ? 'admin' : 'cliente';
+    const res = await req('/usuarios/' + idValue + '/rol', { 
+      method: 'PUT', 
+      body: JSON.stringify({ rol: nuevoRol }) 
+    });
+    
+    if (!res.success) throw new Error(res.message || 'Error cambiando rol');
+    
+    const labelSpan = elem.parentElement.previousElementSibling;
+    if (labelSpan && labelSpan.tagName === 'SPAN') {
+      labelSpan.textContent = isChecked ? 'Admin' : 'Cliente';
+      labelSpan.style.color = isChecked ? 'var(--fire)' : '#4caf50';
+    }
+    // Live-sync: recargar lista de usuarios
+    if (typeof window.loadUsuariosAdmin === 'function') window.loadUsuariosAdmin();
+  } catch (err) {
+    console.error(err);
+    alert(err.message || 'Error al cambiar rol');
+    elem.checked = !isChecked;
+  } finally {
+    elem.disabled = false;
+  }
+};
+
+
+/* ── Mostrar / ocultar contraseña ── */
+window.nuTogglePw = function(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.innerHTML = show
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+};
+
+/* ── Fortaleza de contraseña ── */
+window.nuCheckPwStrength = function(val) {
+  const bars  = ['nu-pw-b1','nu-pw-b2','nu-pw-b3'].map(id => document.getElementById(id));
+  const label = document.getElementById('nu-pw-lbl');
+  bars.forEach(b => { if(b) b.style.background = 'var(--dark-border)'; });
+  if (!val) { if(label) label.textContent = ''; return; }
+  let score = 0;
+  if (val.length >= 6)  score++;
+  if (val.length >= 10) score++;
+  if (/[A-Z]/.test(val) && /[0-9]/.test(val)) score++;
+  
+  const levels = [
+    { txt: '', color: 'var(--dark-border)' },
+    { txt: 'Débil', color: '#ef5350' },
+    { txt: 'Media', color: '#ffca28' },
+    { txt: 'Fuerte', color: '#66bb6a' }
+  ];
+  const lv = levels[score] || levels[1];
+  
+  bars.slice(0, score).forEach(b => { if(b) b.style.background = lv.color; });
+  if(label) label.textContent = lv.txt;
+};
+
+/* ── Tipo de documento → país ── */
+window.nuOnTipoDocChange = function() {
+  const tipo    = document.getElementById('nu-tipo-doc').value;
+  const wrap    = document.getElementById('nu-pais-wrap');
+  const paisInp = document.getElementById('nu-pais');
+
+  if (tipo === 'CC') {
+    wrap.style.display       = 'block';
+    paisInp.value            = 'Colombia';
+    paisInp.readOnly         = true;
+    paisInp.style.background = 'rgba(0,0,0,0.4)';
+    paisInp.style.cursor     = 'not-allowed';
+  } else if (tipo) {
+    wrap.style.display       = 'block';
+    paisInp.value            = '';
+    paisInp.readOnly         = false;
+    paisInp.style.background = '';
+    paisInp.style.cursor     = '';
+    paisInp.placeholder      = 'Escribe el país';
+  } else {
+    wrap.style.display = 'none';
+    paisInp.value      = '';
+    paisInp.readOnly   = false;
+    paisInp.style.background = '';
+    paisInp.style.cursor     = '';
+  }
+};
+
+/* ── Validación en tiempo real ── */
+window.nuShowReq = function(id) {
+  const req = document.getElementById('req-' + id);
+  if(req) req.style.display = 'block';
+  const err = document.getElementById('err-' + id);
+  if(err) err.style.display = 'none';
+  const el = document.getElementById(id);
+  if (el) el.style.borderColor = '';
+};
+
+window.nuValReq = function(id) {
+  const el = document.getElementById(id);
+  const req = document.getElementById('req-' + id);
+  const err = document.getElementById('err-' + id);
+  if(req) req.style.display = 'none';
+  
+  if (id === 'nu-pais' && document.getElementById('nu-pais-wrap').style.display === 'none') {
+    if(el) el.style.borderColor = '';
+    if(err) err.style.display = 'none';
+    return true;
+  }
+  
+  let valid = true;
+  let val = el ? el.value.trim() : '';
+  if (id === 'nu-password' || id === 'nu-password-confirm') val = el.value;
+  
+  if (id === 'nu-tel') {
+    valid = true;
+  } else if (id === 'nu-password') {
+    if (val.length < 6) valid = false;
+    nuValReq('nu-password-confirm');
+  } else if (id === 'nu-password-confirm') {
+    const pw = document.getElementById('nu-password').value;
+    if (!val || val !== pw) valid = false;
+  } else if (id === 'nu-email') {
+    if (!val || !val.toLowerCase().endsWith('@gmail.com')) valid = false;
+  } else {
+    if (!val) valid = false;
+  }
+  
+  if (!valid) {
+    if (el) el.style.borderColor = '#ef5350';
+    if(err) err.style.display = 'block';
+  } else {
+    if (el) el.style.borderColor = '';
+    if(err) err.style.display = 'none';
+  }
+  return valid;
+};
+
+
+window.abrirModalNuevoUsuario = function(rolPred) {
+  // Reset form
+  document.getElementById('f-nuevo-usuario').reset();
+  document.getElementById('m-nuevo-usr-alert').innerHTML = '';
+  
+  ['nu-tipo-doc','nu-num-doc','nu-pais','nu-nombre','nu-apellido','nu-tel','nu-email','nu-password','nu-password-confirm'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.borderColor = '';
+    const req = document.getElementById('req-' + id);
+    if(req) req.style.display = 'none';
+    const err = document.getElementById('err-' + id);
+    if(err) err.style.display = 'none';
+  });
+  
+  nuOnTipoDocChange();
+  nuCheckPwStrength('');
+
+  var btnTxt = document.getElementById('btn-guardar-usuario-txt');
+  if (btnTxt) btnTxt.textContent = 'Crear cuenta';
+  var btn = document.getElementById('btn-guardar-usuario');
+  if (btn) btn.disabled = false;
+
+  // Set title and default role
+  var titleEl = document.getElementById('m-nuevo-usr-title');
+  var rolSelect = document.getElementById('nu-rol');
+  if (rolPred === 'admin') {
+    if (titleEl) titleEl.textContent = 'Nuevo Administrador';
+    if (rolSelect) rolSelect.value = 'admin';
+  } else {
+    if (titleEl) titleEl.textContent = 'Nuevo Cliente';
+    if (rolSelect) rolSelect.value = 'cliente';
+  }
+
+  // Default estado checked
+  var estadoCheck = document.getElementById('nu-estado');
+  if (estadoCheck) estadoCheck.checked = true;
+
+  openM('m-nuevo-usuario');
+};
+
+window.guardarNuevoUsuario = async function(e) {
+  e.preventDefault();
+  var alertDiv = document.getElementById('m-nuevo-usr-alert');
+  var btn = document.getElementById('btn-guardar-usuario');
+  var btnTxt = document.getElementById('btn-guardar-usuario-txt');
+  
+  alertDiv.innerHTML = '';
+  
+  const fds = ['nu-tipo-doc', 'nu-num-doc', 'nu-pais', 'nu-nombre', 'nu-apellido', 'nu-email', 'nu-tel', 'nu-password', 'nu-password-confirm'];
+  let allValid = true;
+  for (const f of fds) {
+    if (!nuValReq(f)) allValid = false;
+  }
+  
+  if (!allValid) {
+    alertDiv.innerHTML = '<div style="background:rgba(239,83,80,0.15);border:1px solid rgba(239,83,80,0.3);color:#ef5350;padding:0.75rem;border-radius:8px;font-size:0.85rem;">\\u2716 Por favor completa todos los campos obligatorios correctamente.</div>';
+    return;
+  }
+
+  if (btn) btn.disabled = true;
+  if (btnTxt) btnTxt.textContent = 'Creando...';
+
+  try {
+    var nombre = document.getElementById('nu-nombre').value.trim();
+    var apellido = document.getElementById('nu-apellido').value.trim();
+    var email = document.getElementById('nu-email').value.trim();
+    var password = document.getElementById('nu-password').value;
+    var telefono = document.getElementById('nu-tel') ? document.getElementById('nu-tel').value.trim() : '';
+    var pais = document.getElementById('nu-pais').value.trim();
+    var tipoDoc = document.getElementById('nu-tipo-doc').value;
+    var numDoc = document.getElementById('nu-num-doc').value.trim();
+    var rol = document.getElementById('nu-rol').value;
+    var estadoCheck = document.getElementById('nu-estado');
+    var estado = estadoCheck ? estadoCheck.checked : true;
+
+    var body = { nombre: nombre, apellido: apellido, email: email, password: password, telefono: telefono, pais: pais, tipoDocumento: tipoDoc, numeroDocumento: numDoc, rol: rol, estado: estado };
+
+    var res = await req('/usuarios', { method: 'POST', body: JSON.stringify(body) });
+
+    if (!res.ok && !res.success) {
+      throw new Error(res.mensaje || res.message || 'Error al crear usuario');
+    }
+
+    alertDiv.innerHTML = '<div style="background:rgba(76,175,80,0.15);border:1px solid rgba(76,175,80,0.3);color:#4caf50;padding:0.75rem;border-radius:8px;font-size:0.85rem;">\\u2714 Cuenta creada exitosamente.</div>';
+    if (btnTxt) btnTxt.textContent = '\\u2714 Creado';
+
+    // Reload user lists
+    if (typeof window.loadUsuariosAdmin === 'function') window.loadUsuariosAdmin();
+    if (typeof window.loadClientesAdmin === 'function') window.loadClientesAdmin();
+
+    // Close modal after 1.5s
+    setTimeout(function() { closeM('m-nuevo-usuario'); }, 1500);
+  } catch (err) {
+    console.error(err);
+    alertDiv.innerHTML = '<div style="background:rgba(239,83,80,0.15);border:1px solid rgba(239,83,80,0.3);color:#ef5350;padding:0.75rem;border-radius:8px;font-size:0.85rem;">\\u2716 ' + (err.message || 'Error desconocido') + '</div>';
+    if (btn) btn.disabled = false;
+    if (btnTxt) btnTxt.textContent = 'Crear cuenta';
+  }
+};

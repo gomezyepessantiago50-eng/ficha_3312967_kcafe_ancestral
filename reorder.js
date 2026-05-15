@@ -1,0 +1,15 @@
+const fs = require('fs'); 
+let c = fs.readFileSync('public/cliente.html', 'utf8'); 
+const p1 = c.indexOf('<!-- 1. Cabaña -->'); 
+const p2 = c.indexOf('<!-- 2. Paquete -->'); 
+const p3 = c.indexOf('<!-- 3. Servicios adicionales -->'); 
+const p4 = c.indexOf('<!-- 4. Fechas y datos -->'); 
+const p5 = c.indexOf('<!-- 5. Método de Pago -->'); 
+const cabana = c.substring(p1, p2).replace('<div class="sec-num">1</div>', '<div class="sec-num">2</div>').replace('<!-- 1. Cabaña -->', '<!-- 2. Cabaña -->').replace('<div class="cabana-grid">', '<div class="cabana-grid" id="cli-cabana-grid" style="display:none;">').replace('<h3>Elige tu cabaña</h3>', '<h3>Elige tu cabaña <span style="font-size:0.75rem;font-weight:400;color:var(--dark-muted);font-family:var(--font-body);" id="cli-cab-prompt">(Selecciona fechas primero)</span></h3>'); 
+const paq = c.substring(p2, p3).replace('<div class="sec-num">2</div>', '<div class="sec-num">3</div>').replace('<!-- 2. Paquete -->', '<!-- 3. Paquete -->'); 
+const srv = c.substring(p3, p4).replace('<div class="sec-num">3</div>', '<div class="sec-num">4</div>').replace('<!-- 3. Servicios adicionales -->', '<!-- 4. Servicios adicionales -->'); 
+const fechas = c.substring(p4, p5).replace('<div class="sec-num">4</div>', '<div class="sec-num">1</div>').replace('<!-- 4. Fechas y datos -->', '<!-- 1. Fechas y datos -->'); 
+const head = c.substring(0, p1); 
+const tail = c.substring(p5); 
+fs.writeFileSync('public/cliente.html', head + fechas + cabana + paq + srv + tail, 'utf8'); 
+console.log('Done');

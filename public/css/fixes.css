@@ -42,8 +42,8 @@
 /* ── admin-footer ────────────────────────────────── */
 .admin-footer {
   display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;
-  padding:0.85rem 1.75rem; border-top:1px solid rgba(232,93,4,0.1);
-  background:rgba(10,6,3,0.6); font-size:0.73rem; color:rgba(255,255,255,0.22);
+  padding:0.85rem 1.75rem; border-top:1px solid rgba(255,107,15,0.15);
+  background:rgba(10,6,3,0.6); font-size:0.73rem; color:rgba(255,255,255,0.28);
   font-family: var(--font-body);
 }
 

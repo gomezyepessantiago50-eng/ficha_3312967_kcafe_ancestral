@@ -174,6 +174,19 @@
         <p>Cada cabaña es un santuario diseñado con atención al detalle</p>
       </div>
 
+      <!-- Formulario de selección de fechas y cabaña -->
+      <form id="reserva-form" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;justify-content:center;margin-bottom:2rem;">
+        <label>Fecha:
+          <input type="date" id="fecha-reserva" name="fecha-reserva" required>
+        </label>
+        <label>Cabaña:
+          <select id="select-cabana" name="select-cabana" required>
+            <option value="">Seleccione una cabaña</option>
+          </select>
+        </label>
+        <button type="submit" class="btn btn-fire">Buscar</button>
+      </form>
+
       <div class="cabanas-grid" id="landing-cabanas-grid">
         <div style="grid-column: 1/-1;text-align:center;padding:2rem;">Cargando cabañas...</div>
       </div>

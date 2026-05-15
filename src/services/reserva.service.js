@@ -81,6 +81,7 @@ const normalizeBloqueo = (r) => ({
   fecha_inicio: toDateString(r.FechaInicio),
   fecha_fin: toDateString(r.FechaFinalizacion),
   motivo: r.motivo,
+  cabana: r.cabana,
   estado: ESTADO_MAP[r.IdEstadoReserva] || 'bloqueada',
 });
 
@@ -134,14 +135,15 @@ const verificarDisponibilidad = async (fechaInicio, fechaFin, cabana = null, exc
     ],
   };
 
-  const cabanaMatch = cabana
-    ? { [Op.or]: [{ IdEstadoReserva: 5 }, { cabana }] }
-    : { IdEstadoReserva: 5 };
-
   const where = {
     IdEstadoReserva: { [Op.in]: [1, 2, 5] },
-    [Op.and]: [fechaOverlap, cabanaMatch],
+    [Op.and]: [fechaOverlap],
   };
+
+  // Scope by cabin: blockages AND reservations must match the same cabin
+  if (cabana) {
+    where.cabana = cabana;
+  }
 
   if (excluirId) where.IdReserva = { [Op.ne]: excluirId };
   const conflictos = await Reserva.findAll({ where });
@@ -160,7 +162,7 @@ const calcularTotal = (subtotal, descuento = 0, iva = 0) => {
 const verDisponibilidad = async () => {
   const registros = await Reserva.findAll({
     where: { IdEstadoReserva: { [Op.in]: [1, 2, 5] } },
-    attributes: ['IdReserva', 'FechaInicio', 'FechaFinalizacion', 'IdEstadoReserva'],
+    attributes: ['IdReserva', 'FechaInicio', 'FechaFinalizacion', 'IdEstadoReserva', 'cabana'],
   });
 
   const reservadas = registros
@@ -171,7 +173,16 @@ const verDisponibilidad = async () => {
     .filter(r => r.IdEstadoReserva === 5)
     .flatMap(r => rangeDates(r.FechaInicio, r.FechaFinalizacion));
 
-  return { reservadas: [...new Set(reservadas)], bloqueadas: [...new Set(bloqueadas)] };
+  // Also return raw records so the frontend can filter by cabin
+  const registrosNorm = registros.map(r => ({
+    id: r.IdReserva,
+    fecha_inicio: toDateString(r.FechaInicio),
+    fecha_fin: toDateString(r.FechaFinalizacion),
+    estado: ESTADO_MAP[r.IdEstadoReserva] || 'pendiente',
+    cabana: r.cabana,
+  }));
+
+  return { reservadas: [...new Set(reservadas)], bloqueadas: [...new Set(bloqueadas)], registros: registrosNorm };
 };
 
 const bloquearFechas = async (datos, usuarioId) => {

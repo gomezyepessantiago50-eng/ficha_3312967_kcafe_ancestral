@@ -134,6 +134,9 @@
     }
     .check-row input[type="checkbox"] { margin-top: 2px; accent-color: var(--fire); flex-shrink: 0; }
     .check-row a { color: var(--fire); text-decoration: underline; cursor: pointer; }
+    .input.invalid, .select.invalid { background-color: rgba(239, 83, 80, 0.08) !important; border-color: var(--danger) !important; }
+    .req-helper { display: none; font-size: 0.75rem; color: var(--mist); margin-top: 0.4rem; }
+    .err-msg { display: none; font-size: 0.75rem; color: var(--danger); margin-top: 0.4rem; font-weight: 500; }
   </style>
 </head>
 <body>
@@ -216,39 +219,56 @@
         </div>
         <div class="row-2">
           <div class="field">
-            <label class="label" for="r-nombre">Nombre <span style="color:var(--danger);">*</span></label>
-            <input class="input" type="text" id="r-nombre" placeholder="Juan" autocomplete="given-name"/>
-          </div>
-          <div class="field">
-            <label class="label" for="r-apellido">Apellido <span style="color:var(--danger);">*</span></label>
-            <input class="input" type="text" id="r-apellido" placeholder="Pérez" autocomplete="family-name"/>
-          </div>
-        </div>
-        <div class="field">
-          <label class="label" for="r-email">Correo electrónico <span style="color:var(--danger);">*</span></label>
-          <input class="input" type="email" id="r-email" placeholder="tu@email.com" autocomplete="email"/>
-        </div>
-        <div class="field">
-          <label class="label" for="r-tel">Teléfono <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label>
-          <input class="input" type="tel" id="r-tel" placeholder="3001234567" autocomplete="tel"/>
-        </div>
-        <div class="row-2">
-          <div class="field">
             <label class="label" for="r-tipo-doc">Tipo de documento <span style="color:var(--danger);">*</span></label>
-            <select class="select" id="r-tipo-doc" onchange="onTipoDocChange()">
-              <option value="">— Selecciona —</option>
+            <select class="select" id="r-tipo-doc" onchange="onTipoDocChange(); valReq('r-tipo-doc')" onfocus="showReq('r-tipo-doc')" onblur="valReq('r-tipo-doc')">
+              <option value="">— Seleccionar —</option>
               <option value="CC">Cédula de Ciudadanía (CC)</option>
-              <option value="Pasaporte">Pasaporte</option>
+              <option value="CE">Cédula de Extranjería (CE)</option>
+              <option value="PA">Pasaporte (PA)</option>
+              <option value="TI">Tarjeta de Identidad (TI)</option>
+              <option value="NIT">NIT</option>
             </select>
+            <div class="req-helper" id="req-r-tipo-doc">Selecciona el tipo de documento de identidad.</div>
+            <div class="err-msg" id="err-r-tipo-doc">Debes seleccionar un tipo de documento.</div>
           </div>
           <div class="field">
             <label class="label" for="r-num-doc">Número de documento <span style="color:var(--danger);">*</span></label>
-            <input class="input" type="text" id="r-num-doc" placeholder="Ej: 1234567890"/>
+            <input class="input" type="text" id="r-num-doc" placeholder="Ej: 1234567890" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onfocus="showReq('r-num-doc')" onblur="valReq('r-num-doc')"/>
+            <div class="req-helper" id="req-r-num-doc">Ingresa tu número de documento sin puntos ni comas.</div>
+            <div class="err-msg" id="err-r-num-doc">El número de documento es obligatorio.</div>
           </div>
         </div>
-        <div class="field" id="r-pais-wrap" style="display:none;">
+<div class="field" id="r-pais-wrap" style="display:none;">
           <label class="label" for="r-pais">País <span style="color:var(--danger);">*</span></label>
-          <input class="input" type="text" id="r-pais" placeholder="Escribe tu país" autocomplete="country-name"/>
+          <input class="input" type="text" id="r-pais" placeholder="Escribe tu país" autocomplete="country-name" onfocus="showReq('r-pais')" onblur="valReq('r-pais')"/>
+          <div class="req-helper" id="req-r-pais">Escribe tu país de residencia.</div>
+          <div class="err-msg" id="err-r-pais">El país es obligatorio.</div>
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label class="label" for="r-nombre">Nombre <span style="color:var(--danger);">*</span></label>
+            <input class="input" type="text" id="r-nombre" placeholder="Juan" autocomplete="given-name" oninput="this.value = this.value.replace(/[0-9]/g, '')" onfocus="showReq('r-nombre')" onblur="valReq('r-nombre')"/>
+            <div class="req-helper" id="req-r-nombre">Ingresa tu primer nombre y otros nombres si tienes.</div>
+            <div class="err-msg" id="err-r-nombre">El nombre es obligatorio.</div>
+          </div>
+          <div class="field">
+            <label class="label" for="r-apellido">Apellido <span style="color:var(--danger);">*</span></label>
+            <input class="input" type="text" id="r-apellido" placeholder="Pérez" autocomplete="family-name" oninput="this.value = this.value.replace(/[0-9]/g, '')" onfocus="showReq('r-apellido')" onblur="valReq('r-apellido')"/>
+            <div class="req-helper" id="req-r-apellido">Ingresa tus apellidos completos.</div>
+            <div class="err-msg" id="err-r-apellido">El apellido es obligatorio.</div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="r-tel">Teléfono <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label>
+          <input class="input" type="tel" id="r-tel" placeholder="3001234567" autocomplete="tel" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onfocus="showReq('r-tel')" onblur="valReq('r-tel')"/>
+          <div class="req-helper" id="req-r-tel">Ingresa tu número de contacto a 10 dígitos.</div>
+          <div class="err-msg" id="err-r-tel"></div>
+        </div>
+        <div class="field">
+          <label class="label" for="r-email">Correo electrónico <span style="color:var(--danger);">*</span></label>
+          <input class="input" type="email" id="r-email" placeholder="tu@email.com" autocomplete="email" onfocus="showReq('r-email')" onblur="valReq('r-email')"/>
+          <div class="req-helper" id="req-r-email">Ingresa tu correo (solo Gmail: @gmail.com).</div>
+          <div class="err-msg" id="err-r-email">El correo es obligatorio y debe ser @gmail.com.</div>
         </div>
         <div class="field">
           <label class="label" for="r-password">Contraseña <span style="color:var(--danger);">*</span></label>
@@ -256,6 +276,8 @@
             <input class="input" type="password" id="r-password"
                    placeholder="Mínimo 6 caracteres"
                    oninput="checkPwStrength(this.value)"
+                   onfocus="showReq('r-password')"
+                   onblur="valReq('r-password')"
                    autocomplete="new-password"/>
             <button class="pw-toggle" type="button" onclick="togglePw('r-password', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
@@ -265,14 +287,30 @@
             <div class="pw-bar" id="pw-b3"></div>
             <span class="pw-label" id="pw-lbl"></span>
           </div>
+          <div class="req-helper" id="req-r-password">Mínimo 6 caracteres. Se recomienda incluir letras y números.</div>
+          <div class="err-msg" id="err-r-password">La contraseña es obligatoria y debe tener al menos 6 caracteres.</div>
         </div>
-        <div class="check-row">
-          <input type="checkbox" id="r-terms"/>
+        <div class="field">
+          <label class="label" for="r-password-confirm">Confirmar contraseña <span style="color:var(--danger);">*</span></label>
+          <div class="field-pw">
+            <input class="input" type="password" id="r-password-confirm"
+                   placeholder="Repite tu contraseña"
+                   onfocus="showReq('r-password-confirm')"
+                   onblur="valReq('r-password-confirm')"
+                   autocomplete="new-password"/>
+            <button class="pw-toggle" type="button" onclick="togglePw('r-password-confirm', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="req-helper" id="req-r-password-confirm">Vuelve a escribir la contraseña.</div>
+          <div class="err-msg" id="err-r-password-confirm">Las contraseñas no coinciden.</div>
+        </div>
+        <div class="check-row" style="margin-bottom:0.4rem;">
+          <input type="checkbox" id="r-terms" onchange="valReq('r-terms')"/>
           <label for="r-terms">
             Acepto los <a onclick="toast('Términos próximamente disponibles','warn')">términos y condiciones</a>
-            y la <a onclick="toast('Política próximamente disponible','warn')">política de privacidad</a>
+            y la <a onclick="toast('Política próximamente privacidad','warn')">política de privacidad</a>
           </label>
         </div>
+        <div class="err-msg" id="err-r-terms" style="margin-bottom:1.1rem;margin-top:0;">Debes aceptar los términos y condiciones para registrarte.</div>
         <button class="btn btn-fire btn-block btn-lg" id="btn-registro" onclick="doRegistro()">
           Crear cuenta
         </button>
@@ -445,16 +483,17 @@ function onTipoDocChange() {
   const tipo    = document.getElementById('r-tipo-doc').value;
   const wrap    = document.getElementById('r-pais-wrap');
   const paisInp = document.getElementById('r-pais');
+
   if (tipo === 'CC') {
-    wrap.style.display = 'block';
-    paisInp.value      = 'Colombia';
-    paisInp.readOnly   = true;
+    wrap.style.display       = 'block';
+    paisInp.value            = 'Colombia';
+    paisInp.readOnly         = true;
     paisInp.style.background = 'var(--sand)';
     paisInp.style.cursor     = 'not-allowed';
-  } else if (tipo === 'Pasaporte') {
-    wrap.style.display = 'block';
-    paisInp.value      = '';
-    paisInp.readOnly   = false;
+  } else if (tipo) {
+    wrap.style.display       = 'block';
+    paisInp.value            = '';
+    paisInp.readOnly         = false;
     paisInp.style.background = '';
     paisInp.style.cursor     = '';
     paisInp.placeholder      = 'Escribe tu país';
@@ -467,37 +506,82 @@ function onTipoDocChange() {
   }
 }
 
+/* ── Validación en tiempo real (Registro) ───────────── */
+function showReq(id) {
+  const req = document.getElementById('req-' + id);
+  if(req) req.style.display = 'block';
+  const err = document.getElementById('err-' + id);
+  if(err) err.style.display = 'none';
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('invalid');
+}
+
+function valReq(id) {
+  const el = document.getElementById(id);
+  const req = document.getElementById('req-' + id);
+  const err = document.getElementById('err-' + id);
+  if(req) req.style.display = 'none';
+  
+  if (id === 'r-pais' && document.getElementById('r-pais-wrap').style.display === 'none') {
+    if(el) el.classList.remove('invalid');
+    if(err) err.style.display = 'none';
+    return true;
+  }
+  
+  let valid = true;
+  let val = el ? (el.type === 'checkbox' ? el.checked : el.value.trim()) : '';
+  if (id === 'r-password' || id === 'r-password-confirm') val = el.value;
+  
+  if (id === 'r-tel') {
+    valid = true;
+  } else if (id === 'r-password') {
+    if (val.length < 6) valid = false;
+    valReq('r-password-confirm');
+  } else if (id === 'r-password-confirm') {
+    const pw = document.getElementById('r-password').value;
+    if (!val || val !== pw) valid = false;
+  } else if (id === 'r-email') {
+    if (!val || !val.toLowerCase().endsWith('@gmail.com')) valid = false;
+  } else if (id === 'r-terms') {
+    valid = val === true;
+  } else {
+    if (!val) valid = false;
+  }
+  
+  if (!valid) {
+    if (el && id !== 'r-terms') el.classList.add('invalid');
+    if(err) err.style.display = 'block';
+  } else {
+    if (el && id !== 'r-terms') el.classList.remove('invalid');
+    if(err) err.style.display = 'none';
+  }
+  return valid;
+}
+
 /* ── REGISTRO ──────────────────────────────────────── */
 async function doRegistro() {
   clearAlert();
+  
+  const fds = ['r-tipo-doc', 'r-num-doc', 'r-pais', 'r-nombre', 'r-apellido', 'r-email', 'r-tel', 'r-password', 'r-password-confirm', 'r-terms'];
+  let allValid = true;
+  for (const f of fds) {
+    if (!valReq(f)) allValid = false;
+  }
+  
+  if (!allValid) {
+    showAlert('Por favor completa todos los campos obligatorios correctamente.'); return;
+  }
+  
   const nombre    = document.getElementById('r-nombre').value.trim();
   const apellido  = document.getElementById('r-apellido').value.trim();
   const email     = document.getElementById('r-email').value.trim();
   const tel       = document.getElementById('r-tel').value.trim();
-  const tipoDoc   = document.getElementById('r-tipo-doc').value;
+  const tipoDoc = document.getElementById('r-tipo-doc').value;
   const numDoc    = document.getElementById('r-num-doc').value.trim();
   const pais      = document.getElementById('r-pais').value.trim();
   const password  = document.getElementById('r-password').value;
-  const terms     = document.getElementById('r-terms').checked;
   const btn       = document.getElementById('btn-registro');
-  if (!nombre || !apellido || !email || !password) {
-    showAlert('Por favor completa todos los campos obligatorios.'); return;
-  }
-  if (!tipoDoc) {
-    showAlert('Por favor selecciona el tipo de documento.'); return;
-  }
-  if (!numDoc) {
-    showAlert('Por favor ingresa tu número de documento.'); return;
-  }
-  if (!pais) {
-    showAlert('Por favor ingresa tu país.'); return;
-  }
-  if (password.length < 6) {
-    showAlert('La contraseña debe tener al menos 6 caracteres.'); return;
-  }
-  if (!terms) {
-    showAlert('Debes aceptar los términos y condiciones para registrarte.'); return;
-  }
+
   try {
     setLoading(btn, true, 'Creando cuenta…');
     const res = await AuthAPI.registro({

@@ -457,7 +457,7 @@
 
       <!-- CLIENTES -->
       <div class="a-section" id="sec-clientes">
-        <div class="page-hd"><div><h2>Clientes</h2><p>Directorio de clientes registrados</p></div></div>
+        <div class="page-hd"><div><h2>Clientes</h2><p>Directorio de clientes registrados</p></div><button class="btn btn-fire" onclick="abrirModalNuevoUsuario('cliente')">+ Nuevo Cliente</button></div>
         <div class="fbar">
           <input type="text" class="input input-dark" id="fil-cliente-q" placeholder="Buscar por nombre, correo o documento..." oninput="cliLiveSearch()" onkeyup="if(event.key==='Enter') cliSearch()" style="flex:1;"/>
           <button class="btn btn-fire" onclick="cliSearch()">Buscar</button>
@@ -493,17 +493,20 @@
         <div id="usr-list-container">
           <!-- Admins -->
           <div id="usr-admins-section" style="margin-bottom:1.5rem;">
-            <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.75rem;">
-              <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(232,93,4,0.15);flex-shrink:0;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--fire)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-              </span>
-              <h3 style="color:var(--fire);font-size:1rem;margin:0;">Administradores</h3>
-              <span class="badge badge-fire" id="usr-admin-count">0</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(232,93,4,0.15);flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--fire)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                </span>
+                <h3 style="color:var(--fire);font-size:1rem;margin:0;">Administradores</h3>
+                <span class="badge badge-fire" id="usr-admin-count">0</span>
+              </div>
+              <button class="btn btn-sm btn-fire" onclick="abrirModalNuevoUsuario('admin')">+ Nuevo Usuario</button>
             </div>
             <div class="table-wrap">
               <table class="table-dark">
                 <thead><tr>
-                  <th>ID</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>País</th><th>Rol</th><th>Acciones</th>
+                  <th>ID</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Acciones</th>
                 </tr></thead>
                 <tbody id="usr-admin-tbody">
                   <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dark-muted);">Cargando...</td></tr>
@@ -514,17 +517,20 @@
 
           <!-- Clientes -->
           <div id="usr-clientes-section">
-            <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.75rem;">
-              <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(45,122,79,0.15);flex-shrink:0;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              </span>
-              <h3 style="color:#4caf50;font-size:1rem;margin:0;">Clientes</h3>
-              <span class="badge" style="background:rgba(45,122,79,0.15);color:#4caf50;border:1px solid rgba(45,122,79,0.3);" id="usr-cli-count">0</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(45,122,79,0.15);flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <h3 style="color:#4caf50;font-size:1rem;margin:0;">Clientes</h3>
+                <span class="badge" style="background:rgba(45,122,79,0.15);color:#4caf50;border:1px solid rgba(45,122,79,0.3);" id="usr-cli-count">0</span>
+              </div>
+
             </div>
             <div class="table-wrap">
               <table class="table-dark">
                 <thead><tr>
-                  <th>ID</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>País</th><th>Rol</th><th>Acciones</th>
+                  <th>ID</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Acciones</th>
                 </tr></thead>
                 <tbody id="usr-cli-tbody">
                   <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dark-muted);">Cargando...</td></tr>
@@ -607,47 +613,28 @@
             <div id="mn-cli-selected" style="display:none;margin-top:0.6rem;padding:0.65rem 0.85rem;background:rgba(45,122,79,0.08);border:1px solid rgba(45,122,79,0.25);border-radius:8px;"></div>
           </div>
 
-          <!-- FECHAS Y CLIENTE -->
+          <!-- FECHAS Y CABAÑA -->
           <div style="margin-bottom:1.5rem;">
-            <h4 style="margin-bottom:0.75rem;color:var(--dark-text);font-size:0.95rem;">2. Cabaña y Fechas</h4>
+            <h4 style="margin-bottom:0.75rem;color:var(--dark-text);font-size:0.95rem;">2. Fechas y Cabaña</h4>
             
-            <div class="field" style="margin-bottom:1rem;">
-              <label class="label label-dark">Cabaña <span style="color:var(--fire);font-weight:800;">*</span></label>
-              <select class="select input-dark" id="mn-cab" onchange="adminCabanaChange()">
-                <option value="roble">El Roble (2 pers.) — $280.000</option>
-                <option value="ceiba">La Ceiba (4 pers.) — $420.000</option>
-                <option value="ancestral">Ancestral (6 pers.) — $650.000</option>
-              </select>
-            </div>
-
-            <div class="row-2">
+            <div class="row-2" style="margin-bottom:1rem;">
               <div class="field"><label class="label label-dark">Fecha inicio <span style="color:var(--fire);font-weight:800;">*</span></label><input type="text" class="input input-dark" id="mn-ini" onchange="adminResumenUpdate()" placeholder="Elige el inicio" required/></div>
               <div class="field"><label class="label label-dark">Fecha fin <span style="color:var(--fire);font-weight:800;">*</span></label><input type="text" class="input input-dark" id="mn-fin" onchange="adminResumenUpdate()" placeholder="Elige el final" required/></div>
+            </div>
+
+            <div class="field">
+              <label class="label label-dark">Cabaña <span style="color:var(--fire);font-weight:800;">*</span> <span id="mn-cab-prompt" style="font-weight:400;color:var(--dark-muted);font-size:0.75rem;">(Selecciona fechas primero)</span></label>
+              <select class="select input-dark" id="mn-cab" onchange="adminCabanaChange()" disabled>
+                <option value="">Selecciona fechas...</option>
+              </select>
             </div>
           </div>
 
           <!-- PAQUETE -->
           <div style="margin-bottom:1.5rem;border-top:1px solid var(--dark-border);padding-top:1rem;">
             <h4 style="margin-bottom:0.75rem;color:var(--dark-text);font-size:0.95rem;">3. Selecciona el paquete <span style="font-size:0.73rem;font-weight:400;opacity:0.6;">(opcional)</span></h4>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;">
-              <button type="button" class="paq-opt" id="adm-p-basico" onclick="adminSelectPaquete('basico')">
-                <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M3.5 21L12 3l8.5 18"/><path d="M20.5 21H3.5"/><path d="M12 6v15"/></svg></div>
-                <div class="paq-name">Básico</div>
-                <div class="paq-desc">Alojamiento en cabaña sin servicios adicionales</div>
-                <div class="paq-price" style="font-size:0.75rem;color:var(--dark-text);">Incluido</div>
-              </button>
-              <button type="button" class="paq-opt" id="adm-p-cafetero" onclick="adminSelectPaquete('cafetero')">
-                <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg></div>
-                <div class="paq-name">Cafetero</div>
-                <div class="paq-desc">Incluye tour guiado por café y desayuno típico</div>
-                <div class="paq-price" style="font-size:0.75rem;color:var(--dark-text);">+$80.000</div>
-              </button>
-              <button type="button" class="paq-opt" id="adm-p-premium" onclick="adminSelectPaquete('premium')">
-                <div class="paq-ico" style="color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-                <div class="paq-name">Premium</div>
-                <div class="paq-desc">Incluye tour, spa, gastronomía y fogata</div>
-                <div class="paq-price" style="font-size:0.75rem;color:var(--dark-text);">+$200.000</div>
-              </button>
+            <div id="adm-paq-grid" class="paquete-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;">
+              <div style="grid-column:1/-1;text-align:center;padding:1.5rem;color:var(--dark-muted);">Cargando paquetes...</div>
             </div>
           </div>
 
@@ -865,7 +852,131 @@
   </div>
 </div>
 
-<!-- MODAL: Reset Password Usuario -->
+<!-- MODAL: Nuevo Usuario / Cliente -->
+<div class="modal-backdrop" id="m-nuevo-usuario" onclick="if(event.target===this)closeM('m-nuevo-usuario')">
+  <div class="modal modal-dark" style="max-width:680px;width:95%;">
+    <div class="modal-hd">
+      <h3 id="m-nuevo-usr-title" style="color:var(--fire);font-weight:800;font-size:1.4rem;text-shadow:0 1px 3px rgba(0,0,0,0.3);">Nuevo Cliente</h3>
+    </div>
+    <form class="modal-body" id="f-nuevo-usuario" autocomplete="off" onsubmit="guardarNuevoUsuario(event)" style="max-height: 60vh; overflow-y: auto; padding-right: 0.5rem;">
+      <div class="row-2">
+        <div class="field">
+          <label class="label" for="nu-tipo-doc" style="color:rgba(255,255,255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Tipo de documento <span style="color:var(--danger);">*</span></label>
+          <select class="select input-dark" id="nu-tipo-doc" onchange="nuOnTipoDocChange(); nuValReq('nu-tipo-doc')" onfocus="nuShowReq('nu-tipo-doc')" onblur="nuValReq('nu-tipo-doc')" style="margin-top:0.4rem;background:rgba(0,0,0,0.2);border:1px solid var(--dark-border);color:var(--dark-text);">
+            <option value="">— Seleccionar —</option>
+            <option value="CC">Cédula de Ciudadanía (CC)</option>
+            <option value="CE">Cédula de Extranjería (CE)</option>
+            <option value="PA">Pasaporte (PA)</option>
+            <option value="TI">Tarjeta de Identidad (TI)</option>
+            <option value="NIT">NIT</option>
+          </select>
+          <div class="req-helper" id="req-nu-tipo-doc" style="display:none;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:0.4rem;">Selecciona el tipo de documento de identidad.</div>
+          <div class="err-msg" id="err-nu-tipo-doc" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">Debes seleccionar un tipo de documento.</div>
+        </div>
+        <div class="field">
+          <label class="label" for="nu-num-doc" style="color:rgba(255,255,255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Número de documento <span style="color:var(--danger);">*</span></label>
+          <input class="input input-dark" type="text" id="nu-num-doc" placeholder="Ej: 1234567890" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onfocus="nuShowReq('nu-num-doc')" onblur="nuValReq('nu-num-doc')" style="margin-top:0.4rem;"/>
+          <div class="req-helper" id="req-nu-num-doc" style="display:none;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:0.4rem;">Ingresa número de documento sin puntos.</div>
+          <div class="err-msg" id="err-nu-num-doc" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">El número es obligatorio.</div>
+        </div>
+      </div>
+
+      <div class="field" id="nu-pais-wrap" style="display:none; margin-top: 1rem;">
+        <label class="label" for="nu-pais" style="color:rgba(255,255,255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">País <span style="color:var(--danger);">*</span></label>
+        <input class="input input-dark" type="text" id="nu-pais" placeholder="Escribe el país" autocomplete="country-name" onfocus="nuShowReq('nu-pais')" onblur="nuValReq('nu-pais')" style="margin-top:0.4rem;"/>
+        <div class="req-helper" id="req-nu-pais" style="display:none;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:0.4rem;">Escribe país de residencia.</div>
+        <div class="err-msg" id="err-nu-pais" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">El país es obligatorio.</div>
+      </div>
+
+      <div class="row-2" style="margin-top: 1rem;">
+        <div class="field">
+          <label class="label" for="nu-nombre" style="color:rgba(255,255,255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Nombre <span style="color:var(--danger);">*</span></label>
+          <input class="input input-dark" type="text" id="nu-nombre" placeholder="Nombre" autocomplete="given-name" oninput="this.value = this.value.replace(/[0-9]/g, '')" onfocus="nuShowReq('nu-nombre')" onblur="nuValReq('nu-nombre')" style="margin-top:0.4rem;"/>
+          <div class="req-helper" id="req-nu-nombre" style="display:none;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:0.4rem;">Primer y segundos nombres.</div>
+          <div class="err-msg" id="err-nu-nombre" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">El nombre es obligatorio.</div>
+        </div>
+        <div class="field">
+          <label class="label" for="nu-apellido" style="color:rgba(255,255,255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Apellido <span style="color:var(--danger);">*</span></label>
+          <input class="input input-dark" type="text" id="nu-apellido" placeholder="Apellido" autocomplete="family-name" oninput="this.value = this.value.replace(/[0-9]/g, '')" onfocus="nuShowReq('nu-apellido')" onblur="nuValReq('nu-apellido')" style="margin-top:0.4rem;"/>
+          <div class="req-helper" id="req-nu-apellido" style="display:none;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:0.4rem;">Apellidos completos.</div>
+          <div class="err-msg" id="err-nu-apellido" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">El apellido es obligatorio.</div>
+        </div>
+      </div>
+
+      <div class="row-2" style="margin-top: 1rem;">
+        <div class="field">
+          <label class="label" for="nu-tel" style="color:rgba(255,255,255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Teléfono <span style="font-weight:400;text-transform:none;letter-spacing:0;color:rgba(255,255,255,0.5)">(opcional)</span></label>
+          <input class="input input-dark" type="tel" id="nu-tel" placeholder="3001234567" autocomplete="tel" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onfocus="nuShowReq('nu-tel')" onblur="nuValReq('nu-tel')" style="margin-top:0.4rem;"/>
+          <div class="req-helper" id="req-nu-tel" style="display:none;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:0.4rem;">Número a 10 dígitos.</div>
+          <div class="err-msg" id="err-nu-tel" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;"></div>
+        </div>
+        <div class="field">
+          <label class="label" for="nu-email" style="color:rgba(255,255,255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Correo electrónico <span style="color:var(--danger);">*</span></label>
+          <input class="input input-dark" type="email" id="nu-email" placeholder="correo@gmail.com" autocomplete="email" onfocus="nuShowReq('nu-email')" onblur="nuValReq('nu-email')" style="margin-top:0.4rem;"/>
+          <div class="req-helper" id="req-nu-email" style="display:none;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:0.4rem;">Solo Gmail (@gmail.com).</div>
+          <div class="err-msg" id="err-nu-email" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">El correo es obligatorio y debe ser @gmail.com.</div>
+        </div>
+      </div>
+
+      <div class="row-2" style="margin-top: 1rem;">
+        <div class="field">
+          <label class="label" for="nu-password" style="color:rgba(255,255,255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Contraseña <span style="color:var(--danger);">*</span></label>
+          <div class="field-pw" style="margin-top:0.4rem;position:relative;">
+            <input class="input input-dark" type="password" id="nu-password" placeholder="Mínimo 6 caracteres" oninput="nuCheckPwStrength(this.value)" onfocus="nuShowReq('nu-password')" onblur="nuValReq('nu-password')" autocomplete="new-password" style="padding-right:2.8rem;"/>
+            <button class="pw-toggle" type="button" onclick="nuTogglePw('nu-password', this)" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.6);font-size:1rem;cursor:pointer;padding:0.2rem;line-height:1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="pw-strength" style="margin-top: 0.5rem; display: flex; gap: 4px; align-items: center;">
+            <div class="pw-bar" id="nu-pw-b1" style="flex:1;height:3px;border-radius:99px;background:var(--dark-border);transition:background 0.3s;"></div>
+            <div class="pw-bar" id="nu-pw-b2" style="flex:1;height:3px;border-radius:99px;background:var(--dark-border);transition:background 0.3s;"></div>
+            <div class="pw-bar" id="nu-pw-b3" style="flex:1;height:3px;border-radius:99px;background:var(--dark-border);transition:background 0.3s;"></div>
+            <span class="pw-label" id="nu-pw-lbl" style="font-size:0.7rem;color:rgba(255,255,255,0.5);min-width:50px;text-align:right;"></span>
+          </div>
+          <div class="req-helper" id="req-nu-password" style="display:none;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:0.4rem;">Mínimo 6 caracteres. Recomendado incluir letras y números.</div>
+          <div class="err-msg" id="err-nu-password" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">La contraseña debe tener al menos 6 caracteres.</div>
+        </div>
+        <div class="field">
+          <label class="label" for="nu-password-confirm" style="color:rgba(255,255,255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Confirmar contraseña <span style="color:var(--danger);">*</span></label>
+          <div class="field-pw" style="margin-top:0.4rem;position:relative;">
+            <input class="input input-dark" type="password" id="nu-password-confirm" placeholder="Repite la contraseña" onfocus="nuShowReq('nu-password-confirm')" onblur="nuValReq('nu-password-confirm')" autocomplete="new-password" style="padding-right:2.8rem;"/>
+            <button class="pw-toggle" type="button" onclick="nuTogglePw('nu-password-confirm', this)" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.6);font-size:1rem;cursor:pointer;padding:0.2rem;line-height:1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="req-helper" id="req-nu-password-confirm" style="display:none;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:0.4rem;">Vuelve a escribir la contraseña.</div>
+          <div class="err-msg" id="err-nu-password-confirm" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">Las contraseñas no coinciden.</div>
+        </div>
+      </div>
+
+      <div class="row-2" style="margin-top: 1rem; border-top: 1px solid var(--dark-border); padding-top: 1rem;">
+        <!-- Rol -->
+        <div class="field">
+          <label class="label" for="nu-rol" style="color:rgba(255,255,255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Rol</label>
+          <select class="select input-dark" id="nu-rol" style="margin-top:0.4rem;background:rgba(0,0,0,0.2);border:1px solid var(--dark-border);color:var(--dark-text);">
+            <option value="cliente">Cliente</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <!-- Estado -->
+        <div class="field" style="display:flex;flex-direction:column;justify-content:center;">
+          <label class="label" style="color:rgba(255,255,255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.85rem;">Estado inicial</label>
+          <label class="ui-switch">
+            <input type="checkbox" id="nu-estado" checked>
+            <span class="ui-slider"></span>
+            <span class="ui-label" style="color:rgba(255,255,255,0.9) !important;font-weight:700;">Activo</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="m-nuevo-usr-alert" style="margin-top:1rem;"></div>
+    </form>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-nuevo-usuario')">Cancelar</button>
+      <button class="btn btn-fire" onclick="document.getElementById('f-nuevo-usuario').requestSubmit()" id="btn-guardar-usuario">
+        <span id="btn-guardar-usuario-txt">Crear cuenta</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Eliminar Usuario -->
 <div class="modal-backdrop" id="m-reset-usuario" onclick="if(event.target===this)closeM('m-reset-usuario')">
   <div class="modal modal-dark modal-sm">
     <div class="modal-hd">
@@ -916,7 +1027,7 @@
         <input type="file" id="m-hab-foto" class="input input-dark" accept="image/*" style="padding:0.4rem; cursor:pointer; background:rgba(255,255,255,0.03); color:var(--dark-text);" onchange="adminPreviewHabFoto(this)" />
         <div id="m-hab-foto-preview" style="margin-top:0.75rem; border-radius:var(--r-md); overflow:hidden; max-width: 100%; height: auto; display:none;"></div>
       </div>
-<div class="field"><label class="label">Estado</label><select class="select" id="m-hab-est"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
+<input type="hidden" id="m-hab-est" value="true" />
     </div>
     <div class="modal-ft">
       <button type="button" class="btn btn-dark-outline" onclick="closeM('m-hab')">Cancelar</button>
@@ -940,7 +1051,7 @@
       </div>
       <div class="row-2">
         <div class="field"><label class="label">Número de Habitaciones <span style="color:var(--fire)">*</span></label><input type="number" class="input input-dark" id="m-cab-numhab" min="1" value="1" required /></div>
-        <div class="field"><label class="label">Estado</label><select class="select" id="m-cab-est"><option value="true">Activa</option><option value="false">Inactiva</option></select></div>
+        <input type="hidden" id="m-cab-est" value="true" />
       </div>
       <div class="row-2">
         <div class="field">
@@ -1002,7 +1113,7 @@
           <div id="m-paq-servicio" class="input input-dark" style="height:auto; max-height:150px; overflow-y:auto; padding:0.5rem; display:flex; flex-direction:column; gap:0.5rem; background:rgba(255,255,255,0.8); border:1px solid var(--sand); border-radius:8px;"><div style="text-align:center; padding:1rem;">Cargando...</div></div>
         </div>
       </div>
-      <div class="field"><label class="label">Estado</label><select class="select" id="m-paq-est"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
+      <input type="hidden" id="m-paq-est" value="true" />
     </div>
     <div class="modal-ft">
       <button type="button" class="btn btn-dark-outline" onclick="closeM('m-paq')">Cancelar</button>
@@ -1023,7 +1134,7 @@
         <div class="field"><label class="label">Capacidad Máxima <span style="color:var(--fire)">*</span></label><input type="number" class="input input-dark" id="m-srv-cap" value="1" min="1" required /></div>
         <div class="field"><label class="label">Precio Fijo <span style="color:var(--fire)">*</span></label><input type="number" class="input input-dark" id="m-srv-precio" required /></div>
       </div>
-      <div class="field"><label class="label">Estado</label><select class="select" id="m-srv-est"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
+      <input type="hidden" id="m-srv-est" value="true" />
     </div>
     <div class="modal-ft">
       <button type="button" class="btn btn-dark-outline" onclick="closeM('m-srv')">Cancelar</button>

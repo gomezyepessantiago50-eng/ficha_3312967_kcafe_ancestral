@@ -118,9 +118,11 @@ const ClientesAPI = {
 
 /* ── Usuarios (admin) ───────────────────────────── */
 const UsuariosAPI = {
-  buscar   : (email)  => req(`/usuarios/buscar?email=${encodeURIComponent(email)}`),
-  listar   : ()       => req('/usuarios'),
-  cambiarRol: (id, rol) => req(`/usuarios/${id}/rol`, { method: 'PUT', body: JSON.stringify({ rol }) }),
-  eliminar : (id)     => req(`/usuarios/${id}`, { method: 'DELETE' }),
-  reset    : (id)     => req(`/usuarios/${id}/reset`, { method: 'POST' }),
+  buscar     : (email)  => req(`/usuarios/buscar?email=${encodeURIComponent(email)}`),
+  crear      : (body)   => req('/usuarios', { method: 'POST', body: JSON.stringify(body) }),
+  listar     : ()       => req('/usuarios'),
+  cambiarRol : (id, rol) => req(`/usuarios/${id}/rol`, { method: 'PUT', body: JSON.stringify({ rol }) }),
+  cambiarEstado: (id, estado) => req(`/usuarios/${id}/estado`, { method: 'PUT', body: JSON.stringify({ estado }) }),
+  eliminar   : (id)     => req(`/usuarios/${id}`, { method: 'DELETE' }),
+  reset      : (id)     => req(`/usuarios/${id}/reset`, { method: 'POST' }),
 };

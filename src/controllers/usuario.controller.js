@@ -15,6 +15,16 @@ const buscarPorEmail = async (req, res) => {
   }
 };
 
+// ── Crear usuario ─────────────────────────────────────────────
+const crearUsuario = async (req, res) => {
+  try {
+    const result = await UsuarioService.crearUsuario(req.body);
+    return res.status(201).json({ ok: true, ...result });
+  } catch (error) {
+    return res.status(error.status || 400).json({ ok: false, mensaje: error.message });
+  }
+};
+
 // ── Listar todos con paginación ───────────────────────────────
 const listarUsuarios = async (req, res) => {
   try {
@@ -44,6 +54,21 @@ const cambiarRol = async (req, res) => {
   }
 };
 
+// ── Cambiar estado ────────────────────────────────────────────
+const cambiarEstado = async (req, res) => {
+  try {
+    const { id }  = req.params;
+    const { estado } = req.body;
+    if (typeof estado !== 'boolean') {
+      return res.status(400).json({ ok: false, mensaje: 'Estado inválido. Usa un valor booleano.' });
+    }
+    const result = await UsuarioService.cambiarEstado(id, estado);
+    return res.status(200).json({ ok: true, ...result });
+  } catch (error) {
+    return res.status(error.status || 500).json({ ok: false, mensaje: error.message });
+  }
+};
+
 // ── Eliminar cuenta ───────────────────────────────────────────
 const eliminarCuenta = async (req, res) => {
   try {
@@ -65,4 +90,4 @@ const generarReset = async (req, res) => {
   }
 };
 
-module.exports = { buscarPorEmail, listarUsuarios, cambiarRol, eliminarCuenta, generarReset };
+module.exports = { buscarPorEmail, crearUsuario, listarUsuarios, cambiarRol, cambiarEstado, eliminarCuenta, generarReset };

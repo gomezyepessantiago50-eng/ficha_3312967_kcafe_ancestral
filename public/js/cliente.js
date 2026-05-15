@@ -10,7 +10,7 @@
 ═══════════════════════════════════════════════════════════ */
 
 const CLIENTE_UI = {
-  cabana:'roble', paquete:null, servicios:new Set(),
+  cabana:null, paquete:null, servicios:new Set(),
   fechaInicio:'', fechaFin:'', personas:2, notas:'',
   usuarioId:null, usuarioDoc:null,
 };
@@ -268,9 +268,64 @@ function onForm() {
     document.getElementById('f-fin').setAttribute('min', ini);
   }
   CLIENTE_UI.fechaInicio=ini;
-  CLIENTE_UI.personas=CABANAS[CLIENTE_UI.cabana].capacidad||2;
+  CLIENTE_UI.personas=CLIENTE_UI.cabana ? (CABANAS[CLIENTE_UI.cabana]?.capacidad||2) : 2;
   CLIENTE_UI.notas=document.getElementById('f-notas')?.value||'';
   updateResumen();
+  filterAvailableCabanas();
+}
+
+async function filterAvailableCabanas() {
+  const ini = CLIENTE_UI.fechaInicio, fin = CLIENTE_UI.fechaFin;
+  const grid = document.getElementById('cli-cabana-grid');
+  const prompt = document.getElementById('cli-cab-prompt');
+  
+  if (!ini || !fin) {
+    if (grid) grid.style.display = 'none';
+    if (prompt) prompt.textContent = '(Selecciona fechas primero)';
+    CLIENTE_UI.cabana = null;
+    highlightSelection(); updateResumen();
+    return;
+  }
+  
+  try {
+    const d = await ReservasAPI.disponibilidad();
+    const registros = d.data?.registros || d.registros || [];
+    
+    const fIni = new Date(ini); fIni.setHours(0,0,0,0);
+    const fFin = new Date(fin); fFin.setHours(0,0,0,0);
+    
+    // Find occupied cabins
+    const occupied = new Set();
+    registros.forEach(r => {
+      if (r.estado === 'cancelada' || r.estado === 'completada') return;
+      const rIni = new Date(r.fecha_inicio || r.FechaInicio); rIni.setHours(0,0,0,0);
+      const rFin = new Date(r.fecha_fin || r.FechaFinalizacion); rFin.setHours(0,0,0,0);
+      
+      // overlap: checkout day allows checkin. rIni < fFin && rFin > fIni
+      if (rIni < fFin && rFin > fIni) {
+        occupied.add(String(r.cabana));
+      }
+    });
+    
+    let availableCount = 0;
+    Object.keys(CABANAS).forEach(cabId => {
+      const el = document.getElementById(`cab-${cabId}`);
+      if (el) {
+        if (occupied.has(cabId)) {
+          el.style.display = 'none';
+          if (CLIENTE_UI.cabana === cabId) CLIENTE_UI.cabana = null; // deselect if occupied
+        } else {
+          el.style.display = 'block';
+          availableCount++;
+        }
+      }
+    });
+    
+    if (grid) grid.style.display = 'grid';
+    if (prompt) prompt.innerHTML = `<span style="color:var(--success);font-weight:600;">(${availableCount} disponibles)</span>`;
+    
+    highlightSelection(); updateResumen();
+  } catch(e) { console.error('Error filtering cabanas', e); }
 }
 
 function updateResumen() {
@@ -279,7 +334,7 @@ function updateResumen() {
   const footer=document.getElementById('price-footer');
   const body=document.getElementById('price-body');
   const noches=nights(CLIENTE_UI.fechaInicio,CLIENTE_UI.fechaFin);
-  const cab=CABANAS[CLIENTE_UI.cabana];
+  const cab=CLIENTE_UI.cabana ? CABANAS[CLIENTE_UI.cabana] : null;
   const paquete=CLIENTE_UI.paquete ? PAQUETES[CLIENTE_UI.paquete] : { label: 'Ninguno', precio: 0, descripcion: 'Sin paquete adicional' };
   const srvs=Array.from(CLIENTE_UI.servicios).map(s=>SERVICIOS[s]);
   const srvP=srvs.reduce((acc,s)=>acc+(s?.precio||0),0);
@@ -287,11 +342,11 @@ function updateResumen() {
   /* FIX 3 */
   const {subtotal,iva,total}=calcMontos(rawSub);
 
-  if (!CLIENTE_UI.fechaInicio||!CLIENTE_UI.fechaFin||noches<=0) {
-    body.innerHTML='<div class="price-empty"><p>Selecciona fechas válidas para calcular el precio.</p></div>';
+  if (!CLIENTE_UI.fechaInicio||!CLIENTE_UI.fechaFin||noches<=0 || !cab) {
+    body.innerHTML='<div class="price-empty"><p>' + (!CLIENTE_UI.fechaInicio||!CLIENTE_UI.fechaFin||noches<=0 ? 'Selecciona fechas válidas para calcular el precio.' : 'Selecciona una cabaña para continuar.') + '</p></div>';
     if(totalRow) totalRow.style.display='none';
-    if(footer)   footer.style.display='block';
-    if(btn)      btn.disabled=false;
+    if(footer)   footer.style.display='none';
+    if(btn)      btn.disabled=true;
     return;
   }
 
@@ -342,7 +397,7 @@ async function confirmarReserva() {
   const comprobante = 'XXXX-XXXX-XXXX-' + tNum.slice(-4);
 
   const noches  = nights(fIni.value, fFin.value);
-  const cab     = CABANAS[CLIENTE_UI.cabana];
+  const cab     = CLIENTE_UI.cabana ? CABANAS[CLIENTE_UI.cabana] : null;
   const paq     = CLIENTE_UI.paquete ? PAQUETES[CLIENTE_UI.paquete] : { precio: 0 };
   const srvArr  = Array.from(CLIENTE_UI.servicios);
   const srvP    = srvArr.reduce((acc,k)=>acc+(SERVICIOS[k]?.precio||0),0);
@@ -597,8 +652,8 @@ async function refreshGlobalCabanas() {
       CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima, ubicacion: c.Ubicacion };
     });
     
-    if (!CABANAS[CLIENTE_UI.cabana] && firstCab) {
-      CLIENTE_UI.cabana = firstCab;
+    if (!CLIENTE_UI.cabana && firstCab && document.getElementById('cli-cabana-grid')?.style.display !== 'none') {
+      // CLIENTE_UI.cabana = firstCab;
     }
 
     cabanas.forEach((c) => {

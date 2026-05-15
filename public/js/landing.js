@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeLazyImages();
   loadLandingCabanas();
   loadLandingPaquetes();
+  setupReservaForm();
 });
 
 // ── MENÚ MOBILE ──────────────────────────────────────────────────────────────
@@ -121,10 +122,12 @@ function initializeButtonInteractions() {
 
 // ── CARGAR CABAÑAS DINÁMICAMENTE ─────────────────────────────────────────────
 async function loadLandingCabanas() {
+
   const cGrid = document.getElementById('landing-cabanas-grid');
   const gGrid = document.getElementById('landing-gallery-grid');
+  const selectCabana = document.getElementById('select-cabana');
   if (!cGrid) return;
-  
+
   try {
     const res = await fetch('/api/cabanas');
     const data = await res.json();
@@ -132,11 +135,48 @@ async function loadLandingCabanas() {
     cabanas = cabanas.filter(c => c.Estado == 1); // Solo activas
     window.cabanasDisponibles = cabanas;
 
+    // Actualizar select de cabañas si existe
+    if (selectCabana) {
+      const prevValue = selectCabana.value;
+      selectCabana.innerHTML = '<option value="">Seleccione una cabaña</option>' +
+        cabanas.map(c => `<option value="${c.IDCabana}">${c.Nombre}</option>`).join('');
+      // Restaurar selección si es posible
+      if (prevValue && cabanas.some(c => c.IDCabana == prevValue)) {
+        selectCabana.value = prevValue;
+      }
+    }
+
     if (cabanas.length === 0) {
       cGrid.innerHTML = '<div style="grid-column: 1/-1;text-align:center;color:var(--dark-muted);padding:2rem;">No hay cabañas disponibles en este momento</div>';
       if (gGrid) gGrid.innerHTML = '<div style="grid-column: 1/-1;text-align:center;color:var(--dark-muted);padding:2rem;">No hay fotos disponibles en la galería</div>';
       return;
     }
+
+// Mantener selects y fecha visibles y funcionales
+function setupReservaForm() {
+  const form = document.getElementById('reserva-form');
+  const fechaInput = document.getElementById('fecha-reserva');
+  const selectCabana = document.getElementById('select-cabana');
+  if (!form || !fechaInput || !selectCabana) return;
+
+  // Opcional: mantener la fecha seleccionada en localStorage
+  fechaInput.value = localStorage.getItem('fecha-reserva') || '';
+  fechaInput.addEventListener('change', () => {
+    localStorage.setItem('fecha-reserva', fechaInput.value);
+  });
+
+  // Opcional: mantener la cabaña seleccionada en localStorage
+  selectCabana.value = localStorage.getItem('select-cabana') || '';
+  selectCabana.addEventListener('change', () => {
+    localStorage.setItem('select-cabana', selectCabana.value);
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Aquí puedes agregar lógica para buscar disponibilidad o mostrar detalles
+    alert(`Fecha: ${fechaInput.value}\nCabaña: ${selectCabana.options[selectCabana.selectedIndex].text}`);
+  });
+}
 
     // 1. Renderizar tarjetas de cabañas
     cGrid.innerHTML = cabanas.map(c => {

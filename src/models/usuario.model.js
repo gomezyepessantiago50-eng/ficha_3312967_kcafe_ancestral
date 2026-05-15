@@ -62,6 +62,11 @@ const Usuario = sequelize.define('Usuario', {
     type:      DataTypes.DATE,
     allowNull: true,
   },
+  Estado: {
+    type:      DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  },
 }, {
   tableName:  'Usuarios',
   timestamps: false,

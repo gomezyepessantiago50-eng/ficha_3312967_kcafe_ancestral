@@ -28,9 +28,23 @@ const buildUserPayload = (usuario) => ({
 
 // ── REGISTRO ─────────────────────────────────────────────────
 const registro = async ({ nombre, apellido, email, password, telefono, tipoDocumento, numeroDocumento, pais, direccion, idRol }) => {
+  if (!email.toLowerCase().endsWith('@gmail.com')) {
+    throw new Error('Solo se permiten correos de Gmail (@gmail.com).');
+  }
+
   // Verificar si el email ya existe
-  const existe = await Usuario.findOne({ where: { Email: email } });
-  if (existe) throw new Error('El correo electrónico ya está registrado.');
+  const existeEmail = await Usuario.findOne({ where: { Email: email } });
+  if (existeEmail) throw new Error('El correo electrónico ya está registrado con otra cuenta.');
+
+  if (numeroDocumento) {
+    const existeDoc = await Usuario.findOne({ where: { NumeroDocumento: numeroDocumento } });
+    if (existeDoc) throw new Error('El número de documento ya está registrado con otra cuenta.');
+  }
+
+  if (telefono) {
+    const existeTel = await Usuario.findOne({ where: { Telefono: telefono } });
+    if (existeTel) throw new Error('El teléfono ya está registrado con otra cuenta.');
+  }
 
   // Hashear contraseña
   const hash = await bcrypt.hash(password, 12);

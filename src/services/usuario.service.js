@@ -17,8 +17,40 @@ const buscarPorEmail = async (email) => {
   return normalizeUsuario(usuario);
 };
 
+// ── Crear usuario ─────────────────────────────────────────────
+const crearUsuario = async ({ nombre, apellido, email, password, telefono, tipoDocumento, numeroDocumento, pais, direccion, rol, estado }) => {
+  if (!email) throw Object.assign(new Error('El correo es requerido.'), { status: 400 });
+  if (!password) throw Object.assign(new Error('La contraseña es requerida.'), { status: 400 });
+
+  const existeEmail = await Usuario.findOne({ where: { Email: email } });
+  if (existeEmail) throw Object.assign(new Error('El correo electrónico ya está registrado.'), { status: 400 });
+
+  const hash = await bcrypt.hash(password, 12);
+  const idRol = rol === 'admin' ? 1 : 2;
+
+  const usuario = await Usuario.create({
+    NombreUsuario:   nombre,
+    Apellido:        apellido    || null,
+    Email:           email,
+    Contrasena:      hash,
+    Telefono:        telefono    || null,
+    TipoDocumento:   tipoDocumento || null,
+    NumeroDocumento: numeroDocumento || null,
+    Pais:            pais        || null,
+    Direccion:       direccion   || null,
+    IDRol:           idRol,
+    Estado:          estado !== false, // default true
+  });
+
+  return {
+    mensaje: 'Usuario creado correctamente.',
+    usuario: normalizeUsuario(usuario),
+  };
+};
+
 // ── Cambiar rol ───────────────────────────────────────────────
 const cambiarRol = async (id, nuevoRol) => {
+  if (parseInt(id) === 1) throw Object.assign(new Error('No se puede modificar el rol del administrador principal.'), { status: 403 });
   const rolId = nuevoRol === 'admin' ? 1 : 2;
   const usuario = await Usuario.findByPk(id);
   if (!usuario) throw Object.assign(new Error('Usuario no encontrado.'), { status: 404 });
@@ -31,8 +63,23 @@ const cambiarRol = async (id, nuevoRol) => {
   };
 };
 
+// ── Cambiar estado ────────────────────────────────────────────
+const cambiarEstado = async (id, estado) => {
+  if (parseInt(id) === 1) throw Object.assign(new Error('No se puede cambiar el estado del administrador principal.'), { status: 403 });
+  const usuario = await Usuario.findByPk(id);
+  if (!usuario) throw Object.assign(new Error('Usuario no encontrado.'), { status: 404 });
+
+  await usuario.update({ Estado: estado });
+
+  return {
+    mensaje: `Estado actualizado correctamente.`,
+    usuario: normalizeUsuario(usuario),
+  };
+};
+
 // ── Eliminar cuenta ───────────────────────────────────────────
 const eliminarCuenta = async (id, adminId) => {
+  if (parseInt(id) === 1) throw Object.assign(new Error('No se puede eliminar la cuenta del administrador principal.'), { status: 403 });
   if (parseInt(id) === parseInt(adminId)) {
     throw Object.assign(new Error('No puedes eliminar tu propia cuenta.'), { status: 400 });
   }
@@ -45,6 +92,7 @@ const eliminarCuenta = async (id, adminId) => {
 
 // ── Restablecer contraseña (admin genera token) ───────────────
 const generarResetAdmin = async (id) => {
+  if (parseInt(id) === 1) throw Object.assign(new Error('No se puede restablecer la contraseña del administrador principal por este medio.'), { status: 403 });
   const usuario = await Usuario.findByPk(id);
   if (!usuario) throw Object.assign(new Error('Usuario no encontrado.'), { status: 404 });
 
@@ -112,6 +160,7 @@ const normalizeUsuario = (u) => ({
   direccion:       u.Direccion,
   rol:             u.IDRol === 1 ? 'admin' : 'cliente',
   idRol:           u.IDRol,
+  estado:          u.Estado,
 });
 
-module.exports = { buscarPorEmail, cambiarRol, eliminarCuenta, generarResetAdmin, listarUsuarios };
+module.exports = { buscarPorEmail, crearUsuario, cambiarRol, cambiarEstado, eliminarCuenta, generarResetAdmin, listarUsuarios };

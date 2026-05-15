@@ -1,0 +1,41 @@
+# Inverting Reservation Flow
+
+The user wants to invert the reservation flow so that dates are selected first, and the available cabins are shown based on the selected dates.
+
+## User Review Required
+Please review the proposed UI flow below.
+- The user will now be forced to select their check-in and check-out dates **before** seeing any cabin options.
+- Cabins that are already reserved or blocked during the selected date range will **not** be displayed (or will be shown as unavailable) to prevent booking conflicts.
+
+## Proposed Changes
+
+### `public/cliente.html`
+- Reorder the wizard sections: 
+  - Move "Fechas y datos" (Step 4) to the top to become Step 1.
+  - Move "Elige tu cabaña" to be Step 2.
+  - "Paquete" becomes Step 3, "Servicios adicionales" becomes Step 4, and "Método de Pago" becomes Step 5.
+- Hide the cabin grid initially and display a prompt: "Selecciona las fechas de tu estadía para ver las cabañas disponibles."
+
+### `public/admin.html`
+- In the "Nueva Reserva" modal (`#m-nueva`), reorder the "Cabaña y Fechas" section so that the `Fecha inicio` and `Fecha fin` inputs appear before the `Cabaña` select dropdown.
+- Disable the `Cabaña` dropdown by default until valid dates are entered.
+
+### `public/js/cliente.js`
+- Modify the state `CLIENTE_UI.cabana` to be `null` by default.
+- In `onForm()` (called when dates change):
+  - If valid dates are selected, call a new function `filterAvailableCabanas(ini, fin)`.
+  - Fetch or use existing availability data (`ReservasAPI.disponibilidad()`) to find overlapping reservations (`r.fecha_inicio <= fin` AND `r.fecha_fin >= inicio`).
+  - Update the cabin grid to only render cabins that are NOT in the overlapping set.
+  - If the previously selected cabin becomes unavailable, automatically clear the selection and update the price summary.
+
+### `public/js/admin.js`
+- Update `adminResumenUpdate()` (called when dates change):
+  - Check availability for the selected dates.
+  - Re-populate the `<select id="mn-cab">` to only include cabins that are available for the selected dates.
+  - Clear the currently selected cabin if it's no longer available.
+
+## Verification Plan
+1. Open the client interface (`/cliente.html`). Verify that cabins are hidden until dates are selected.
+2. Select dates that have a known blockage. Verify that the blocked cabin is not shown.
+3. Open the admin dashboard, open the "Nueva Reserva" modal.
+4. Verify that the cabin dropdown only enables and populates after dates are selected, filtering out occupied cabins.
