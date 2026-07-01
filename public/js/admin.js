@@ -1610,20 +1610,50 @@ function adminSelectPaquete(key) {
   adminResumenUpdate();
 }
 function adminToggleSrv(key, evt) {
+  if (evt) evt.preventDefault();
   if (evt && evt.target.closest('.srv-counter-btn')) return;
+  
   if (ADMIN_NUEVA_RES.servicios.has(key)) {
     ADMIN_NUEVA_RES.servicios.delete(key);
   } else {
     const cabData = ADMIN_NUEVA_RES.cabana ? CABANAS[ADMIN_NUEVA_RES.cabana] : null;
     ADMIN_NUEVA_RES.servicios.set(key, cabData ? cabData.capacidad : 1);
   }
-  document.getElementById(`adm-srv-${key}`)?.classList.toggle('selected', ADMIN_NUEVA_RES.servicios.has(key));
-  const counterDiv = document.getElementById(`adm-srv-counter-${key}`);
-  if (counterDiv) {
-    const isSelected = ADMIN_NUEVA_RES.servicios.has(key);
-    counterDiv.style.display = isSelected ? 'flex' : 'none';
-    if (isSelected) document.getElementById(`adm-srv-count-${key}`).textContent = ADMIN_NUEVA_RES.servicios.get(key);
+  
+  const isSelected = ADMIN_NUEVA_RES.servicios.has(key);
+  const btn = document.getElementById(`adm-srv-${key}`);
+  if (btn) {
+    if (isSelected) {
+      btn.classList.add('selected');
+      btn.style.background = 'var(--fire)';
+      btn.style.color = '#fff';
+      btn.style.borderColor = 'var(--fire)';
+      
+      const cbtnList = btn.querySelectorAll('.srv-counter-btn');
+      cbtnList.forEach(cb => cb.style.color = '#fff');
+      const ctSpan = document.getElementById(`adm-srv-count-${key}`);
+      if(ctSpan) ctSpan.style.color = '#fff';
+    } else {
+      btn.classList.remove('selected');
+      btn.style.background = '#fff';
+      btn.style.color = 'var(--bark)';
+      btn.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+      
+      const cbtnList = btn.querySelectorAll('.srv-counter-btn');
+      cbtnList.forEach(cb => cb.style.color = 'var(--bark)');
+      const ctSpan = document.getElementById(`adm-srv-count-${key}`);
+      if(ctSpan) ctSpan.style.color = 'var(--bark)';
+    }
   }
+
+  const counterDiv = document.getElementById(`adm-srv-counter-${key}`);
+  if (counterDiv) counterDiv.style.display = isSelected ? 'flex' : 'none';
+
+  const countSpan = document.getElementById(`adm-srv-count-${key}`);
+  if (isSelected && countSpan) {
+    countSpan.textContent = ADMIN_NUEVA_RES.servicios.get(key);
+  }
+
   adminResumenUpdate();
 }
 
@@ -4157,7 +4187,7 @@ window.adminRefreshGlobalServices = async function () {
     });
 
     // Buscar la srv-grid dentro del modal de nueva reserva
-    const srvGrid = document.querySelector('#m-nueva .srv-grid');
+    const srvGrid = document.querySelector('#adm-srv-grid');
     if (srvGrid) {
       srvGrid.innerHTML = html;
       if (typeof adminCalcTotal === 'function') adminCalcTotal();
