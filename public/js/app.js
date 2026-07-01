@@ -22,6 +22,7 @@ document.addEventListener('click', e => { if (e.target.classList.contains('overl
 
 /* ── Tabs ───────────────────────────────── */
 function initTabs(root = document) {
+  if (!root || typeof root.querySelectorAll !== 'function') return;
   root.querySelectorAll('[data-tabs]').forEach(g => {
     g.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {

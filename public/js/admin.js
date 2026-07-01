@@ -34,9 +34,9 @@ window.customConfirm = function (msg) {
   });
 };
 
-const CABANAS = {};
-const PAQUETES = {};
-const SERVICIOS = {};
+window.CABANAS = {};
+window.PAQUETES = {};
+window.SERVICIOS = {};
 
 const ADMIN_NUEVA_RES = { cabana: null, paquete: null, paquetes_extra: new Map(), servicios: new Map() };
 
@@ -2697,11 +2697,8 @@ window.adminAdjustPaqCount = function (key, diff) {
 const oldLoadPaquetes2 = window.loadPaquetes;
 window.loadPaquetes = async function () {
   if (oldLoadPaquetes2) await oldLoadPaquetes2();
-  await refreshGlobalPackages();
+  if (typeof window.adminRefreshGlobalPackages === 'function') await window.adminRefreshGlobalPackages();
 };
-
-document.addEventListener('DOMContentLoaded', refreshGlobalPackages);
-refreshGlobalPackages();
 
 
 /* ════════ DYNAMIC CABANAS IN RESERVATION ════════ */
@@ -2710,20 +2707,20 @@ async function refreshGlobalCabanas() {
     const data = await req('/cabanas');
     const cabanas = data.data || [];
 
-    for (const key in CABANAS) delete CABANAS[key];
+    for (const key in window.CABANAS) delete window.CABANAS[key];
 
     let html = '';
     let firstCab = null;
     cabanas.forEach(c => {
       if (!c.Estado && c.Estado !== 1) return; // Active only
       if (!firstCab) firstCab = c.IDCabana;
-      CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima, ubicacion: c.Ubicacion };
+      window.CABANAS[c.IDCabana] = { label: c.Nombre, precio: c.Costo, descripcion: c.Descripcion, capacidad: c.CapacidadMaxima, ubicacion: c.Ubicacion };
 
       const isSelected = ADMIN_NUEVA_RES.cabana == c.IDCabana;
       html += `<option value="${c.IDCabana}" ${isSelected ? 'selected' : ''}>${c.Nombre} (${c.CapacidadMaxima} pers.) — ${fCop(c.Costo)}</option>`;
     });
 
-    if (!CABANAS[ADMIN_NUEVA_RES.cabana] && firstCab) {
+    if (!window.CABANAS[ADMIN_NUEVA_RES.cabana] && firstCab) {
       ADMIN_NUEVA_RES.cabana = firstCab;
     }
 
@@ -4028,13 +4025,13 @@ window.adminRefreshGlobalPackages = async function () {
       PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion, serviciosIncluidos: p.ServiciosIncluidos };
     });
 
-    if (ADMIN_NUEVA_RES.paquete && !PAQUETES[ADMIN_NUEVA_RES.paquete]) {
+    if (ADMIN_NUEVA_RES.paquete && !window.PAQUETES[ADMIN_NUEVA_RES.paquete]) {
       ADMIN_NUEVA_RES.paquete = null;
     }
 
     html = '<div class="srv-grid">'; // Usamos srv-grid para que tome el mismo estilo que los servicios
     paqs.forEach(p => {
-      if (!PAQUETES[p.IDPaquete]) return;
+      if (!window.PAQUETES[p.IDPaquete]) return;
       
       const cant = (ADMIN_NUEVA_RES && ADMIN_NUEVA_RES.paquetes_extra && ADMIN_NUEVA_RES.paquetes_extra.has(String(p.IDPaquete))) ? (ADMIN_NUEVA_RES.paquetes_extra.get(String(p.IDPaquete)) || 1) : 1;
       const isSelected = ADMIN_NUEVA_RES && ADMIN_NUEVA_RES.paquetes_extra && ADMIN_NUEVA_RES.paquetes_extra.has(String(p.IDPaquete));
@@ -4412,7 +4409,6 @@ window.toggleEstadoGlobal = async function (modulo, idValue, elem) {
 
     // === LIVE SYNC: refrescar datos globales y la reserva ===
     if (modulo === 'paquetes') {
-      if (typeof refreshGlobalPackages === 'function') refreshGlobalPackages();
       if (typeof window.adminRefreshGlobalPackages === 'function') window.adminRefreshGlobalPackages();
     } else if (modulo === 'cabanas') {
       if (typeof refreshGlobalCabanas === 'function') refreshGlobalCabanas();
