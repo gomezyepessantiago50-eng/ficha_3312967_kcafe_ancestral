@@ -987,36 +987,36 @@ async function abrirVerReserva(id) {
 
     // ── Build final HTML ──
     document.getElementById('m-view-id').textContent = id;
-    document.getElementById('m-view-body').innerHTML=\`
+    document.getElementById('m-view-body').innerHTML=`
       <div style="display:grid;gap:1.5rem;">
-        \${cancelInfoHtml}
+        ${cancelInfoHtml}
 
         <!-- ID, Estado y fecha de creación -->
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;padding-bottom:1rem;border-bottom:1px solid var(--dark-border);">
           <div style="display:flex;align-items:center;gap:0.75rem;">
             <span style="font-family:var(--font-display);font-size:1.1rem;font-weight:800;color: #fff;">Reserva</span>
-            \${statusBadge(estadoRes)}
+            ${statusBadge(estadoRes)}
           </div>
-          <p style="color:var(--dark-muted);font-size:0.85rem;margin:0;">📅 Fecha de creación: <strong style="color: #fff;">\${fechaCreacion}</strong></p>
+          <p style="color:var(--dark-muted);font-size:0.85rem;margin:0;">📅 Fecha de creación: <strong style="color: #fff;">${fechaCreacion}</strong></p>
         </div>
 
         <!-- Fechas y datos -->
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;background:rgba(255, 255, 255,0.03);border:1px solid var(--dark-border);border-radius:12px;padding:1.25rem;">
           <div style="text-align:center;">
             <div style="font-size:0.72rem;color:var(--dark-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">Fecha llegada</div>
-            <div style="font-size:1rem;font-weight:700;color:var(--sand);">\${fDate(reserva.fecha_inicio||reserva.FechaInicio)}</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--sand);">${fDate(reserva.fecha_inicio||reserva.FechaInicio)}</div>
           </div>
           <div style="text-align:center;">
             <div style="font-size:0.72rem;color:var(--dark-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">Fecha salida</div>
-            <div style="font-size:1rem;font-weight:700;color:var(--sand);">\${fDate(reserva.fecha_fin||reserva.FechaFinalizacion)}</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--sand);">${fDate(reserva.fecha_fin||reserva.FechaFinalizacion)}</div>
           </div>
           <div style="text-align:center;">
             <div style="font-size:0.72rem;color:var(--dark-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">Duración</div>
-            <div style="font-size:1rem;font-weight:700;color:var(--sand);">\${noches} \${noches===1?'noche':'noches'}</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--sand);">${noches} ${noches===1?'noche':'noches'}</div>
           </div>
           <div style="text-align:center;">
             <div style="font-size:0.72rem;color:var(--dark-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">Personas</div>
-            <div style="font-size:1rem;font-weight:700;color:var(--sand);">\${reserva.num_personas||1}</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--sand);">${reserva.num_personas||1}</div>
           </div>
         </div>
 
@@ -1027,10 +1027,10 @@ async function abrirVerReserva(id) {
             <span style="font-size:0.75rem;color:var(--dark-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Cabaña</span>
           </div>
           <div style="padding:0 1.25rem 1.25rem;">
-            \${cabanaImgHtml}
-            <h4 style="font-size:1.15rem;margin:0 0 0.3rem;color: #fff;font-weight:700;">\${cabanaLabel}</h4>
-            \${cabanaDesc ? \`<p style="font-size:0.85rem;color:rgba(255, 255, 255,0.6);margin:0;line-height:1.6;">\${cabanaDesc}</p>\` : ''}
-            \${cabanaMetaHtml}
+            ${cabanaImgHtml}
+            <h4 style="font-size:1.15rem;margin:0 0 0.3rem;color: #fff;font-weight:700;">${cabanaLabel}</h4>
+            ${cabanaDesc ? `<p style="font-size:0.85rem;color:rgba(255, 255, 255,0.6);margin:0;line-height:1.6;">${cabanaDesc}</p>` : ''}
+            ${cabanaMetaHtml}
           </div>
         </div>
 
@@ -1042,12 +1042,12 @@ async function abrirVerReserva(id) {
           </div>
           <div style="padding:0 1.25rem 1.25rem;">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
-              <h4 style="font-size:1.1rem;margin:0;color: #fff;font-weight:700;">\${paqueteLabel}</h4>
-              \${paqueteObj?.precio ? \`<span style="background:rgba(232,93,4,0.12);border:1px solid rgba(232,93,4,0.25);padding:0.3rem 0.75rem;border-radius:20px;font-size:0.85rem;color:var(--fire);font-weight:700;">+\${fCop(paqueteObj.precio)}</span>\` : ''}
+              <h4 style="font-size:1.1rem;margin:0;color: #fff;font-weight:700;">${paqueteLabel}</h4>
+              ${paqueteObj?.precio ? `<span style="background:rgba(232,93,4,0.12);border:1px solid rgba(232,93,4,0.25);padding:0.3rem 0.75rem;border-radius:20px;font-size:0.85rem;color:var(--fire);font-weight:700;">+${fCop(paqueteObj.precio)}</span>` : ''}
             </div>
-            \${paqueteDesc ? \`<p style="font-size:0.85rem;color:rgba(255, 255, 255,0.6);margin:0.4rem 0 0;line-height:1.6;">\${paqueteDesc}</p>\` : ''}
-            \${paqueteIncludedHtml}
-            \${paquetesExtraHtml}
+            ${paqueteDesc ? `<p style="font-size:0.85rem;color:rgba(255, 255, 255,0.6);margin:0.4rem 0 0;line-height:1.6;">${paqueteDesc}</p>` : ''}
+            ${paqueteIncludedHtml}
+            ${paquetesExtraHtml}
           </div>
         </div>
 
@@ -1058,19 +1058,19 @@ async function abrirVerReserva(id) {
             <span style="font-size:0.75rem;color:var(--dark-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Servicios Adicionales</span>
           </div>
           <div style="padding:0 1.25rem 1.25rem;">
-            \${srvCardsHtml}
+            ${srvCardsHtml}
           </div>
         </div>
 
         <!-- Notas -->
-        \${reserva.notas ? \`
+        ${reserva.notas ? `
         <div style="background:rgba(255, 255, 255,0.02);border:1px solid var(--dark-border);border-radius:14px;padding:1.25rem;">
           <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
             <span style="font-size:1rem;">📝</span>
             <span style="font-size:0.75rem;color:var(--dark-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Notas</span>
           </div>
-          <p style="font-size:0.9rem;color:var(--sand);font-style:italic;margin:0;line-height:1.6;">\${reserva.notas}</p>
-        </div>\` : ''}
+          <p style="font-size:0.9rem;color:var(--sand);font-style:italic;margin:0;line-height:1.6;">${reserva.notas}</p>
+        </div>` : ''}
 
         <!-- Resumen de Pago -->
         <div style="background:rgba(255, 255, 255,0.02);border:1px solid var(--dark-border);border-radius:14px;padding:1.25rem;">
@@ -1079,29 +1079,29 @@ async function abrirVerReserva(id) {
             <span style="font-size:0.75rem;color:var(--dark-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Información de Pago</span>
           </div>
           <div style="display:grid;gap:0.6rem;font-size:0.9rem;color:var(--dark-muted);">
-            <div style="display:flex;justify-content:space-between;"><span>Documento Cliente:</span><strong style="color: #fff;">\${reserva.NroDocumentoCliente||reserva.documento||reserva.id_cliente||'—'}</strong></div>
-            <div style="display:flex;justify-content:space-between;"><span>Método de Pago:</span><strong style="color: #fff;text-transform:capitalize;">\${reserva.metodo_pago||reserva.MetodoPago||'No especificado'}</strong></div>
-            <div style="display:flex;justify-content:space-between;margin-top:0.4rem;"><span>Subtotal:</span><strong style="color: #fff;">\${fCop(reserva.subtotal||reserva.SubTotal||0)}</strong></div>
-            <div style="display:flex;justify-content:space-between;"><span>IVA:</span><strong style="color: #fff;">\${fCop(reserva.iva||reserva.IVA||0)}</strong></div>
-            \${(reserva.descuento||reserva.Descuento) ? \`<div style="display:flex;justify-content:space-between;color:var(--success);"><span>Descuento:</span><strong>-\${fCop(reserva.descuento||reserva.Descuento)}</strong></div>\` : ''}
+            <div style="display:flex;justify-content:space-between;"><span>Documento Cliente:</span><strong style="color: #fff;">${reserva.NroDocumentoCliente||reserva.documento||reserva.id_cliente||'—'}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span>Método de Pago:</span><strong style="color: #fff;text-transform:capitalize;">${reserva.metodo_pago||reserva.MetodoPago||'No especificado'}</strong></div>
+            <div style="display:flex;justify-content:space-between;margin-top:0.4rem;"><span>Subtotal:</span><strong style="color: #fff;">${fCop(reserva.subtotal||reserva.SubTotal||0)}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span>IVA:</span><strong style="color: #fff;">${fCop(reserva.iva||reserva.IVA||0)}</strong></div>
+            ${(reserva.descuento||reserva.Descuento) ? `<div style="display:flex;justify-content:space-between;color:var(--success);"><span>Descuento:</span><strong>-${fCop(reserva.descuento||reserva.Descuento)}</strong></div>` : ''}
             
-            \${(() => {
+            ${(() => {
               let hist = reserva.pagos_historial;
               if (typeof hist === 'string') { try { hist = JSON.parse(hist); } catch(e) { hist = null; } }
               if (!Array.isArray(hist) || hist.length === 0) {
-                return \`<div style="display:flex;justify-content:space-between;padding-top:0.6rem;margin-top:0.2rem;border-top:1px dashed var(--dark-border);"><span>Monto Pagado:</span><strong style="color:var(--success);font-size:1rem;">\${fCop(reserva.monto_pagado||reserva.MontoPagado||0)}</strong></div>\`;
+                return `<div style="display:flex;justify-content:space-between;padding-top:0.6rem;margin-top:0.2rem;border-top:1px dashed var(--dark-border);"><span>Monto Pagado:</span><strong style="color:var(--success);font-size:1rem;">${fCop(reserva.monto_pagado||reserva.MontoPagado||0)}</strong></div>`;
               }
               let histHtml = '<div style="padding-top:0.6rem;margin-top:0.2rem;border-top:1px dashed var(--dark-border);">';
               histHtml += '<div style="font-size:0.75rem;color:var(--dark-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem;">Historial de Pagos</div>';
               hist.forEach((p, i) => {
                 const fecha = p.fecha ? new Date(p.fecha).toLocaleDateString('es-CO', {day:'2-digit',month:'short',year:'numeric'}) : '';
-                histHtml += \`<div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;\${i > 0 ? 'border-top:1px solid rgba(255,255,255,0.05);' : ''}">
+                histHtml += `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;${i > 0 ? 'border-top:1px solid rgba(255,255,255,0.05);' : ''}">
                   <div>
-                    <div style="color:#fff;font-weight:600;font-size:0.85rem;">\${p.descripcion || 'Pago'}</div>
-                    <div style="color:var(--dark-muted);font-size:0.75rem;">\${fecha}</div>
+                    <div style="color:#fff;font-weight:600;font-size:0.85rem;">${p.descripcion || 'Pago'}</div>
+                    <div style="color:var(--dark-muted);font-size:0.75rem;">${fecha}</div>
                   </div>
-                  <strong style="color:var(--success);">\${fCop(p.monto || 0)}</strong>
-                </div>\`;
+                  <strong style="color:var(--success);">${fCop(p.monto || 0)}</strong>
+                </div>`;
               });
               histHtml += '</div>';
               return histHtml;
@@ -1116,7 +1116,7 @@ async function abrirVerReserva(id) {
               <span style="font-weight:700;font-size:0.95rem;color: #fff;">Total de la Reserva</span>
               <div style="font-size:0.78rem;color:var(--dark-muted);margin-top:0.15rem;">Incluye todos los impuestos y servicios</div>
             </div>
-            <span style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--fire);">\${fCop(reserva.monto_total||reserva.MontoTotal||0)}</span>
+            <span style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--fire);">${fCop(reserva.monto_total||reserva.MontoTotal||0)}</span>
           </div>
         </div>
 
@@ -1124,7 +1124,7 @@ async function abrirVerReserva(id) {
         <div style="background:rgba(232,93,4,0.15);padding:0.75rem 1rem;border-radius:8px;text-align:center;font-size:0.9rem;color:var(--fire);border:1px solid rgba(232,93,4,0.3);">
           <span style="font-weight:800;color:var(--fire);">🕐 Check-in:</span> <span style="font-weight:600;color:var(--fire);">1:00 PM</span> <span style="opacity:0.5;margin:0 0.5rem;color:var(--fire);">|</span> <span style="font-weight:800;color:var(--fire);">Check-out:</span> <span style="font-weight:600;color:var(--fire);">12:00 PM</span>
         </div>
-      </div>\`;
+      </div>`;
     openM('m-view-reserva');
   } catch (err) { toast(err.message || 'No se pudo cargar', 'err'); }
 }
