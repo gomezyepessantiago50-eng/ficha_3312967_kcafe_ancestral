@@ -19,7 +19,10 @@ const Auth = {
   isAdmin  : ()     => { const u = Auth.getUser(); return u?.idRol === 1 || u?.IDRol === 1; },
 };
 
-async function req(path, opts = {}) {
+async function req(path, opts = {}, _retries = 0) {
+  const MAX_RETRIES = 4;
+  const RETRY_DELAY = 2000; // 2 segundos entre reintentos
+
   const token = Auth.getToken();
   const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
   if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -40,9 +43,21 @@ async function req(path, opts = {}) {
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
+      // Si se agotó el tiempo, reintentar si estamos dentro del límite
+      if (_retries < MAX_RETRIES) {
+        await new Promise(r => setTimeout(r, RETRY_DELAY));
+        return req(path, opts, _retries + 1);
+      }
       throw new Error('El servidor tardó demasiado en responder. Verifica la conexión a la base de datos.');
     }
     throw new Error('Error de red o servidor inalcanzable: ' + error.message);
+  }
+
+  // ── 503 = servidor iniciando, reintentar automáticamente ──
+  if (res.status === 503 && _retries < MAX_RETRIES) {
+    console.log(`[API] Servidor iniciando… reintentando ${path} (${_retries + 1}/${MAX_RETRIES})`);
+    await new Promise(r => setTimeout(r, RETRY_DELAY));
+    return req(path, opts, _retries + 1);
   }
 
   if (!res.ok) {

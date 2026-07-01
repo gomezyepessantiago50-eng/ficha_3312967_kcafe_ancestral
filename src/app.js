@@ -35,6 +35,21 @@ app.get('/admin', (req, res) => {
 // ── Servir frontend estático ──────────────────────────────────
 app.use(express.static(path.join(__dirname, '../public')));
 
+// ── Compuerta: bloquear API hasta que la BD esté lista ───────
+const { isDbReady } = require('./database/connection');
+app.use('/api', (req, res, next) => {
+  // Permitir auth siempre (login/register no necesitan sync completo de tablas nuevas)
+  if (req.path.startsWith('/auth')) return next();
+  if (!isDbReady()) {
+    return res.status(503).json({
+      ok: false,
+      mensaje: 'El servidor está iniciando. Intenta de nuevo en unos segundos.',
+      retry: true,
+    });
+  }
+  next();
+});
+
 // ── Rutas de la API ───────────────────────────────────────────
 app.use('/api/reservas',     require('./routes/reserva.routes'));
 app.use('/api/auth',         require('./routes/auth.routes'));

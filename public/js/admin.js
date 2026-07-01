@@ -84,8 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function showSec(name, btn) {
   document.querySelectorAll('.a-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
-  document.getElementById('sec-' + name)?.classList.add('active');
-  btn.classList.add('active');
+  const sec = document.getElementById('sec-' + name);
+  if (sec) sec.classList.add('active');
+  if (btn && btn.classList) btn.classList.add('active');
   document.getElementById('topbar-crumb').textContent = CRUMBS[name] || name;
   if (name === 'reservas') loadReservas(1);
   if (name === 'bloqueos') loadBloqueos();
@@ -2917,12 +2918,12 @@ const oldShowSec2 = window.showSec;
 window.showSec = function (name, btn) {
   if (oldShowSec2) oldShowSec2(name, btn);
   if (name === 'dashboard') window.loadDashboard?.();
-  if (name === 'cabanas' && typeof window.loadCabanas === 'function') window.loadCabanas();
-  if (name === 'habitaciones' && typeof window.loadHabitaciones === 'function') window.loadHabitaciones();
-  if (name === 'paquetes') window.loadPaquetesAdmin();
-  if (name === 'servicios') window.loadServiciosAdmin();
-  if (name === 'clientes') window.loadClientesAdmin();
-  if (name === 'usuarios') window.loadUsuariosAdmin();
+  if (name === 'cabanas' && typeof window.loadCabanas === 'function') window.loadCabanas(1);
+  if (name === 'habitaciones' && typeof window.loadHabitaciones === 'function') window.loadHabitaciones(1);
+  if (name === 'paquetes' && typeof window.loadPaquetesAdmin === 'function') window.loadPaquetesAdmin(1);
+  if (name === 'servicios' && typeof window.loadServiciosAdmin === 'function') window.loadServiciosAdmin(1);
+  if (name === 'clientes' && typeof window.loadClientesAdmin === 'function') window.loadClientesAdmin(1);
+  if (name === 'usuarios' && typeof window.loadUsuariosAdmin === 'function') window.loadUsuariosAdmin(1);
 };
 
 // 2. Implement loadPaquetesAdmin
