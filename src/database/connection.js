@@ -28,8 +28,12 @@ const connectDB = async () => {
     console.log('Conexion a MySQL establecida correctamente');
 
     if (process.env.NODE_ENV !== 'production') {
-      await sequelize.sync({ force: false });
+      await sequelize.sync({ alter: true });
       console.log('Modelos sincronizados con la base de datos');
+    } else {
+      // En producción solo crear tablas que no existan, sin alterar las existentes
+      await sequelize.sync({ force: false });
+      console.log('Modelos sincronizados con la base de datos (producción)');
     }
   } catch (error) {
     console.error('Error al conectar a la base de datos:', error.message);

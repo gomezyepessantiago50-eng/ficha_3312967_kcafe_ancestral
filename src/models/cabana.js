@@ -48,6 +48,10 @@ module.exports = (sequelize) => {
         type: DataTypes.TEXT('long'),
         allowNull: true,
       },
+      Ubicacion: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
     },
     {
       tableName: 'cabanas',
