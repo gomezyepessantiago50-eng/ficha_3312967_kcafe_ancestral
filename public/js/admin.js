@@ -34,6 +34,8 @@ window.customConfirm = function (msg) {
   });
 };
 
+//-
+
 window.CABANAS = {};
 window.PAQUETES = {};
 window.SERVICIOS = {};
