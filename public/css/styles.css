@@ -927,5 +927,37 @@ span.flatpickr-weekday {
   color: rgba(255,255,255,0.15) !important;
   background: transparent !important;
   border-color: transparent !important;
-  cursor: not-allowed !important;
+}
+
+/* ── SRV CHIP & COUNTER (CLIENTE) ───────────────── */
+.srv-chip {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: var(--r-md);
+  border: 1.5px solid rgba(46,26,14,0.15);
+  background: var(--white);
+  color: var(--bark);
+  padding: 1rem;
+}
+.srv-chip:hover {
+  border-color: var(--fire);
+}
+.srv-chip.selected {
+  background: var(--fire) !important;
+  color: var(--white) !important;
+  border-color: var(--fire) !important;
+}
+.srv-chip.selected .srv-counter-btn {
+  background: rgba(0,0,0,0.1) !important;
+  color: var(--white) !important;
+}
+.srv-chip .srv-counter-btn {
+  background: rgba(46,26,14,0.06) !important;
+  color: var(--bark) !important;
+}
+.srv-chip.selected [id^="srv-count-"] {
+  color: var(--white) !important;
 }

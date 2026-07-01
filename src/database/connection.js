@@ -27,6 +27,9 @@ const connectDB = async () => {
     await sequelize.authenticate();
     console.log('Conexion a MySQL establecida correctamente');
 
+    // Cargar todos los modelos ANTES de sincronizar para asegurar que tablas como paquetes, servicios y columnas nuevas sean detectadas.
+    require('../models');
+
     // Usamos alter: true siempre temporalmente para que Render actualice las tablas existentes (ej. agregar columna Ubicacion a cabanas)
     await sequelize.sync({ alter: true });
     console.log('Modelos sincronizados con la base de datos');

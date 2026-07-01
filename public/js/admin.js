@@ -711,7 +711,6 @@ async function loadReservas(page = 1) {
                     <option value="cancelada" style="color: #fff;background:var(--dark-bg);">Cancelada</option>
                   ` : ''}
                   ${r.estado === 'confirmada' ? `
-                    <option value="completada" style="color: #fff;background:var(--dark-bg);">Completada</option>
                     <option value="cancelada" style="color: #fff;background:var(--dark-bg);">Cancelada</option>
                   ` : ''}
                 </select>`;
@@ -2632,37 +2631,7 @@ window.previewImage = function (input, previewId) {
 
 
 /* ════════ DYNAMIC SERVICES IN RESERVATION ════════ */
-async function refreshGlobalServices() {
-  try {
-    const data = await ServiciosAPI.listar();
-    const srvs = data.servicios || data.data || [];
-
-    for (const key in SERVICIOS) delete SERVICIOS[key];
-
-    let html = '';
-    srvs.forEach(s => {
-      if (s.Estado !== 1 && s.Estado !== true) return; // Solo activos
-      SERVICIOS[s.IDServicio] = { label: s.NombreServicio, precio: s.Costo, imagen: s.Imagen, cobroPorPersona: s.CobroPorPersona === 1 || s.CobroPorPersona === true };
-      html += `
-        <button type="button" class="srv-chip" id="adm-srv-${s.IDServicio}" onclick="adminToggleSrv('${s.IDServicio}')" style="border:1.5px solid rgba(255, 255, 255,0.15);background:#fff;color:var(--bark);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M5 12l5 5L20 7"/></svg> ${s.NombreServicio} <span class="srv-price" style="margin-left:0.3rem;">+$${s.Costo / 1000}K</span>
-        </button>`;
-    });
-
-    const srvGrid = document.querySelector('#m-nueva .srv-grid');
-    if (srvGrid) srvGrid.innerHTML = html;
-  } catch (e) { console.error('Error refreshing services', e); }
-}
-
-const oldLoadServicios2 = window.loadServicios;
-window.loadServicios = async function () {
-  if (oldLoadServicios2) await oldLoadServicios2();
-  await refreshGlobalServices();
-};
-
-document.addEventListener('DOMContentLoaded', refreshGlobalServices);
-// Just in case DOM is already loaded:
-refreshGlobalServices();
+// Eliminado refreshGlobalServices duplicado, se usa adminRefreshGlobalServices
 
 
 /* REMOVED DYNAMIC PACKAGES IN RESERVATION (moved down) */
@@ -4447,7 +4416,6 @@ window.toggleEstadoGlobal = async function (modulo, idValue, elem) {
     } else if (modulo === 'cabanas') {
       if (typeof refreshGlobalCabanas === 'function') refreshGlobalCabanas();
     } else if (modulo === 'servicios') {
-      if (typeof refreshGlobalServices === 'function') refreshGlobalServices();
       if (typeof window.adminRefreshGlobalServices === 'function') window.adminRefreshGlobalServices();
     } else if (modulo === 'habitaciones') {
       // Habitaciones no tienen grid en reserva, pero recargamos la lista

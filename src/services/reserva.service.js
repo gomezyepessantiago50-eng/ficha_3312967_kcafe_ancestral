@@ -368,6 +368,18 @@ const crearReserva = async (datos, usuarioId = 1) => {
 };
 
 const listarReservas = async (filtros = {}, paginacion = {}) => {
+  // Auto-completar reservas pasadas
+  const todayStr = toDateString(new Date());
+  await Reserva.update(
+    { IdEstadoReserva: 4 },
+    {
+      where: {
+        IdEstadoReserva: { [Op.in]: [1, 2] },
+        FechaFinalizacion: { [Op.lt]: todayStr }
+      }
+    }
+  );
+
   const estadoId = ({ pendiente: 1, confirmada: 2, cancelada: 3, completada: 4, bloqueada: 5 })[filtros.estado];
   const where = { IdEstadoReserva: { [Op.ne]: 5 } };
 
@@ -421,6 +433,18 @@ const listarBloqueos = async () => {
 };
 
 const misReservas = async (usuarioId) => {
+  // Auto-completar reservas pasadas
+  const todayStr = toDateString(new Date());
+  await Reserva.update(
+    { IdEstadoReserva: 4 },
+    {
+      where: {
+        IdEstadoReserva: { [Op.in]: [1, 2] },
+        FechaFinalizacion: { [Op.lt]: todayStr }
+      }
+    }
+  );
+
   const where = { IdEstadoReserva: { [Op.ne]: 5 } };
   if (usuarioId) where.UsuarioIdusuario = usuarioId;
   const reservas = await Reserva.findAll({
