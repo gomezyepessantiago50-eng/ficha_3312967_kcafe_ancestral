@@ -1617,7 +1617,7 @@ function adminToggleSrv(key, evt) {
     ADMIN_NUEVA_RES.servicios.delete(key);
   } else {
     const cabData = ADMIN_NUEVA_RES.cabana ? CABANAS[ADMIN_NUEVA_RES.cabana] : null;
-    ADMIN_NUEVA_RES.servicios.set(key, cabData ? cabData.capacidad : 1);
+    ADMIN_NUEVA_RES.servicios.set(key, (cabData && cabData.capacidad) ? cabData.capacidad : 1);
   }
   
   const isSelected = ADMIN_NUEVA_RES.servicios.has(key);
@@ -2665,59 +2665,7 @@ document.addEventListener('DOMContentLoaded', refreshGlobalServices);
 refreshGlobalServices();
 
 
-/* ════════ DYNAMIC PACKAGES IN RESERVATION ════════ */
-async function refreshGlobalPackages() {
-  try {
-    const data = await PaquetesAPI.listar();
-    const paqs = data.paquetes || data.data || [];
-
-    for (const key in PAQUETES) delete PAQUETES[key];
-
-    let html = '';
-    paqs.forEach(p => {
-      if (p.Estado !== 1 && p.Estado !== true) return;
-      PAQUETES[p.IDPaquete] = { label: p.NombrePaquete, precio: p.Precio, descripcion: p.Descripcion, serviciosIncluidos: p.ServiciosIncluidos };
-    });
-
-    if (ADMIN_NUEVA_RES.paquete && !PAQUETES[ADMIN_NUEVA_RES.paquete]) {
-      ADMIN_NUEVA_RES.paquete = null;
-    }
-    for (const k of ADMIN_NUEVA_RES.paquetes_extra.keys()) {
-      if (!PAQUETES[k]) ADMIN_NUEVA_RES.paquetes_extra.delete(k);
-    }
-
-    html = '<div class="srv-grid">'; // Usamos srv-grid para que tome el mismo estilo que los servicios
-    paqs.forEach(p => {
-      if (!PAQUETES[p.IDPaquete]) return;
-      
-      const cant = ADMIN_NUEVA_RES.paquetes_extra.has(String(p.IDPaquete)) ? ADMIN_NUEVA_RES.paquetes_extra.get(String(p.IDPaquete)) : 1;
-      const isSelected = ADMIN_NUEVA_RES.paquetes_extra.has(String(p.IDPaquete));
-      
-      html += `
-        <button type="button" class="srv-chip ${isSelected ? 'selected' : ''}" id="adm-paqe-${p.IDPaquete}" onclick="adminTogglePaq('${p.IDPaquete}', event)" style="${isSelected ? 'background:var(--fire);color: #fff;border-color:var(--fire);' : 'background:#fff;color:var(--bark);border-color:rgba(255, 255, 255,0.15);'} flex-direction:column; align-items:center; text-align:center;">
-          <div style="font-weight:700;margin-bottom:0.2rem;">${p.NombrePaquete}</div>
-          <div style="font-size:0.75rem; opacity:0.8;">+${fCop(p.Precio)} / pers</div>
-          <div id="adm-paqe-counter-${p.IDPaquete}" style="display:${isSelected?'flex':'none'}; align-items:center; justify-content:center; gap:0.5rem; margin-top:0.5rem;" onclick="event.stopPropagation()">
-            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.1); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:${isSelected?'#fff':'var(--bark)'};" onclick="adminAdjustPaqCount('${p.IDPaquete}', -1)">-</span>
-            <span id="adm-paqe-count-${p.IDPaquete}" style="font-weight:bold; color:${isSelected?'#fff':'var(--bark)'};">${cant}</span>
-            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.1); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:${isSelected?'#fff':'var(--bark)'};" onclick="adminAdjustPaqCount('${p.IDPaquete}', 1)">+</span>
-          </div>
-        </button>`;
-    });
-    html += '</div>';
-
-    if (paqs.length === 0) {
-      html = '<div style="grid-column:1/-1;text-align:center;padding:1.5rem;color:var(--dark-muted);">No hay paquetes activos disponibles</div>';
-    }
-
-    const grid = document.getElementById('adm-paq-grid');
-    if (grid) {
-      grid.innerHTML = html;
-    }
-
-    if (typeof adminResumenUpdate === 'function') adminResumenUpdate();
-  } catch (e) { console.error('Error refreshing packages', e); }
-}
+/* REMOVED DYNAMIC PACKAGES IN RESERVATION (moved down) */
 
 window.adminTogglePaq = function (key, ev) {
   if (ev) ev.preventDefault();
@@ -4114,18 +4062,27 @@ window.adminRefreshGlobalPackages = async function () {
       ADMIN_NUEVA_RES.paquete = null;
     }
 
-    paqs.forEach((p) => {
+    html = '<div class="srv-grid">'; // Usamos srv-grid para que tome el mismo estilo que los servicios
+    paqs.forEach(p => {
       if (!PAQUETES[p.IDPaquete]) return;
-      const isSelected = ADMIN_NUEVA_RES.paquete == p.IDPaquete;
-
-      html += '<button type="button" class="paq-opt ' + (isSelected ? 'selected' : '') + '" id="adm-p-' + p.IDPaquete + '" onclick="adminSelectPaquete(\'' + p.IDPaquete + '\')" style="border:2px solid ' + (isSelected ? 'var(--fire)' : 'var(--dark-border)') + ';background:var(--dark-card);">'
-        + '<div class="paq-name" style="font-size:1.05rem;font-weight:700;color: #fff;margin-bottom:0.3rem;">' + p.NombrePaquete + '</div>'
-        + '<div class="paq-desc" style="font-size:0.8rem;color:rgba(255,255,255,0.9);margin-bottom:0.4rem;">' + (p.Descripcion || '') + '</div>'
-        + '<div class="paq-price" style="font-size:0.85rem;font-weight:700;color:var(--fire);">' + (p.Precio > 0 ? '+' + fCop(p.Precio) : 'Incluido') + '</div>'
-        + '</button>';
+      
+      const cant = (ADMIN_NUEVA_RES && ADMIN_NUEVA_RES.paquetes_extra && ADMIN_NUEVA_RES.paquetes_extra.has(String(p.IDPaquete))) ? (ADMIN_NUEVA_RES.paquetes_extra.get(String(p.IDPaquete)) || 1) : 1;
+      const isSelected = ADMIN_NUEVA_RES && ADMIN_NUEVA_RES.paquetes_extra && ADMIN_NUEVA_RES.paquetes_extra.has(String(p.IDPaquete));
+      
+      html += `
+        <button type="button" class="srv-chip ${isSelected ? 'selected' : ''}" id="adm-paqe-${p.IDPaquete}" onclick="adminTogglePaq('${p.IDPaquete}', event)" style="${isSelected ? 'background:var(--fire);color: #fff;border-color:var(--fire);' : 'background:#fff;color:var(--bark);border-color:rgba(255, 255, 255,0.15);'} flex-direction:column; align-items:center; text-align:center;">
+          <div style="font-weight:700;margin-bottom:0.2rem;">${p.NombrePaquete}</div>
+          <div style="font-size:0.75rem; opacity:0.8;">+${fCop(p.Precio)} / pers</div>
+          <div id="adm-paqe-counter-${p.IDPaquete}" style="display:${isSelected?'flex':'none'}; align-items:center; justify-content:center; gap:0.5rem; margin-top:0.5rem;" onclick="event.stopPropagation()">
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.1); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:${isSelected?'#fff':'var(--bark)'};" onclick="adminAdjustPaqCount('${p.IDPaquete}', -1)">-</span>
+            <span id="adm-paqe-count-${p.IDPaquete}" style="font-weight:bold; color:${isSelected?'#fff':'var(--bark)'};">${cant}</span>
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.1); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:${isSelected?'#fff':'var(--bark)'};" onclick="adminAdjustPaqCount('${p.IDPaquete}', 1)">+</span>
+          </div>
+        </button>`;
     });
+    html += '</div>';
 
-    if (!html) {
+    if (paqs.length === 0 || html === '<div class="srv-grid"></div>') {
       html = '<div style="grid-column:1/-1;text-align:center;padding:1.5rem;color:var(--dark-muted);">No hay paquetes activos disponibles</div>';
     }
 
@@ -4173,7 +4130,7 @@ window.adminRefreshGlobalServices = async function () {
     srvs.forEach(s => {
       SERVICIOS[s.IDServicio] = { label: s.NombreServicio, precio: s.Costo, imagen: s.Imagen };
       if (s.Estado !== 1 && s.Estado !== true) return; // Solo activos renderizan chips
-      const cant = ADMIN_NUEVA_RES && ADMIN_NUEVA_RES.servicios && ADMIN_NUEVA_RES.servicios.has(String(s.IDServicio)) ? ADMIN_NUEVA_RES.servicios.get(String(s.IDServicio)) : 1;
+      const cant = (ADMIN_NUEVA_RES && ADMIN_NUEVA_RES.servicios && ADMIN_NUEVA_RES.servicios.has(String(s.IDServicio))) ? (ADMIN_NUEVA_RES.servicios.get(String(s.IDServicio)) || 1) : 1;
       const isSelected = ADMIN_NUEVA_RES && ADMIN_NUEVA_RES.servicios && ADMIN_NUEVA_RES.servicios.has(String(s.IDServicio));
       html += `
         <button type="button" class="srv-chip ${isSelected ? 'selected' : ''}" id="adm-srv-${s.IDServicio}" onclick="adminToggleSrv('${s.IDServicio}', event)" style="${isSelected ? 'background:var(--fire);color: #fff;border-color:var(--fire);' : 'background:#fff;color:var(--bark);border-color:rgba(255, 255, 255,0.15);'} flex-direction:column; align-items:center;">

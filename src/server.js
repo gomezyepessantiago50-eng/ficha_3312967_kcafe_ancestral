@@ -21,14 +21,15 @@ const openBrowser = (url) => {
   });
 };
 
-const startServer = async () => {
-  try {
-    await connectDB();
-    launchServer(PORT);
-  } catch (error) {
+const startServer = () => {
+  // Abrimos el puerto de inmediato para que Render (u otra plataforma)
+  // detecte el servicio activo sin esperar a la base de datos
+  launchServer(PORT);
+
+  // Conectamos la base de datos en paralelo, sin bloquear el arranque
+  connectDB().catch((error) => {
     console.error('Error al conectar a la base de datos:', error);
-    process.exit(1);
-  }
+  });
 };
 
 const launchServer = (port) => {
@@ -81,4 +82,3 @@ const launchServer = (port) => {
 };
 
 startServer();
-
