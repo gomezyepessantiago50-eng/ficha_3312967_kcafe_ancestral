@@ -27,14 +27,9 @@ const connectDB = async () => {
     await sequelize.authenticate();
     console.log('Conexion a MySQL establecida correctamente');
 
-    if (process.env.NODE_ENV !== 'production') {
-      await sequelize.sync({ alter: true });
-      console.log('Modelos sincronizados con la base de datos');
-    } else {
-      // En producción solo crear tablas que no existan, sin alterar las existentes
-      await sequelize.sync({ force: false });
-      console.log('Modelos sincronizados con la base de datos (producción)');
-    }
+    // Usamos alter: true siempre temporalmente para que Render actualice las tablas existentes (ej. agregar columna Ubicacion a cabanas)
+    await sequelize.sync({ alter: true });
+    console.log('Modelos sincronizados con la base de datos');
   } catch (error) {
     console.error('Error al conectar a la base de datos:', error.message);
   }

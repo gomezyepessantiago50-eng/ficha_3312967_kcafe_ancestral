@@ -26,8 +26,24 @@ async function req(path, opts = {}) {
 
   // Evitar cache del navegador en peticiones GET
   const fetchOpts = { ...opts, headers, cache: 'no-store' };
-  const res  = await fetch(API_URL + path, fetchOpts);
-  const data = await res.json().catch(() => ({}));
+
+  // Add a 15-second timeout to avoid infinite loading states
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  fetchOpts.signal = controller.signal;
+
+  let res, data;
+  try {
+    res  = await fetch(API_URL + path, fetchOpts);
+    clearTimeout(timeoutId);
+    data = await res.json().catch(() => ({}));
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('El servidor tardó demasiado en responder. Verifica la conexión a la base de datos.');
+    }
+    throw new Error('Error de red o servidor inalcanzable: ' + error.message);
+  }
 
   if (!res.ok) {
     if (res.status === 401) {
