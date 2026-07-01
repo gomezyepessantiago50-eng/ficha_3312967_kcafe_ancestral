@@ -48,11 +48,17 @@ const launchServer = (port) => {
       openBrowser(url);
     }
 
-    // Iniciar tarea automática de limpieza de reservas abandonadas
-    console.log('   [INFO] Tarea de limpieza automática iniciada (cada 5 min)');
+    // Iniciar tareas automáticas
+    console.log('   [INFO] Tareas automáticas iniciadas (cada 5 min):');
+    console.log('          - Limpieza de reservas pendientes no pagadas');
+    console.log('          - Auto-completar reservas con fecha de salida pasada');
     setInterval(async () => {
       await reservaService.limpiarReservasPendientes();
+      await reservaService.completarReservasVencidas();
     }, 5 * 60 * 1000); // Se ejecuta cada 5 minutos
+
+    // Ejecutar inmediatamente al iniciar el servidor
+    reservaService.completarReservasVencidas();
   });
 
   server.on('error', (error) => {

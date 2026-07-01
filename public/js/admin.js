@@ -38,7 +38,7 @@ const CABANAS = {};
 const PAQUETES = {};
 const SERVICIOS = {};
 
-const ADMIN_NUEVA_RES = { cabana: null, paquete: null, servicios: new Map() };
+const ADMIN_NUEVA_RES = { cabana: null, paquete: null, paquetes_extra: new Map(), servicios: new Map() };
 
 /* FIX 10 — cálculo correcto: subtotal sin IVA */
 function calcMontos(sub) {
@@ -726,7 +726,6 @@ async function loadReservas(page = 1) {
                 ${selectHtml}
                 <button class="btn btn-outline btn-sm" onclick="abrirVerReserva(${r.id})" style="background-color:#fff;color:#000;border:none;">Ver</button>
                 <button class="btn btn-fire btn-sm" onclick="abrirAddServiciosAdmin(${r.id})">Añadir Extras</button>
-                <button class="btn btn-sm btn-dark-outline" ${bl ? 'disabled title="No editable"' : `onclick="abrirDetalle(${r.id})"`}>Editar</button>
               </div>
             </div>
           </div>`;
@@ -1714,9 +1713,13 @@ async function adminResumenUpdate() {
   const paq = ADMIN_NUEVA_RES.paquete ? PAQUETES[ADMIN_NUEVA_RES.paquete] : { label: 'Ninguno', precio: 0 };
   const srvs = Array.from(ADMIN_NUEVA_RES.servicios.keys()).map(k => { const s = SERVICIOS[k]; return s ? {...s, id:k, cantidad:ADMIN_NUEVA_RES.servicios.get(k)} : null; }).filter(Boolean);
   const srvP = srvs.reduce((a, s) => a + (s.precio * s.cantidad), 0);
+  
+  const paqExtras = Array.from(ADMIN_NUEVA_RES.paquetes_extra.keys()).map(k => { const p = PAQUETES[k]; return p ? {...p, id:k, cantidad:ADMIN_NUEVA_RES.paquetes_extra.get(k)} : null; }).filter(Boolean);
+  const paqExtraP = paqExtras.reduce((a, p) => a + (p.precio * p.cantidad), 0);
+
   const noches = (ini && fin && valido && cab) ? nights(ini, fin) : 0;
   const paqPrecioTotal = (paq.precio || 0) * (cab ? cab.capacidad : 1);
-  const rawSub = cab ? (cab.precio + paqPrecioTotal) * Math.max(noches, 1) + srvP : 0;
+  const rawSub = cab ? (cab.precio + paqPrecioTotal) * Math.max(noches, 1) + srvP + paqExtraP : 0;
   const { subtotal, iva, total } = calcMontos(rawSub);
   const body = document.getElementById('admin-price-body'), totalRow = document.getElementById('admin-price-total');
   if (!valido || !cab) {
@@ -1729,10 +1732,9 @@ async function adminResumenUpdate() {
     ${cab.ubicacion ? `<div class="price-row" style="padding-top:0;"><span class="pk" style="font-size:0.75rem;">Ubicación</span><span class="pv" style="font-size:0.75rem;font-weight:normal;color:var(--dark-muted);">${cab.ubicacion}</span></div>` : ''}
     <div class="price-row"><span class="pk">Precio cabaña</span><span class="pv">${fCop(cab.precio)} / noche</span></div>
     <div class="price-row" style="margin-bottom:1rem; border-bottom:1px dashed rgba(255, 255, 255,0.1); padding-bottom:0.5rem;"><span class="pk" style="font-weight:600;">Total cabaña</span><span class="pv" style="font-weight:600;">${fCop(cab.precio * noches)}</span></div>
-    <div class="price-row"><span class="pk">Paquete</span><span class="pv">${paq.label}</span></div>
-    <div class="price-row"><span class="pk">Precio paquete</span><span class="pv">${paq.precio ? `+${fCop(paqPrecioTotal)} (x${cab ? cab.capacidad : 1} pers)` : 'Incluido'}</span></div>
-    ${srvs.map(s => `<div class="price-row"><span class="pk">${s.label}</span><span class="pv">+${fCop(s.precio * s.cantidad)} (${s.cantidad} pers)</span></div>`).join('')}
-    ${srvs.length > 0 ? `<div class="price-row" style="margin-bottom:1rem; border-bottom:1px dashed rgba(255, 255, 255,0.1); padding-bottom:0.5rem;"><span class="pk" style="font-weight:600;">Total servicios</span><span class="pv" style="font-weight:600;">${fCop(srvP)}</span></div>` : ''}`;
+    ${paqExtras.length > 0 ? paqExtras.map(p => `<div class="price-row"><span class="pk" style="padding-left:0.5rem;font-size:0.85rem;color:var(--dark-muted);">↳ P. Extra: ${p.label} (×${p.cantidad})</span><span class="pv" style="font-size:0.85rem;color:var(--dark-muted);">+${fCop(p.precio * p.cantidad)}</span></div>`).join('') : ''}
+    ${srvs.map(s => `<div class="price-row"><span class="pk" style="padding-left:0.5rem;font-size:0.85rem;color:var(--dark-muted);">↳ ${s.label} (×${s.cantidad})</span><span class="pv" style="font-size:0.85rem;color:var(--dark-muted);">+${fCop(s.precio * s.cantidad)}</span></div>`).join('')}
+    ${(srvs.length > 0 || paqExtras.length > 0) ? `<div class="price-row" style="margin-bottom:1rem; border-bottom:1px dashed rgba(255, 255, 255,0.1); padding-bottom:0.5rem;"><span class="pk" style="font-weight:600;">Total extras</span><span class="pv" style="font-weight:600;">${fCop(srvP + paqExtraP)}</span></div>` : ''}`;
   const tEl = document.getElementById('admin-pt-val'); if (tEl) tEl.textContent = fCop(total);
   if (totalRow) totalRow.style.display = 'flex';
 }
@@ -1765,8 +1767,15 @@ async function doNuevaAdmin() {
       const sv = SERVICIOS[s.id]; if (!sv) return acc;
       return acc + (sv.precio * s.cantidad);
     }, 0);
+    
+    const paqExtraArr = Array.from(ADMIN_NUEVA_RES.paquetes_extra.entries()).map(([id, cantidad]) => ({ id, cantidad }));
+    const paqExtraP = paqExtraArr.reduce((acc, p) => {
+      const pk = PAQUETES[p.id]; if (!pk) return acc;
+      return acc + (pk.precio * p.cantidad);
+    }, 0);
+
     const paqPrecioTotal = (paqData.precio || 0) * (cabData.capacidad || 1);
-    const rawSub = (cabData.precio + paqPrecioTotal) * Math.max(noches, 1) + srvP;
+    const rawSub = (cabData.precio + paqPrecioTotal) * Math.max(noches, 1) + srvP + paqExtraP;
     const { subtotal, iva, total } = calcMontos(rawSub);
 
     // Para tarjeta cobramos el monto total de la reserva
@@ -1786,6 +1795,7 @@ async function doNuevaAdmin() {
       num_personas: cabData.capacidad,
       cabana: cab,
       paquete: ADMIN_NUEVA_RES.paquete,
+      paquetes_extra: paqExtraArr,
       servicios: serviciosArr,
 
       comprobante_pago: comprobante,
@@ -1825,6 +1835,7 @@ async function doNuevaAdmin() {
 function adminResetNuevaRES() {
   ADMIN_NUEVA_RES.cabana = null;
   ADMIN_NUEVA_RES.paquete = null;
+  ADMIN_NUEVA_RES.paquetes_extra.clear();
   ADMIN_NUEVA_RES.servicios.clear();
   ['mn-ini', 'mn-fin'].forEach(id => document.getElementById(id).value = '');
   const cabSel = document.getElementById('mn-cab');
@@ -2641,18 +2652,31 @@ async function refreshGlobalPackages() {
     if (ADMIN_NUEVA_RES.paquete && !PAQUETES[ADMIN_NUEVA_RES.paquete]) {
       ADMIN_NUEVA_RES.paquete = null;
     }
+    for (const k of ADMIN_NUEVA_RES.paquetes_extra.keys()) {
+      if (!PAQUETES[k]) ADMIN_NUEVA_RES.paquetes_extra.delete(k);
+    }
 
+    html = '<div class="srv-grid">'; // Usamos srv-grid para que tome el mismo estilo que los servicios
     paqs.forEach(p => {
       if (!PAQUETES[p.IDPaquete]) return;
-      const isSelected = ADMIN_NUEVA_RES.paquete == p.IDPaquete;
-      html += '<button type="button" class="paq-opt ' + (isSelected ? 'selected' : '') + '" id="adm-p-' + p.IDPaquete + '" onclick="adminSelectPaquete(\'' + p.IDPaquete + '\')" style="border:2px solid ' + (isSelected ? 'var(--fire)' : 'var(--dark-border)') + ';background:var(--dark-card);">'
-        + '<div class="paq-name" style="font-size:1.05rem;font-weight:700;color: #fff;margin-bottom:0.3rem;">' + p.NombrePaquete + '</div>'
-        + '<div class="paq-desc" style="font-size:0.8rem;color:var(--dark-muted);margin-bottom:0.4rem;">' + (p.Descripcion || '') + '</div>'
-        + '<div class="paq-price" style="font-size:0.85rem;font-weight:700;color:var(--fire);">' + (p.Precio > 0 ? '+' + fCop(p.Precio) : 'Incluido') + '</div>'
-        + '</button>';
+      
+      const cant = ADMIN_NUEVA_RES.paquetes_extra.has(String(p.IDPaquete)) ? ADMIN_NUEVA_RES.paquetes_extra.get(String(p.IDPaquete)) : 1;
+      const isSelected = ADMIN_NUEVA_RES.paquetes_extra.has(String(p.IDPaquete));
+      
+      html += `
+        <button type="button" class="srv-chip ${isSelected ? 'selected' : ''}" id="adm-paqe-${p.IDPaquete}" onclick="adminTogglePaq('${p.IDPaquete}', event)" style="${isSelected ? 'background:var(--fire);color: #fff;border-color:var(--fire);' : 'background:#fff;color:var(--bark);border-color:rgba(255, 255, 255,0.15);'} flex-direction:column; align-items:center; text-align:center;">
+          <div style="font-weight:700;margin-bottom:0.2rem;">${p.NombrePaquete}</div>
+          <div style="font-size:0.75rem; opacity:0.8;">+${fCop(p.Precio)} / pers</div>
+          <div id="adm-paqe-counter-${p.IDPaquete}" style="display:${isSelected?'flex':'none'}; align-items:center; justify-content:center; gap:0.5rem; margin-top:0.5rem;" onclick="event.stopPropagation()">
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.1); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:${isSelected?'#fff':'var(--bark)'};" onclick="adminAdjustPaqCount('${p.IDPaquete}', -1)">-</span>
+            <span id="adm-paqe-count-${p.IDPaquete}" style="font-weight:bold; color:${isSelected?'#fff':'var(--bark)'};">${cant}</span>
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.1); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:${isSelected?'#fff':'var(--bark)'};" onclick="adminAdjustPaqCount('${p.IDPaquete}', 1)">+</span>
+          </div>
+        </button>`;
     });
+    html += '</div>';
 
-    if (!html) {
+    if (paqs.length === 0) {
       html = '<div style="grid-column:1/-1;text-align:center;padding:1.5rem;color:var(--dark-muted);">No hay paquetes activos disponibles</div>';
     }
 
@@ -2664,6 +2688,63 @@ async function refreshGlobalPackages() {
     if (typeof adminResumenUpdate === 'function') adminResumenUpdate();
   } catch (e) { console.error('Error refreshing packages', e); }
 }
+
+window.adminTogglePaq = function (key, ev) {
+  if (ev) ev.preventDefault();
+  if (ADMIN_NUEVA_RES.paquetes_extra.has(key)) {
+    ADMIN_NUEVA_RES.paquetes_extra.delete(key);
+  } else {
+    const cabData = ADMIN_NUEVA_RES.cabana ? CABANAS[ADMIN_NUEVA_RES.cabana] : null;
+    ADMIN_NUEVA_RES.paquetes_extra.set(key, cabData ? cabData.capacidad : 1);
+  }
+  
+  const isSelected = ADMIN_NUEVA_RES.paquetes_extra.has(key);
+  const btn = document.getElementById(`adm-paqe-${key}`);
+  if (btn) {
+    if (isSelected) {
+      btn.classList.add('selected');
+      btn.style.background = 'var(--fire)';
+      btn.style.color = '#fff';
+      btn.style.borderColor = 'var(--fire)';
+      
+      const cbtnList = btn.querySelectorAll('.srv-counter-btn');
+      cbtnList.forEach(cb => cb.style.color = '#fff');
+      const ctSpan = document.getElementById(`adm-paqe-count-${key}`);
+      if(ctSpan) ctSpan.style.color = '#fff';
+    } else {
+      btn.classList.remove('selected');
+      btn.style.background = '#fff';
+      btn.style.color = 'var(--bark)';
+      btn.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+      
+      const cbtnList = btn.querySelectorAll('.srv-counter-btn');
+      cbtnList.forEach(cb => cb.style.color = 'var(--bark)');
+      const ctSpan = document.getElementById(`adm-paqe-count-${key}`);
+      if(ctSpan) ctSpan.style.color = 'var(--bark)';
+    }
+  }
+
+  const counterDiv = document.getElementById(`adm-paqe-counter-${key}`);
+  if (counterDiv) counterDiv.style.display = isSelected ? 'flex' : 'none';
+
+  const countSpan = document.getElementById(`adm-paqe-count-${key}`);
+  if (isSelected && countSpan) {
+    countSpan.textContent = ADMIN_NUEVA_RES.paquetes_extra.get(key);
+  }
+
+  adminResumenUpdate();
+};
+
+window.adminAdjustPaqCount = function (key, diff) {
+  if (!ADMIN_NUEVA_RES.paquetes_extra.has(key)) return;
+  let count = ADMIN_NUEVA_RES.paquetes_extra.get(key);
+  count += diff;
+  if (count < 1) count = 1;
+  if (count > 20) count = 20;
+  ADMIN_NUEVA_RES.paquetes_extra.set(key, count);
+  document.getElementById(`adm-paqe-count-${key}`).textContent = count;
+  adminResumenUpdate();
+};
 
 const oldLoadPaquetes2 = window.loadPaquetes;
 window.loadPaquetes = async function () {

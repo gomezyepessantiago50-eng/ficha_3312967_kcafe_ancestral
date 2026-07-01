@@ -629,6 +629,45 @@ const limpiarReservasPendientes = async () => {
   }
 };
 
+const completarReservasVencidas = async () => {
+  try {
+    const hoy = new Date();
+    const hoyStr = `${hoy.getUTCFullYear()}-${String(hoy.getUTCMonth() + 1).padStart(2, '0')}-${String(hoy.getUTCDate()).padStart(2, '0')}`;
+
+    // Buscar reservas confirmadas cuya fecha de salida ya pasó
+    const vencidas = await Reserva.findAll({
+      where: {
+        IdEstadoReserva: 2, // Confirmada
+        FechaFinalizacion: { [Op.lt]: hoyStr }
+      }
+    });
+
+    if (vencidas.length > 0) {
+      for (const reserva of vencidas) {
+        await reserva.update({ IdEstadoReserva: 4 }); // 4 = Completada
+
+        // Enviar email de notificación
+        try {
+          const targetClient = await Usuario.findByPk(reserva.UsuarioIdusuario);
+          if (targetClient && targetClient.Email) {
+            emailService.enviarCambioEstadoReserva({
+              to: targetClient.Email,
+              nombre: targetClient.NombreUsuario,
+              reserva: normalizeReserva(reserva),
+              nuevoEstado: 'completada'
+            }).catch(err => console.error('Error enviando email de completada:', err.message));
+          }
+        } catch (err) {
+          console.error('Error al enviar email de reserva completada:', err.message);
+        }
+      }
+      console.log(`[Auto-Completar] ${vencidas.length} reserva(s) marcadas como completadas (fecha de salida pasada).`);
+    }
+  } catch (error) {
+    console.error('[Auto-Completar] Error completando reservas vencidas:', error.message);
+  }
+};
+
 module.exports = {
   verDisponibilidad,
   bloquearFechas,
@@ -641,4 +680,5 @@ module.exports = {
   editarReserva,
   eliminarReserva,
   limpiarReservasPendientes,
+  completarReservasVencidas,
 };
