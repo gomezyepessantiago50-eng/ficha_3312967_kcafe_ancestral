@@ -825,44 +825,306 @@ async function abrirVerReserva(id) {
   try {
     const res = await ReservasAPI.una(id);
     const reserva = res.data || res;
-    window._tempReservaImgs = [];
-    const srvs = Array.isArray(reserva.servicios) ? reserva.servicios.map(srvObj => {
-      let k = srvObj.id || srvObj;
-      let cantidad = srvObj.cantidad || 1;
-      let s = SERVICIOS[k];
-      if (!s) return `<span style="margin-right:0.5rem;">${k} (x${cantidad})</span>`;
-      if (s.imagen) {
-        window._tempReservaImgs.push(`<div><strong style="display:block;margin-bottom:0.5rem;color: #fff;">${s.label}</strong><img src="${s.imagen}" style="width:100%;height:150px;object-fit:cover;border-radius:8px;border:1px solid var(--dark-border);"/></div>`);
+    const ini = new Date(reserva.fecha_inicio || reserva.FechaInicio);
+    const fin = new Date(reserva.fecha_fin || reserva.FechaFinalizacion);
+    const noches = Math.ceil((fin - ini) / (1000 * 60 * 60 * 24));
+    let servicios = [];
+    if (reserva.servicios) {
+      servicios = typeof reserva.servicios === 'string' ? JSON.parse(reserva.servicios) : (Array.isArray(reserva.servicios) ? reserva.servicios : []);
+    }
+    let paquetesExtra = [];
+    if (reserva.paquetes_extra) {
+      paquetesExtra = typeof reserva.paquetes_extra === 'string' ? JSON.parse(reserva.paquetes_extra) : (Array.isArray(reserva.paquetes_extra) ? reserva.paquetes_extra : []);
+    }
+    const cabanaObj = CABANAS[reserva.cabana];
+    const cabanaLabel = cabanaObj?.label || reserva.cabana || '—';
+    const cabanaDesc = cabanaObj?.descripcion || '';
+    const paqueteObj = PAQUETES[reserva.paquete];
+    const paqueteLabel = paqueteObj?.label || reserva.paquete || '—';
+    const paqueteDesc = paqueteObj?.descripcion || '';
+
+    // ── Build cancellation info ──
+    const estadoRes = reserva.estado || 'pendiente';
+    let cancelInfoHtml = '';
+    if (estadoRes === 'cancelada' && reserva.motivo) {
+      const parts = reserva.motivo.split(': ');
+      const quien = parts[0] || 'Desconocido';
+      const razon = parts.slice(1).join(': ') || reserva.motivo;
+      cancelInfoHtml = `
+        <div style="background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);border-radius:12px;padding:1.25rem;">
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+            <span style="font-size:1.1rem;">❌</span>
+            <span style="font-weight:700;font-size:0.95rem;color:var(--danger);">Reserva Cancelada</span>
+          </div>
+          <p style="color:var(--dark-muted);font-size:0.88rem;margin:0;">Cancelado por <strong style="color: #fff;">${quien}</strong>: ${razon}</p>
+        </div>`;
+    }
+
+    // ── Fecha de creación ──
+    const fechaCreacion = (reserva.fecha_reserva || reserva.FechaReserva)
+      ? new Date(reserva.fecha_reserva || reserva.FechaReserva).toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : '—';
+
+    // ── Cabaña image ──
+    let cabanaImgHtml = '';
+    if (cabanaObj) {
+      let imgSrc = cabanaObj.imagen || 'assets/images/cabana-roble.jpg';
+      let imgExt = cabanaObj.imagenCabana || null;
+      let imgInt = cabanaObj.imagenHabitacion || null;
+      let arrExt = [], arrInt = [];
+      try { arrExt = imgExt && imgExt.startsWith('[') ? JSON.parse(imgExt) : (imgExt ? [imgExt] : []); } catch(e) { arrExt = imgExt ? [imgExt] : []; }
+      try { arrInt = imgInt && imgInt.startsWith('[') ? JSON.parse(imgInt) : (imgInt ? [imgInt] : []); } catch(e) { arrInt = imgInt ? [imgInt] : []; }
+
+      if (arrExt.length > 0 && arrInt.length > 0) {
+        cabanaImgHtml = `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1rem;">
+            <div style="position:relative;overflow:hidden;border-radius:12px;border:1px solid var(--dark-border);cursor:pointer;" onclick="verImagenCompleta('${arrExt[0]}')">
+              <img src="${arrExt[0]}" alt="${cabanaLabel} Exterior" style="width:100%;height:180px;object-fit:cover;display:block;transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onerror="this.src='assets/images/cabana-roble.jpg'">
+              <div style="position:absolute;bottom:0;left:0;right:0;padding:0.4rem 0.75rem;background:linear-gradient(transparent,rgba(0,0,0,0.7));font-size:0.72rem;color: #fff;font-weight:600;">Exterior</div>
+            </div>
+            <div style="position:relative;overflow:hidden;border-radius:12px;border:1px solid var(--dark-border);cursor:pointer;" onclick="verImagenCompleta('${arrInt[0]}')">
+              <img src="${arrInt[0]}" alt="${cabanaLabel} Interior" style="width:100%;height:180px;object-fit:cover;display:block;transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onerror="this.src='assets/images/cabana-roble.jpg'">
+              <div style="position:absolute;bottom:0;left:0;right:0;padding:0.4rem 0.75rem;background:linear-gradient(transparent,rgba(0,0,0,0.7));font-size:0.72rem;color: #fff;font-weight:600;">Habitación</div>
+            </div>
+          </div>`;
+      } else if (imgSrc) {
+        cabanaImgHtml = `
+          <div style="position:relative;overflow:hidden;border-radius:12px;border:1px solid var(--dark-border);margin-bottom:1rem;cursor:pointer;" onclick="verImagenCompleta('${imgSrc}')">
+            <img src="${imgSrc}" alt="${cabanaLabel}" style="width:100%;height:220px;object-fit:cover;display:block;transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onerror="this.src='assets/images/cabana-roble.jpg'">
+          </div>`;
       }
-      return `<div style="display:inline-block;background:rgba(255, 255, 255,0.1);padding:0.2rem 0.5rem;border-radius:4px;margin:2px;"><span>${s.label} (x${cantidad})</span></div>`;
-    }).join(' ') : '';
+    }
+
+    // ── Cabaña meta info ──
+    let cabanaMetaHtml = '';
+    if (cabanaObj) {
+      const metaPills = [];
+      if (cabanaObj.capacidad) metaPills.push(`<span style="background:rgba(255, 255, 255,0.06);border:1px solid var(--dark-border);padding:0.3rem 0.7rem;border-radius:20px;font-size:0.78rem;display:inline-flex;align-items:center;gap:0.3rem;">👥 ${cabanaObj.capacidad} pers.</span>`);
+      if (cabanaObj.numeroHabitaciones) metaPills.push(`<span style="background:rgba(255, 255, 255,0.06);border:1px solid var(--dark-border);padding:0.3rem 0.7rem;border-radius:20px;font-size:0.78rem;display:inline-flex;align-items:center;gap:0.3rem;">🛏 ${cabanaObj.numeroHabitaciones} hab.</span>`);
+      if (cabanaObj.ubicacion) metaPills.push(`<span style="background:rgba(255, 255, 255,0.06);border:1px solid var(--dark-border);padding:0.3rem 0.7rem;border-radius:20px;font-size:0.78rem;display:inline-flex;align-items:center;gap:0.3rem;">📍 ${cabanaObj.ubicacion}</span>`);
+      if (cabanaObj.precio) metaPills.push(`<span style="background:rgba(232,93,4,0.12);border:1px solid rgba(232,93,4,0.25);padding:0.3rem 0.7rem;border-radius:20px;font-size:0.78rem;color:var(--fire);font-weight:700;display:inline-flex;align-items:center;gap:0.3rem;">${fCop(cabanaObj.precio)}/día</span>`);
+      cabanaMetaHtml = metaPills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem;">${metaPills.join('')}</div>` : '';
+    }
+
+    // ── Paquete section with image ──
+    let paqueteImgHtml = '';
+    let paqueteIncludedHtml = '';
+    if (paqueteObj) {
+      const srvIds = paqueteObj.includedServices || [];
+      if (srvIds.length > 0) {
+        let includedItems = srvIds.map(sid => {
+          const sObj = SERVICIOS[sid];
+          if (!sObj) return '';
+          const sImg = sObj.imagen ? `<img src="${sObj.imagen}" alt="${sObj.label}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:0.4rem;border:1px solid var(--dark-border);cursor:pointer;" onclick="verImagenCompleta('${sObj.imagen}')" onerror="this.style.display='none'">` : '';
+          return `
+            <div style="background:rgba(255, 255, 255,0.03);border:1px solid var(--dark-border);border-radius:10px;padding:0.75rem;text-align:center;">
+              ${sImg}
+              <div style="font-size:0.82rem;font-weight:600;color: #fff;">${sObj.label}</div>
+            </div>`;
+        }).filter(Boolean).join('');
+
+        if (includedItems) {
+          paqueteIncludedHtml = `
+            <div style="margin-top:0.75rem;">
+              <div style="font-size:0.78rem;color:var(--dark-muted);font-weight:600;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em;">Servicios incluidos en el paquete:</div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0.75rem;">${includedItems}</div>
+            </div>`;
+        }
+      }
+    }
+
+    // ── Paquetes Extra ──
+    let paquetesExtraHtml = '';
+    if (paquetesExtra && paquetesExtra.length > 0) {
+      const pItems = paquetesExtra.map(pid => {
+        const pObj = PAQUETES[pid];
+        if (!pObj) return '';
+        return `
+          <div style="background:rgba(255, 255, 255,0.03);border:1px solid var(--dark-border);border-radius:10px;padding:0.75rem;text-align:center;">
+            <div style="font-size:0.82rem;font-weight:600;color: #fff;">Paquete Extra: ${pObj.label}</div>
+            ${pObj.precio ? `<div style="font-size:0.75rem;color:var(--dark-muted);margin-top:0.4rem;">${fCop(pObj.precio * (reserva.num_personas||1))}</div>` : ''}
+          </div>`;
+      }).filter(Boolean).join('');
+      
+      if (pItems) {
+        paquetesExtraHtml = `
+          <div style="margin-top:1rem;">
+            <h5 style="color: #fff;font-size:1.1rem;margin-bottom:0.75rem;">Paquetes Extra</h5>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.75rem;">
+              ${pItems}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // ── Servicios adicionales con imágenes ──
+    let srvCardsHtml = '';
+    if (servicios.length > 0) {
+      const srvItems = servicios.map(s => {
+        const srvId = typeof s==='string' ? s : s.id;
+        const sObj = SERVICIOS[srvId];
+        const lbl = sObj?.label || (typeof s==='string' ? s : s.label || s);
+        const sImg = sObj?.imagen || null;
+
+        return `
+          <div style="background:rgba(255, 255, 255,0.03);border:1px solid var(--dark-border);border-radius:12px;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+            ${sImg ? `<div style="position:relative;overflow:hidden;cursor:pointer;" onclick="verImagenCompleta('${sImg}')"><img src="${sImg}" alt="${lbl}" style="width:100%;height:120px;object-fit:cover;display:block;transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onerror="this.parentElement.style.display='none'"></div>` : ''}
+            <div style="padding:0.75rem;text-align:center;">
+              <span style="background:var(--fire-soft);color:var(--fire);padding:0.25rem 0.6rem;border-radius:6px;font-size:0.8rem;font-weight:700;display:inline-flex;align-items:center;gap:0.25rem;">✓ ${lbl}</span>
+              ${sObj?.precio ? `<div style="font-size:0.75rem;color:var(--dark-muted);margin-top:0.4rem;">${fCop(sObj.precio)}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+
+      srvCardsHtml = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.75rem;">
+          ${srvItems}
+        </div>`;
+    } else {
+      srvCardsHtml = '<div style="font-size:0.9rem;color:var(--dark-muted);font-style:italic;">Sin servicios adicionales</div>';
+    }
+
+    // ── Build final HTML ──
     document.getElementById('m-view-id').textContent = id;
-    document.getElementById('m-view-body').innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-        <div><strong>Cliente</strong><p>${reserva.cliente_nombre ? `${reserva.cliente_nombre} (${reserva.documento})` : (reserva.documento || '—')}</p></div>
-        <div><strong>Estado</strong><p>${statusBadge(reserva.estado)}</p></div>
-        <div><strong>Cabaña</strong><p>${CABANAS[reserva.cabana]?.label || reserva.cabana || '—'}</p></div>
-        <div><strong>Paquete Inicial</strong><p>${PAQUETES[reserva.paquete]?.label || reserva.paquete || 'Básico'}</p></div>
-        <div><strong>Paquetes Extra</strong><p>${(reserva.paquetes_extra || []).map(p => PAQUETES[p]?.label || p).join(', ') || 'Ninguno'}</p></div>
-        <div><strong>Fecha inicio</strong><p>${fDate(reserva.fecha_inicio)}</p></div>
-        <div><strong>Fecha fin</strong><p>${fDate(reserva.fecha_fin)}</p></div>
-        <div><strong>Noches</strong><p>${nights(reserva.fecha_inicio, reserva.fecha_fin)}</p></div>
-        <div><strong>Personas</strong><p>${reserva.num_personas || 1}</p></div>
-        <div><strong>Servicios</strong><p>${srvs || 'Ninguno'}</p></div>
-        <div><strong>Fecha reserva</strong><p>${fDate(reserva.fecha_reserva)}</p></div>
-      </div>
-      <div style="margin-top:1rem;padding:1rem;background:rgba(255, 255, 255,0.05);border-radius:var(--r-lg);">
-        <h4 style="margin:0 0 0.75rem;">Costos</h4>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;line-height:1.5;">
-          <div><strong>Total</strong><p style="color:var(--fire); font-weight:700;">${fCop(reserva.MontoTotal ?? reserva.subtotal ?? 0)}</p></div>
+    document.getElementById('m-view-body').innerHTML=\`
+      <div style="display:grid;gap:1.5rem;">
+        \${cancelInfoHtml}
+
+        <!-- ID, Estado y fecha de creación -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;padding-bottom:1rem;border-bottom:1px solid var(--dark-border);">
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <span style="font-family:var(--font-display);font-size:1.1rem;font-weight:800;color: #fff;">Reserva</span>
+            \${statusBadge(estadoRes)}
+          </div>
+          <p style="color:var(--dark-muted);font-size:0.85rem;margin:0;">📅 Fecha de creación: <strong style="color: #fff;">\${fechaCreacion}</strong></p>
         </div>
-      </div>
-      <div style="margin-top:1rem;">
-        <strong>Notas</strong>
-        <p style="white-space:pre-wrap;color:var(--dark-muted);margin-top:0.35rem;">${reserva.notas || 'Sin notas'}</p>
-      </div>
-      ${window._tempReservaImgs && window._tempReservaImgs.length > 0 ? `<div style="margin-top:1.5rem;"><strong style="display:block;margin-bottom:0.5rem;color: #fff;">Fotos de Servicios Extra:</strong><div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">${window._tempReservaImgs.join('')}</div></div>` : ''}
-    `;
+
+        <!-- Fechas y datos -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;background:rgba(255, 255, 255,0.03);border:1px solid var(--dark-border);border-radius:12px;padding:1.25rem;">
+          <div style="text-align:center;">
+            <div style="font-size:0.72rem;color:var(--dark-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">Fecha llegada</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--sand);">\${fDate(reserva.fecha_inicio||reserva.FechaInicio)}</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.72rem;color:var(--dark-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">Fecha salida</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--sand);">\${fDate(reserva.fecha_fin||reserva.FechaFinalizacion)}</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.72rem;color:var(--dark-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">Duración</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--sand);">\${noches} \${noches===1?'noche':'noches'}</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.72rem;color:var(--dark-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">Personas</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--sand);">\${reserva.num_personas||1}</div>
+          </div>
+        </div>
+
+        <!-- Cabaña -->
+        <div style="background:rgba(255, 255, 255,0.02);border:1px solid var(--dark-border);border-radius:14px;overflow:hidden;">
+          <div style="padding:1rem 1.25rem 0.5rem;display:flex;align-items:center;gap:0.5rem;">
+            <span style="font-size:1.1rem;">🏠</span>
+            <span style="font-size:0.75rem;color:var(--dark-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Cabaña</span>
+          </div>
+          <div style="padding:0 1.25rem 1.25rem;">
+            \${cabanaImgHtml}
+            <h4 style="font-size:1.15rem;margin:0 0 0.3rem;color: #fff;font-weight:700;">\${cabanaLabel}</h4>
+            \${cabanaDesc ? \`<p style="font-size:0.85rem;color:rgba(255, 255, 255,0.6);margin:0;line-height:1.6;">\${cabanaDesc}</p>\` : ''}
+            \${cabanaMetaHtml}
+          </div>
+        </div>
+
+        <!-- Paquete -->
+        <div style="background:rgba(255, 255, 255,0.02);border:1px solid var(--dark-border);border-radius:14px;overflow:hidden;">
+          <div style="padding:1rem 1.25rem 0.5rem;display:flex;align-items:center;gap:0.5rem;">
+            <span style="font-size:1.1rem;">📦</span>
+            <span style="font-size:0.75rem;color:var(--dark-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Paquete</span>
+          </div>
+          <div style="padding:0 1.25rem 1.25rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+              <h4 style="font-size:1.1rem;margin:0;color: #fff;font-weight:700;">\${paqueteLabel}</h4>
+              \${paqueteObj?.precio ? \`<span style="background:rgba(232,93,4,0.12);border:1px solid rgba(232,93,4,0.25);padding:0.3rem 0.75rem;border-radius:20px;font-size:0.85rem;color:var(--fire);font-weight:700;">+\${fCop(paqueteObj.precio)}</span>\` : ''}
+            </div>
+            \${paqueteDesc ? \`<p style="font-size:0.85rem;color:rgba(255, 255, 255,0.6);margin:0.4rem 0 0;line-height:1.6;">\${paqueteDesc}</p>\` : ''}
+            \${paqueteIncludedHtml}
+            \${paquetesExtraHtml}
+          </div>
+        </div>
+
+        <!-- Servicios Adicionales -->
+        <div style="background:rgba(255, 255, 255,0.02);border:1px solid var(--dark-border);border-radius:14px;overflow:hidden;">
+          <div style="padding:1rem 1.25rem 0.75rem;display:flex;align-items:center;gap:0.5rem;">
+            <span style="font-size:1.1rem;">✨</span>
+            <span style="font-size:0.75rem;color:var(--dark-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Servicios Adicionales</span>
+          </div>
+          <div style="padding:0 1.25rem 1.25rem;">
+            \${srvCardsHtml}
+          </div>
+        </div>
+
+        <!-- Notas -->
+        \${reserva.notas ? \`
+        <div style="background:rgba(255, 255, 255,0.02);border:1px solid var(--dark-border);border-radius:14px;padding:1.25rem;">
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+            <span style="font-size:1rem;">📝</span>
+            <span style="font-size:0.75rem;color:var(--dark-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Notas</span>
+          </div>
+          <p style="font-size:0.9rem;color:var(--sand);font-style:italic;margin:0;line-height:1.6;">\${reserva.notas}</p>
+        </div>\` : ''}
+
+        <!-- Resumen de Pago -->
+        <div style="background:rgba(255, 255, 255,0.02);border:1px solid var(--dark-border);border-radius:14px;padding:1.25rem;">
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;">
+            <span style="font-size:1.1rem;">💳</span>
+            <span style="font-size:0.75rem;color:var(--dark-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Información de Pago</span>
+          </div>
+          <div style="display:grid;gap:0.6rem;font-size:0.9rem;color:var(--dark-muted);">
+            <div style="display:flex;justify-content:space-between;"><span>Documento Cliente:</span><strong style="color: #fff;">\${reserva.NroDocumentoCliente||reserva.documento||reserva.id_cliente||'—'}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span>Método de Pago:</span><strong style="color: #fff;text-transform:capitalize;">\${reserva.metodo_pago||reserva.MetodoPago||'No especificado'}</strong></div>
+            <div style="display:flex;justify-content:space-between;margin-top:0.4rem;"><span>Subtotal:</span><strong style="color: #fff;">\${fCop(reserva.subtotal||reserva.SubTotal||0)}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span>IVA:</span><strong style="color: #fff;">\${fCop(reserva.iva||reserva.IVA||0)}</strong></div>
+            \${(reserva.descuento||reserva.Descuento) ? \`<div style="display:flex;justify-content:space-between;color:var(--success);"><span>Descuento:</span><strong>-\${fCop(reserva.descuento||reserva.Descuento)}</strong></div>\` : ''}
+            
+            \${(() => {
+              let hist = reserva.pagos_historial;
+              if (typeof hist === 'string') { try { hist = JSON.parse(hist); } catch(e) { hist = null; } }
+              if (!Array.isArray(hist) || hist.length === 0) {
+                return \`<div style="display:flex;justify-content:space-between;padding-top:0.6rem;margin-top:0.2rem;border-top:1px dashed var(--dark-border);"><span>Monto Pagado:</span><strong style="color:var(--success);font-size:1rem;">\${fCop(reserva.monto_pagado||reserva.MontoPagado||0)}</strong></div>\`;
+              }
+              let histHtml = '<div style="padding-top:0.6rem;margin-top:0.2rem;border-top:1px dashed var(--dark-border);">';
+              histHtml += '<div style="font-size:0.75rem;color:var(--dark-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem;">Historial de Pagos</div>';
+              hist.forEach((p, i) => {
+                const fecha = p.fecha ? new Date(p.fecha).toLocaleDateString('es-CO', {day:'2-digit',month:'short',year:'numeric'}) : '';
+                histHtml += \`<div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;\${i > 0 ? 'border-top:1px solid rgba(255,255,255,0.05);' : ''}">
+                  <div>
+                    <div style="color:#fff;font-weight:600;font-size:0.85rem;">\${p.descripcion || 'Pago'}</div>
+                    <div style="color:var(--dark-muted);font-size:0.75rem;">\${fecha}</div>
+                  </div>
+                  <strong style="color:var(--success);">\${fCop(p.monto || 0)}</strong>
+                </div>\`;
+              });
+              histHtml += '</div>';
+              return histHtml;
+            })()}
+          </div>
+        </div>
+
+        <!-- Total -->
+        <div style="background:linear-gradient(135deg,rgba(232,93,4,0.12),rgba(192,57,43,0.08));padding:1.25rem 1.5rem;border-radius:14px;border:1px solid rgba(232,93,4,0.25);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <span style="font-weight:700;font-size:0.95rem;color: #fff;">Total de la Reserva</span>
+              <div style="font-size:0.78rem;color:var(--dark-muted);margin-top:0.15rem;">Incluye todos los impuestos y servicios</div>
+            </div>
+            <span style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--fire);">\${fCop(reserva.monto_total||reserva.MontoTotal||0)}</span>
+          </div>
+        </div>
+
+        <!-- Check-in/Check-out reminder -->
+        <div style="background:rgba(232,93,4,0.15);padding:0.75rem 1rem;border-radius:8px;text-align:center;font-size:0.9rem;color:var(--fire);border:1px solid rgba(232,93,4,0.3);">
+          <span style="font-weight:800;color:var(--fire);">🕐 Check-in:</span> <span style="font-weight:600;color:var(--fire);">1:00 PM</span> <span style="opacity:0.5;margin:0 0.5rem;color:var(--fire);">|</span> <span style="font-weight:800;color:var(--fire);">Check-out:</span> <span style="font-weight:600;color:var(--fire);">12:00 PM</span>
+        </div>
+      </div>\`;
     openM('m-view-reserva');
   } catch (err) { toast(err.message || 'No se pudo cargar', 'err'); }
 }
@@ -1043,6 +1305,10 @@ async function guardarDetalleReserva() {
     total_nuevos_servicios = nuevos_servicios_detalle.reduce((acc, s) => acc + s.precio, 0);
   }
 
+  const btn = document.getElementById('m-det-btn-guardar');
+  const origText = btn ? btn.textContent : 'Continuar con el pago';
+  if (btn) { btn.disabled = true; btn.textContent = 'Procesando pago...'; }
+
   try {
     await ReservasAPI.actualizar(_viewId, {
       FechaInicio: ini, FechaFinalizacion: fin, cabana, paquete, num_personas: personas, notas,
@@ -1071,7 +1337,10 @@ async function guardarDetalleReserva() {
 
     closeM('m-detalle-admin'); toast('Reserva actualizada', 'ok');
     loadReservas(_pag.currentPage); loadDashboard();
-  } catch (err) { alertEl.innerHTML = `<div class="alert alert-error">⚠ ${err.message}</div>`; }
+  } catch (err) { 
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+    alertEl.innerHTML = `<div class="alert alert-error">⚠ ${err.message}</div>`; 
+  }
 }
 
 /* ════════ SERVICIOS DETALLE RESERVA ════════ */
@@ -4715,7 +4984,7 @@ function evaluarAdminAddServicios() {
     </div>`;
     listaNuevos.innerHTML = htmlResumen;
     resumenContainer.style.display = 'block';
-    btnGuardar.textContent = 'Guardar Cambios';
+    btnGuardar.textContent = 'Continuar con el pago';
     btnGuardar.style.display = 'inline-block';
   } else {
     resumenContainer.style.display = 'none';
@@ -4737,7 +5006,7 @@ async function guardarAddServiciosAdmin() {
   if (alertEl) alertEl.innerHTML = '';
   const origText = btn.textContent;
   btn.disabled = true;
-  btn.textContent = 'Guardando...';
+  btn.textContent = 'Procesando pago...';
 
   try {
     // Combinar paquetes extra
@@ -4751,15 +5020,26 @@ async function guardarAddServiciosAdmin() {
       servicios: allSrvs,
       paquetes_extra: allPaqExtra.map(p => p.id),
       nuevos_servicios_detalle: _adminAddNuevosDetalle,
-      total_nuevos_servicios: _adminAddTotalNuevos
+      total_nuevos_servicios: _adminAddTotalNuevos,
+      metodo_pago_nuevos_servicios: 'stripe'
     };
 
     await ReservasAPI.actualizar(_adminAddResId, payload);
 
-    toast('Servicios y extras actualizados correctamente', 'ok');
-    closeM('m-add-servicios-admin');
-    loadReservas(_pag.currentPage);
-    loadDashboard();
+    // Redirect to Stripe for the difference
+    const token = typeof Auth !== 'undefined' ? Auth.getToken() : localStorage.getItem('kafe_token');
+    const stripeRes = await fetch('/api/pagos/stripe/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ idReserva: _adminAddResId, source: 'admin_add_extras', montoExtra: _adminAddTotalNuevos })
+    });
+    
+    const stripeData = await stripeRes.json();
+    if (stripeData.ok && stripeData.url) {
+      window.location.href = stripeData.url;
+    } else {
+      throw new Error(stripeData.mensaje || 'Error al conectar con la pasarela de pagos Stripe');
+    }
 
   } catch(err) {
     btn.disabled = false;

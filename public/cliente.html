@@ -1371,10 +1371,8 @@
 
         <!-- Selección de Paquete Extra -->
         <h4 style="margin-bottom:1rem; font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.5rem; color:#fff;">Paquete Extra Adicional</h4>
-        <div class="field" style="margin-bottom:2rem;">
-          <select class="input input-dark" id="m-add-srv-paquete-extra" onchange="evaluarClientAddServicios()" style="max-width:400px;">
-            <option value="">Ninguno</option>
-          </select>
+        <div id="m-add-srv-paq-grid" class="srv-grid" style="margin-bottom:2rem;">
+          <!-- Se llena por JS -->
         </div>
 
         <!-- Selección de Servicios -->
@@ -1392,7 +1390,7 @@
       </div>
       <div class="modal-ft">
         <button type="button" class="btn btn-dark-outline" onclick="closeM('m-add-servicios')">Cancelar</button>
-        <button class="btn btn-fire" id="btn-add-srv-pago" onclick="guardarAddServicios()" style="display:none; background-color:var(--success); border-color:var(--success);">Pagar en Stripe</button>
+        <button class="btn btn-fire btn-block btn-lg" id="btn-add-srv-pago" onclick="guardarAddServicios()" style="display:none; padding:1rem 2rem; font-size:1rem; border-radius:10px;">Continuar con el pago</button>
       </div>
     </div>
   </div>

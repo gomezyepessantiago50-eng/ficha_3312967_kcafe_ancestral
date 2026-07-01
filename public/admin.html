@@ -926,18 +926,19 @@
     <div class="modal-ft">
       <button type="button" class="btn btn-dark-outline" onclick="closeM('m-detalle-admin')">Cerrar</button>
       <button class="btn btn-fire" id="m-det-btn-pago" onclick="guardarDetalleReserva()" style="display:none; background-color: var(--success); border-color: var(--success);">Continuar con el pago</button>
-      <button class="btn btn-fire" id="m-det-btn-guardar" onclick="guardarDetalleReserva()">Guardar cambios</button>
+      <button class="btn btn-fire btn-block btn-lg" id="m-det-btn-guardar" onclick="guardarDetalleReserva()" style="padding:1rem 2rem; font-size:1rem; border-radius:10px;">Continuar con el pago</button>
     </div>
   </div>
 </div>
 
 <!-- MODAL: Ver reserva -->
 <div class="modal-backdrop" id="m-view-reserva" onclick="if(event.target===this)closeM('m-view-reserva')">
-  <div class="modal modal-dark">
-    <div class="modal-hd"><h3>Ver Reserva #<span id="m-view-id"></span></h3></div>
-    <div class="modal-body">
-      <div id="m-view-body"></div>
+  <div class="modal modal-dark" style="width: min(820px, 95vw); max-height: 92vh;">
+    <div class="modal-hd">
+      <h3>Detalle de Reserva #<span id="m-view-id"></span></h3>
+      <button type="button" class="modal-close" onclick="closeM('m-view-reserva')">&times;</button>
     </div>
+    <div class="modal-body" id="m-view-body" style="overflow-y:auto;"></div>
     <div class="modal-ft">
       <button type="button" class="btn btn-dark-outline" onclick="closeM('m-view-reserva')">Cerrar</button>
     </div>
@@ -985,7 +986,7 @@
     </div>
     <div class="modal-ft">
       <button type="button" class="btn btn-dark-outline" onclick="closeM('m-add-servicios-admin')">Cancelar</button>
-      <button class="btn btn-fire" id="btn-add-srv-admin-guardar" onclick="guardarAddServiciosAdmin()">Guardar Cambios</button>
+      <button class="btn btn-fire btn-block btn-lg" id="btn-add-srv-admin-guardar" onclick="guardarAddServiciosAdmin()" style="padding:1rem 2rem; font-size:1rem; border-radius:10px;">Continuar con el pago</button>
     </div>
   </div>
 </div>

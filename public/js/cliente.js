@@ -1408,7 +1408,8 @@ let _addReservaId = null;
 let _addReservaData = null;
 let _addReservaSrvs = new Map();
 let _addReservaSrvsOriginales = new Map();
-let _addReservaPaquetesExtraOriginales = new Set();
+let _addReservaPaquetesExtraOriginales = new Map();
+let _addReservaPaquetesExtra = new Map();
 
 async function abrirAddServicios(id) {
   _addReservaId = id;
@@ -1434,20 +1435,13 @@ async function abrirAddServicios(id) {
     let paqExtArr = _addReservaData.paquetes_extra;
     if (typeof paqExtArr === 'string') { try { paqExtArr = JSON.parse(paqExtArr); } catch(e){ paqExtArr=[]; } }
     if (!Array.isArray(paqExtArr)) paqExtArr = [];
-    _addReservaPaquetesExtraOriginales = new Set(paqExtArr.map(String));
+    _addReservaPaquetesExtraOriginales = new Map(paqExtArr.map(p => {
+      if (typeof p === 'object' && p.id) return [String(p.id), p.cantidad || 1];
+      return [String(p), 1];
+    }));
+    _addReservaPaquetesExtra = new Map(_addReservaPaquetesExtraOriginales);
 
-    // Populate Paquete Extra dropdown
-    const selPaqExtra = document.getElementById('m-add-srv-paquete-extra');
-    if (selPaqExtra) {
-      selPaqExtra.innerHTML = '<option value="">Ninguno</option>';
-      Object.keys(PAQUETES).forEach(k => {
-        const p = PAQUETES[k];
-        if (k !== _addReservaData.paquete && !_addReservaPaquetesExtraOriginales.has(String(k))) {
-          selPaqExtra.innerHTML += `<option value="${k}">${p.label} (+${fCop(p.precio)} / pers)</option>`;
-        }
-      });
-      selPaqExtra.value = '';
-    }
+    renderClientAddPaqExtras();
 
     renderClientAddSrvs();
     evaluarClientAddServicios();
@@ -1455,6 +1449,86 @@ async function abrirAddServicios(id) {
   } catch(e) {
     toast(e.message, 'err');
   }
+}
+
+/* ── Render Paquetes Extras como tarjetas con +/- ── */
+function renderClientAddPaqExtras() {
+  const grid = document.getElementById('m-add-srv-paq-grid');
+  if (!grid) return;
+
+  const paqBase = _addReservaData.paquete; // paquete inicial, no se puede re-añadir
+  const personas = _addReservaData.num_personas || 1;
+  let html = '';
+
+  Object.keys(PAQUETES).forEach(k => {
+    const p = PAQUETES[k];
+    if (k === paqBase) return; // No mostrar el paquete base
+
+    const strK = String(k);
+    const isOriginal = _addReservaPaquetesExtraOriginales.has(strK);
+    const originalCant = _addReservaPaquetesExtraOriginales.get(strK) || 0;
+    const isSelected = _addReservaPaquetesExtra.has(strK);
+    const currentCant = _addReservaPaquetesExtra.get(strK) || 0;
+
+    if (isOriginal) {
+      const cant = currentCant > originalCant ? currentCant : originalCant;
+      if (!_addReservaPaquetesExtra.has(strK) || _addReservaPaquetesExtra.get(strK) < originalCant) {
+        _addReservaPaquetesExtra.set(strK, originalCant);
+      }
+      const hasIncrease = cant > originalCant;
+      html += `
+        <button type="button" class="srv-chip selected" style="background:var(--fire);color:#fff;border-color:var(--fire); margin-bottom:0; padding:0.6rem 1rem; font-size:0.85rem; min-width:180px;" title="Ya reservado — puedes aumentar personas">
+          ${p.label} <span style="font-weight:600; opacity:1;">Reservado (x${cant})</span>
+          <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-top:0.5rem;" onclick="event.stopPropagation()">
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.15); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:#fff; ${cant <= originalCant ? 'opacity:0.3; pointer-events:none;' : ''}" onclick="adjustClientAddPaqCount('${k}', -1)">−</span>
+            <span style="font-weight:bold; color:#fff;">${cant}</span>
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.15); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:#fff;" onclick="adjustClientAddPaqCount('${k}', 1)">+</span>
+          </div>
+          ${hasIncrease ? `<div style="font-size:0.7rem; margin-top:0.25rem; color:rgba(255,255,255,0.8);">+${cant - originalCant} nuevas → +${fCop(p.precio * (cant - originalCant))}</div>` : `<div style="font-size:0.7rem; margin-top:0.25rem; color:rgba(255,255,255,0.6);">Presiona + para agregar más</div>`}
+        </button>`;
+    } else {
+      const cant = isSelected ? currentCant : 0;
+      html += `
+        <button type="button" class="srv-chip ${isSelected ? 'selected' : ''}" onclick="toggleClientAddPaq('${k}', event)" style="${isSelected ? 'background:var(--fire);color:#fff;border-color:var(--fire);' : 'background:#fff;color:var(--bark);border-color:rgba(255,255,255,0.15);'} margin-bottom:0; padding:0.6rem 1rem; font-size:0.85rem; min-width:180px;">
+          ${p.label} <span style="font-weight:600; opacity:0.8;">+${fCop(p.precio)} / pers</span>
+          <div style="display:${isSelected ? 'flex' : 'none'}; align-items:center; justify-content:center; gap:0.5rem; margin-top:0.5rem;" onclick="event.stopPropagation()">
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.1); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:${isSelected ? '#fff' : 'var(--bark)'};" onclick="adjustClientAddPaqCount('${k}', -1)">−</span>
+            <span style="font-weight:bold; color:${isSelected ? '#fff' : 'var(--bark)'};">${cant}</span>
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.1); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:${isSelected ? '#fff' : 'var(--bark)'};" onclick="adjustClientAddPaqCount('${k}', 1)">+</span>
+          </div>
+        </button>`;
+    }
+  });
+
+  grid.innerHTML = html || '<span style="color:var(--dark-muted);font-size:0.85rem;">No hay paquetes extras disponibles</span>';
+}
+
+function toggleClientAddPaq(k, evt) {
+  if (evt && evt.target.closest('.srv-counter-btn')) return;
+  const strK = String(k);
+  if (_addReservaPaquetesExtraOriginales.has(strK)) return;
+  if (_addReservaPaquetesExtra.has(strK)) {
+    _addReservaPaquetesExtra.delete(strK);
+  } else {
+    const personas = _addReservaData ? (_addReservaData.num_personas || 1) : 1;
+    _addReservaPaquetesExtra.set(strK, personas);
+  }
+  renderClientAddPaqExtras();
+  evaluarClientAddServicios();
+}
+
+function adjustClientAddPaqCount(k, dir) {
+  const strK = String(k);
+  if (!_addReservaPaquetesExtra.has(strK)) return;
+  let count = _addReservaPaquetesExtra.get(strK);
+  count += dir;
+  const originalMin = _addReservaPaquetesExtraOriginales.has(strK) ? _addReservaPaquetesExtraOriginales.get(strK) : 1;
+  if (count < originalMin) count = originalMin;
+  const maxCap = Math.max(...Object.values(CABANAS).map(c => c.capacidad || 0), 1);
+  if (count > maxCap) count = maxCap;
+  _addReservaPaquetesExtra.set(strK, count);
+  renderClientAddPaqExtras();
+  evaluarClientAddServicios();
 }
 
 function renderClientAddSrvs() {
@@ -1564,28 +1638,28 @@ function evaluarClientAddServicios() {
   const listaNuevos = document.getElementById('m-add-srv-lista-nuevos');
   const btnPago = document.getElementById('btn-add-srv-pago');
   
-  const paqExtraEl = document.getElementById('m-add-srv-paquete-extra');
-  const paqueteExtraVal = paqExtraEl ? paqExtraEl.value : null;
-
-  const personas = _addReservaData.num_personas || 1;
   let htmlResumen = '';
   _clienteTotalNuevosSrvs = 0;
   _clienteNuevosSrvsDetalle = [];
 
-  // Paquete Extra
-  if (paqueteExtraVal) {
-    const pExtra = PAQUETES[paqueteExtraVal];
-    if (pExtra) {
-      const costoPaq = (pExtra.precio || 0) * personas;
-      _clienteTotalNuevosSrvs += costoPaq;
+  // Paquetes Extra: cobrar solo diferencia
+  for (let [k, cant] of _addReservaPaquetesExtra.entries()) {
+    const p = PAQUETES[k];
+    if (!p) continue;
+    const originalCant = _addReservaPaquetesExtraOriginales.get(k) || 0;
+    const extraCant = cant - originalCant;
+    if (extraCant > 0) {
+      const costo = p.precio * extraCant;
+      _clienteTotalNuevosSrvs += costo;
       _clienteNuevosSrvsDetalle.push({
-        id: paqueteExtraVal,
-        label: `Paquete Extra: ${pExtra.label} (x${personas} pers)`,
-        precio: costoPaq
+        id: k,
+        tipo: 'paquete_extra',
+        label: originalCant > 0 ? `Paquete: ${p.label} (+${extraCant} pers adicionales)` : `Paquete Extra: ${p.label} (x${cant} pers)`,
+        precio: costo
       });
       htmlResumen += `<div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
-        <span>Paquete Extra: ${pExtra.label} (x${personas} pers)</span>
-        <strong>+${fCop(costoPaq)}</strong>
+        <span>${originalCant > 0 ? `${p.label} (+${extraCant} pers adicionales)` : `Paquete Extra: ${p.label} (x${cant} pers)`}</span>
+        <strong>+${fCop(costo)}</strong>
       </div>`;
     }
   }
@@ -1651,19 +1725,15 @@ async function guardarAddServicios() {
   setLoading(btn, true, 'Procesando...');
 
   try {
-    const paqExtraEl = document.getElementById('m-add-srv-paquete-extra');
-    const paqueteExtraVal = paqExtraEl ? paqExtraEl.value : null;
-    
-    // Combinar extras originales + el nuevo
-    const allPaqExtra = new Set(_addReservaPaquetesExtraOriginales);
-    if (paqueteExtraVal) allPaqExtra.add(paqueteExtraVal);
+    // Combinar paquetes extra
+    const allPaqExtra = [..._addReservaPaquetesExtra.entries()].map(([id, cant]) => ({ id, cantidad: cant }));
 
     // Combinar servicios originales + nuevos
     const allSrvsIds = [...new Set([..._addReservaSrvsOriginales.keys(), ..._addReservaSrvs.keys()])];
     const allSrvs = allSrvsIds.map(id => ({ id, cantidad: _addReservaSrvs.get(id) || _addReservaSrvsOriginales.get(id) || 1 }));
 
     // Calcular el SubTotal completo de la reserva combinando todo
-    const pExtraCostTotal = Array.from(allPaqExtra).reduce((s, p) => s + ((PAQUETES[p]?.precio || 0) * (_addReservaData.num_personas||1)), 0);
+    const pExtraCostTotal = allPaqExtra.reduce((s, p) => s + ((PAQUETES[p.id]?.precio || 0) * p.cantidad), 0);
     const srvCostTotal = allSrvs.reduce((s, obj) => s + ((SERVICIOS[obj.id]?.precio || 0) * obj.cantidad), 0);
     const cabanaCost = CABANAS[_addReservaData.cabana]?.precio || 0;
     const paqCost = (PAQUETES[_addReservaData.paquete]?.precio || 0) * (_addReservaData.num_personas||1);
@@ -1672,7 +1742,7 @@ async function guardarAddServicios() {
 
     const payload = {
       servicios: allSrvs,
-      paquetes_extra: Array.from(allPaqExtra),
+      paquetes_extra: allPaqExtra.map(p => p.id),
       metodo_pago_nuevos_servicios: 'stripe',
       nuevos_servicios_detalle: _clienteNuevosSrvsDetalle,
       total_nuevos_servicios: _clienteTotalNuevosSrvs
@@ -1696,7 +1766,7 @@ async function guardarAddServicios() {
     }
 
   } catch(err) {
-    setLoading(btn, false, 'Pagar en Stripe');
+    setLoading(btn, false, 'Continuar con el pago');
     if (alertEl) alertEl.innerHTML = `<div class="alert alert-error">⚠ ${err.message}</div>`;
   }
 }
