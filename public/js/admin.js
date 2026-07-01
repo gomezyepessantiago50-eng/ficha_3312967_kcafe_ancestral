@@ -725,7 +725,8 @@ async function loadReservas(page = 1) {
               <div class="res-actions" style="flex-shrink:0;">
                 ${selectHtml}
                 <button class="btn btn-outline btn-sm" onclick="abrirVerReserva(${r.id})" style="background-color:#fff;color:#000;border:none;">Ver</button>
-                <button class="btn btn-sm btn-fire" ${bl ? 'disabled title="No editable"' : `onclick="abrirDetalle(${r.id})"`}>Editar</button>
+                <button class="btn btn-fire btn-sm" onclick="abrirAddServiciosAdmin(${r.id})">Añadir Extras</button>
+                <button class="btn btn-sm btn-dark-outline" ${bl ? 'disabled title="No editable"' : `onclick="abrirDetalle(${r.id})"`}>Editar</button>
               </div>
             </div>
           </div>`;
@@ -4424,3 +4425,345 @@ window.verImagenCompleta = function (src) {
     overlay.remove();
   };
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   ADMIN — Añadir Servicios y Extras (modal m-add-servicios-admin)
+   Same card-style design as the client modal
+   ════════════════════════════════════════════════════════════════════ */
+
+let _adminAddResId = null;
+let _adminAddResData = null;
+let _adminAddPaqExtras = new Map();           // key => cantidad
+let _adminAddPaqExtrasOriginales = new Map(); // key => cantidad (ya reservados)
+let _adminAddSrvs = new Map();               // key => cantidad
+let _adminAddSrvsOriginales = new Map();     // key => cantidad (ya reservados)
+
+async function abrirAddServiciosAdmin(id) {
+  _adminAddResId = id;
+  const alertEl = document.getElementById('m-add-srv-admin-alert');
+  if (alertEl) alertEl.innerHTML = '';
+  document.getElementById('m-add-srv-admin-id').textContent = id;
+
+  try {
+    const resp = await fetch(`/api/reservas/${id}`, {
+      headers: { 'Authorization': `Bearer ${Auth.getToken()}` }
+    });
+    const d = await resp.json();
+    const reserva = d.data || d.reserva || d;
+    if (!reserva || !reserva.id) { toast('Reserva no encontrada', 'error'); return; }
+    _adminAddResData = reserva;
+
+    // --- Parse servicios originales ---
+    let srvsArr = reserva.servicios;
+    if (typeof srvsArr === 'string') { try { srvsArr = JSON.parse(srvsArr); } catch(e){ srvsArr=[]; } }
+    if (!Array.isArray(srvsArr)) srvsArr = [];
+    _adminAddSrvsOriginales = new Map(srvsArr.map(s => [String(s.id || s), s.cantidad || 1]));
+    _adminAddSrvs = new Map(_adminAddSrvsOriginales);
+
+    // --- Parse paquetes extra originales ---
+    let paqExtArr = reserva.paquetes_extra;
+    if (typeof paqExtArr === 'string') { try { paqExtArr = JSON.parse(paqExtArr); } catch(e){ paqExtArr=[]; } }
+    if (!Array.isArray(paqExtArr)) paqExtArr = [];
+    _adminAddPaqExtrasOriginales = new Map(paqExtArr.map(p => {
+      if (typeof p === 'object' && p.id) return [String(p.id), p.cantidad || 1];
+      return [String(p), 1];
+    }));
+    _adminAddPaqExtras = new Map(_adminAddPaqExtrasOriginales);
+
+    renderAdminAddPaqExtras();
+    renderAdminAddSrvs();
+    evaluarAdminAddServicios();
+    openM('m-add-servicios-admin');
+  } catch(e) {
+    toast(e.message || 'Error cargando reserva', 'error');
+  }
+}
+
+/* ── Render Paquetes Extras como tarjetas con +/- ── */
+function renderAdminAddPaqExtras() {
+  const grid = document.getElementById('m-add-srv-admin-paq-grid');
+  if (!grid) return;
+
+  const paqBase = _adminAddResData.paquete; // paquete inicial, no se puede re-añadir
+  const personas = _adminAddResData.num_personas || 1;
+  let html = '';
+
+  Object.keys(PAQUETES).forEach(k => {
+    const p = PAQUETES[k];
+    if (k === paqBase) return; // No mostrar el paquete base
+
+    const strK = String(k);
+    const isOriginal = _adminAddPaqExtrasOriginales.has(strK);
+    const originalCant = _adminAddPaqExtrasOriginales.get(strK) || 0;
+    const isSelected = _adminAddPaqExtras.has(strK);
+    const currentCant = _adminAddPaqExtras.get(strK) || 0;
+
+    if (isOriginal) {
+      const cant = currentCant > originalCant ? currentCant : originalCant;
+      if (!_adminAddPaqExtras.has(strK) || _adminAddPaqExtras.get(strK) < originalCant) {
+        _adminAddPaqExtras.set(strK, originalCant);
+      }
+      const hasIncrease = cant > originalCant;
+      html += `
+        <button type="button" class="srv-chip selected" style="background:var(--fire);color:#fff;border-color:var(--fire); margin-bottom:0; padding:0.6rem 1rem; font-size:0.85rem; min-width:180px;" title="Ya reservado — puedes aumentar personas">
+          ${p.label} <span style="font-weight:600; opacity:1;">Reservado (x${cant})</span>
+          <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-top:0.5rem;" onclick="event.stopPropagation()">
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.15); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:#fff; ${cant <= originalCant ? 'opacity:0.3; pointer-events:none;' : ''}" onclick="adjustAdminAddPaqCount('${k}', -1)">−</span>
+            <span style="font-weight:bold; color:#fff;">${cant}</span>
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.15); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:#fff;" onclick="adjustAdminAddPaqCount('${k}', 1)">+</span>
+          </div>
+          ${hasIncrease ? `<div style="font-size:0.7rem; margin-top:0.25rem; color:rgba(255,255,255,0.8);">+${cant - originalCant} nuevas → +${fCop(p.precio * (cant - originalCant))}</div>` : `<div style="font-size:0.7rem; margin-top:0.25rem; color:rgba(255,255,255,0.6);">Presiona + para agregar más</div>`}
+        </button>`;
+    } else {
+      const cant = isSelected ? currentCant : 0;
+      html += `
+        <button type="button" class="srv-chip ${isSelected ? 'selected' : ''}" onclick="toggleAdminAddPaq('${k}', event)" style="${isSelected ? 'background:var(--fire);color:#fff;border-color:var(--fire);' : 'background:#fff;color:var(--bark);border-color:rgba(255,255,255,0.15);'} margin-bottom:0; padding:0.6rem 1rem; font-size:0.85rem; min-width:180px;">
+          ${p.label} <span style="font-weight:600; opacity:0.8;">+${fCop(p.precio)} / pers</span>
+          <div style="display:${isSelected ? 'flex' : 'none'}; align-items:center; justify-content:center; gap:0.5rem; margin-top:0.5rem;" onclick="event.stopPropagation()">
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.1); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:${isSelected ? '#fff' : 'var(--bark)'};" onclick="adjustAdminAddPaqCount('${k}', -1)">−</span>
+            <span style="font-weight:bold; color:${isSelected ? '#fff' : 'var(--bark)'};">${cant}</span>
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.1); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:${isSelected ? '#fff' : 'var(--bark)'};" onclick="adjustAdminAddPaqCount('${k}', 1)">+</span>
+          </div>
+        </button>`;
+    }
+  });
+
+  grid.innerHTML = html || '<span style="color:var(--dark-muted);font-size:0.85rem;">No hay paquetes extras disponibles</span>';
+}
+
+function toggleAdminAddPaq(k, evt) {
+  if (evt && evt.target.closest('.srv-counter-btn')) return;
+  const strK = String(k);
+  if (_adminAddPaqExtrasOriginales.has(strK)) return;
+  if (_adminAddPaqExtras.has(strK)) {
+    _adminAddPaqExtras.delete(strK);
+  } else {
+    const personas = _adminAddResData ? (_adminAddResData.num_personas || 1) : 1;
+    _adminAddPaqExtras.set(strK, personas);
+  }
+  renderAdminAddPaqExtras();
+  evaluarAdminAddServicios();
+}
+
+function adjustAdminAddPaqCount(k, dir) {
+  const strK = String(k);
+  if (!_adminAddPaqExtras.has(strK)) return;
+  let count = _adminAddPaqExtras.get(strK);
+  count += dir;
+  const originalMin = _adminAddPaqExtrasOriginales.has(strK) ? _adminAddPaqExtrasOriginales.get(strK) : 1;
+  if (count < originalMin) count = originalMin;
+  const maxCap = Math.max(...Object.values(CABANAS).map(c => c.capacidad || 0), 1);
+  if (count > maxCap) count = maxCap;
+  _adminAddPaqExtras.set(strK, count);
+  renderAdminAddPaqExtras();
+  evaluarAdminAddServicios();
+}
+
+/* ── Render Servicios Adicionales como tarjetas con +/- ── */
+function renderAdminAddSrvs() {
+  const grid = document.getElementById('m-add-srv-admin-srv-grid');
+  if (!grid) return;
+
+  const paq = _adminAddResData.paquete ? PAQUETES[_adminAddResData.paquete] : null;
+  let includedIds = [];
+  if (paq && paq.serviciosIncluidos) {
+    try { includedIds = Array.isArray(paq.serviciosIncluidos) ? paq.serviciosIncluidos : JSON.parse(paq.serviciosIncluidos); } catch(e) {}
+  }
+
+  let html = '';
+  Object.keys(SERVICIOS).forEach(id => {
+    const s = SERVICIOS[id];
+    const strId = String(id);
+    const isIncluded = includedIds.some(incId => String(incId) === strId);
+    const isOriginal = _adminAddSrvsOriginales.has(strId);
+    const originalCant = _adminAddSrvsOriginales.get(strId) || 0;
+    const currentCant = _adminAddSrvs.get(strId) || 0;
+
+    if (isIncluded && _adminAddSrvs.has(strId)) {
+      _adminAddSrvs.delete(strId);
+    }
+
+    if (isIncluded) {
+      const cant = isOriginal ? originalCant : 1;
+      html += `
+        <button type="button" class="srv-chip disabled" style="background:#fff;color:var(--bark);border-color:rgba(255,255,255,0.15); margin-bottom:0; padding:0.6rem 1rem; font-size:0.85rem; min-width:180px;" title="Incluido en el paquete original">
+          ${s.label} <span style="font-weight:600; opacity:0.8;">Incluido (x${cant})</span>
+        </button>`;
+    } else if (isOriginal) {
+      const cant = currentCant > originalCant ? currentCant : originalCant;
+      if (!_adminAddSrvs.has(strId) || _adminAddSrvs.get(strId) < originalCant) {
+        _adminAddSrvs.set(strId, originalCant);
+      }
+      const hasIncrease = cant > originalCant;
+      html += `
+        <button type="button" class="srv-chip selected" style="background:var(--fire);color:#fff;border-color:var(--fire); margin-bottom:0; padding:0.6rem 1rem; font-size:0.85rem; min-width:180px;" title="Ya reservado — puedes aumentar personas">
+          ${s.label} <span style="font-weight:600; opacity:1;">Reservado (x${cant})</span>
+          <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-top:0.5rem;" onclick="event.stopPropagation()">
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.15); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:#fff; ${cant <= originalCant ? 'opacity:0.3; pointer-events:none;' : ''}" onclick="adjustAdminAddSrvCount('${id}', -1)">−</span>
+            <span style="font-weight:bold; color:#fff;">${cant}</span>
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.15); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:#fff;" onclick="adjustAdminAddSrvCount('${id}', 1)">+</span>
+          </div>
+          ${hasIncrease ? `<div style="font-size:0.7rem; margin-top:0.25rem; color:rgba(255,255,255,0.8);">+${cant - originalCant} nuevas → +${fCop(s.precio * (cant - originalCant))}</div>` : `<div style="font-size:0.7rem; margin-top:0.25rem; color:rgba(255,255,255,0.6);">Presiona + para agregar más</div>`}
+        </button>`;
+    } else {
+      const isSelected = _adminAddSrvs.has(strId);
+      const cant = isSelected ? _adminAddSrvs.get(strId) : 0;
+      html += `
+        <button type="button" class="srv-chip ${isSelected ? 'selected' : ''}" onclick="toggleAdminAddSrv('${id}', event)" style="${isSelected ? 'background:var(--fire);color:#fff;border-color:var(--fire);' : 'background:#fff;color:var(--bark);border-color:rgba(255,255,255,0.15);'} margin-bottom:0; padding:0.6rem 1rem; font-size:0.85rem; min-width:180px;">
+          ${s.label} <span style="font-weight:600; opacity:0.8;">+${fCop(s.precio)} / pers</span>
+          <div style="display:${isSelected ? 'flex' : 'none'}; align-items:center; justify-content:center; gap:0.5rem; margin-top:0.5rem;" onclick="event.stopPropagation()">
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.1); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:${isSelected ? '#fff' : 'var(--bark)'};" onclick="adjustAdminAddSrvCount('${id}', -1)">−</span>
+            <span style="font-weight:bold; color:${isSelected ? '#fff' : 'var(--bark)'};">${cant}</span>
+            <span class="srv-counter-btn" style="cursor:pointer; background:rgba(0,0,0,0.1); padding:0.2rem 0.6rem; border-radius:4px; font-weight:bold; color:${isSelected ? '#fff' : 'var(--bark)'};" onclick="adjustAdminAddSrvCount('${id}', 1)">+</span>
+          </div>
+        </button>`;
+    }
+  });
+  grid.innerHTML = html || '<span style="color:var(--dark-muted);font-size:0.85rem;">No hay servicios adicionales disponibles</span>';
+}
+
+function toggleAdminAddSrv(id, evt) {
+  if (evt && evt.target.closest('.srv-counter-btn')) return;
+  const strId = String(id);
+  if (_adminAddSrvsOriginales.has(strId)) return;
+  if (_adminAddSrvs.has(strId)) {
+    _adminAddSrvs.delete(strId);
+  } else {
+    const personas = _adminAddResData ? (_adminAddResData.num_personas || 1) : 1;
+    _adminAddSrvs.set(strId, personas);
+  }
+  renderAdminAddSrvs();
+  evaluarAdminAddServicios();
+}
+
+function adjustAdminAddSrvCount(id, dir) {
+  const strId = String(id);
+  if (!_adminAddSrvs.has(strId)) return;
+  let count = _adminAddSrvs.get(strId);
+  count += dir;
+  const originalMin = _adminAddSrvsOriginales.has(strId) ? _adminAddSrvsOriginales.get(strId) : 1;
+  if (count < originalMin) count = originalMin;
+  const maxCap = Math.max(...Object.values(CABANAS).map(c => c.capacidad || 0), 1);
+  if (count > maxCap) count = maxCap;
+  _adminAddSrvs.set(strId, count);
+  renderAdminAddSrvs();
+  evaluarAdminAddServicios();
+}
+
+/* ── Evaluar cambios y mostrar resumen ── */
+let _adminAddTotalNuevos = 0;
+let _adminAddNuevosDetalle = [];
+
+function evaluarAdminAddServicios() {
+  if (!_adminAddResData) return;
+  const resumenContainer = document.getElementById('m-add-srv-admin-resumen');
+  const listaNuevos = document.getElementById('m-add-srv-admin-lista-nuevos');
+  const btnGuardar = document.getElementById('btn-add-srv-admin-guardar');
+
+  let htmlResumen = '';
+  _adminAddTotalNuevos = 0;
+  _adminAddNuevosDetalle = [];
+
+  // Paquetes Extra: cobrar solo diferencia
+  for (let [k, cant] of _adminAddPaqExtras.entries()) {
+    const p = PAQUETES[k];
+    if (!p) continue;
+    const originalCant = _adminAddPaqExtrasOriginales.get(k) || 0;
+    const extraCant = cant - originalCant;
+    if (extraCant > 0) {
+      const costo = p.precio * extraCant;
+      _adminAddTotalNuevos += costo;
+      _adminAddNuevosDetalle.push({
+        id: k,
+        tipo: 'paquete_extra',
+        label: originalCant > 0 ? `Paquete: ${p.label} (+${extraCant} pers adicionales)` : `Paquete Extra: ${p.label} (x${cant} pers)`,
+        precio: costo
+      });
+      htmlResumen += `<div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+        <span>${originalCant > 0 ? `${p.label} (+${extraCant} pers adicionales)` : `Paquete Extra: ${p.label} (x${cant} pers)`}</span>
+        <strong>+${fCop(costo)}</strong>
+      </div>`;
+    }
+  }
+
+  // Servicios: cobrar solo diferencia
+  for (let [k, cant] of _adminAddSrvs.entries()) {
+    const s = SERVICIOS[k];
+    if (!s) continue;
+    const originalCant = _adminAddSrvsOriginales.get(k) || 0;
+    const extraCant = cant - originalCant;
+    if (extraCant > 0) {
+      const costo = s.precio * extraCant;
+      _adminAddTotalNuevos += costo;
+      _adminAddNuevosDetalle.push({
+        id: k,
+        tipo: 'servicio',
+        label: originalCant > 0 ? `${s.label} (+${extraCant} pers adicionales)` : `${s.label} (x${cant} pers)`,
+        precio: costo
+      });
+      htmlResumen += `<div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+        <span>${originalCant > 0 ? `${s.label} (+${extraCant} pers adicionales)` : `${s.label} (x${cant} pers)`}</span>
+        <strong>+${fCop(costo)}</strong>
+      </div>`;
+    }
+  }
+
+  if (_adminAddTotalNuevos > 0) {
+    htmlResumen += `<div style="display:flex; justify-content:space-between; margin-top:1rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.1); color:#fff; font-size:1.1rem;">
+      <strong>Total Nuevos Cargos:</strong>
+      <strong style="color:var(--success);">${fCop(_adminAddTotalNuevos)}</strong>
+    </div>`;
+    listaNuevos.innerHTML = htmlResumen;
+    resumenContainer.style.display = 'block';
+    btnGuardar.textContent = 'Guardar Cambios';
+    btnGuardar.style.display = 'inline-block';
+  } else {
+    resumenContainer.style.display = 'none';
+    // Check if anything changed at all
+    const hasChanges = _adminAddPaqExtras.size !== _adminAddPaqExtrasOriginales.size
+      || _adminAddSrvs.size !== _adminAddSrvsOriginales.size
+      || [..._adminAddPaqExtras].some(([k,v]) => _adminAddPaqExtrasOriginales.get(k) !== v)
+      || [..._adminAddSrvs].some(([k,v]) => _adminAddSrvsOriginales.get(k) !== v);
+    btnGuardar.style.display = hasChanges ? 'inline-block' : 'none';
+  }
+}
+
+/* ── Guardar cambios ── */
+async function guardarAddServiciosAdmin() {
+  if (!_adminAddResId) return;
+
+  const alertEl = document.getElementById('m-add-srv-admin-alert');
+  const btn = document.getElementById('btn-add-srv-admin-guardar');
+  if (alertEl) alertEl.innerHTML = '';
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    // Combinar paquetes extra
+    const allPaqExtra = [..._adminAddPaqExtras.entries()].map(([id, cant]) => ({ id, cantidad: cant }));
+
+    // Combinar servicios
+    const allSrvsIds = [...new Set([..._adminAddSrvsOriginales.keys(), ..._adminAddSrvs.keys()])];
+    const allSrvs = allSrvsIds.map(id => ({ id, cantidad: _adminAddSrvs.get(id) || _adminAddSrvsOriginales.get(id) || 1 }));
+
+    const payload = {
+      servicios: allSrvs,
+      paquetes_extra: allPaqExtra.map(p => p.id),
+      nuevos_servicios_detalle: _adminAddNuevosDetalle,
+      total_nuevos_servicios: _adminAddTotalNuevos
+    };
+
+    await ReservasAPI.actualizar(_adminAddResId, payload);
+
+    toast('Servicios y extras actualizados correctamente', 'ok');
+    closeM('m-add-servicios-admin');
+    loadReservas(_pag.currentPage);
+    loadDashboard();
+
+  } catch(err) {
+    btn.disabled = false;
+    btn.textContent = origText;
+    if (alertEl) alertEl.innerHTML = `<div class="alert alert-error">⚠ ${err.message}</div>`;
+  }
+}
