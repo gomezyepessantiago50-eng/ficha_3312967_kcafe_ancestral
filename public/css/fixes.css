@@ -1,0 +1,368 @@
+/* ═══════════════════════════════════════════════════
+   KAFE ANCESTRAL — fixes.css
+   Parche de compatibilidad — agregar al final de styles.css
+   o incluir como <link> después de styles.css
+═══════════════════════════════════════════════════ */
+
+/* ── Alias modal-backdrop → overlay ─────────────── */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0; z-index: 900;
+  background: rgba(46,26,14,0.6); backdrop-filter: blur(8px);
+  align-items: center; justify-content: center; padding: 1rem;
+}
+.modal-backdrop.open { display: flex; }
+
+/* ── Alias modal-hd → modal-head ────────────────── */
+.modal-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.5rem 1.75rem 1rem; border-bottom: 1px solid var(--sand);
+  position: sticky; top:0; background: var(--white); z-index:1;
+}
+.modal-dark .modal-hd { background: var(--dark-card2); border-color: var(--dark-border); }
+.modal-hd h3 { font-size: 1.1rem; }
+
+/* ── Alias modal-ft → modal-foot ────────────────── */
+.modal-ft {
+  padding: 1rem 1.75rem 1.5rem;
+  display: flex; gap: 0.75rem; justify-content: flex-end;
+  border-top: 1px solid var(--sand);
+}
+.modal-dark .modal-ft { border-color: var(--dark-border); }
+
+/* ── Alias modal-sm ──────────────────────────────── */
+.modal-sm { width: min(400px, 100%); }
+
+/* ── Alias table-wrap / table-dark ──────────────── */
+.table-wrap { overflow-x: auto; border-radius: var(--r-lg); border: 1px solid rgba(46,26,14,0.08); }
+.table-dark { background: var(--dark-card); }
+.table-dark thead th { background: var(--dark-bg); color: var(--dark-muted); font-size: 0.71rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.8rem 1rem; white-space: nowrap; }
+.table-dark tbody td { border-color: rgba(255,255,255,0.05); color: var(--dark-text); padding: 0.9rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; white-space: nowrap; }
+.table-dark tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+/* ── admin-footer ────────────────────────────────── */
+.admin-footer {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+  padding: 0.85rem 1.75rem; border-top: 1px solid rgba(255,107,15,0.15);
+  background: rgba(10,6,3,0.6); font-size: 0.73rem; color: rgba(255,255,255,0.28);
+  font-family: var(--font-body); flex-shrink: 0;
+}
+
+/* ── cal-light (alias de cal sin dark) ──────────── */
+.cal-light .cal-nav-btn { border-color: var(--sand-mid); color: var(--mist); }
+.cal-light .cal-nav-btn:hover { border-color: var(--fire); color: var(--fire); background: var(--fire-soft); }
+.cal-light .cal-title { color: var(--bark); }
+.cal-light .cal-wday  { color: var(--mist-light); }
+.cal-light .cal-day   { color: var(--bark); }
+
+/* ── Fix text visibility in white modals inside .admin-shell ── */
+.admin-shell .modal .input,
+.admin-shell .modal .select,
+.admin-shell .modal .textarea {
+  color: var(--bark) !important;
+  background: var(--white) !important;
+  border-color: var(--sand-mid) !important;
+}
+.admin-shell .modal .input:focus,
+.admin-shell .modal .select:focus,
+.admin-shell .modal .textarea:focus {
+  border-color: var(--fire) !important;
+}
+.admin-shell .modal .input::placeholder,
+.admin-shell .modal .textarea::placeholder {
+  color: var(--mist-light) !important;
+}
+.admin-shell .modal .label {
+  color: var(--mist) !important;
+}
+.admin-shell .modal {
+  color: var(--bark);
+}
+
+
+/* ═══════════════════════════════════════════════════
+   APP-LIKE LAYOUT FOR ADMIN
+   Makes the admin panel behave like a fixed-viewport app:
+   sidebar + topbar stay fixed, content area fills remaining space,
+   and each a-section scrolls independently.
+═══════════════════════════════════════════════════ */
+body:has(.admin-shell) { overflow: hidden; height: 100vh; margin: 0; }
+.admin-shell { height: 100vh; overflow: hidden; display: flex; }
+.admin-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.admin-content {
+  flex: 1;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.a-section { flex: 1; display: none; flex-direction: column; overflow-y: auto; min-height: 0; }
+.a-section.active { display: flex !important; }
+
+/* Table containers fill remaining vertical space */
+.table-wrap { flex-shrink: 0; overflow-x: auto; overflow-y: auto; min-height: 100px; -webkit-overflow-scrolling: touch; }
+.t-wrap     { flex-shrink: 0; overflow-x: auto; overflow-y: auto; min-height: 100px; -webkit-overflow-scrolling: touch; }
+
+
+/* ═══════════════════════════════════════════════════
+   ADMIN — MOBILE HAMBURGER MENU
+═══════════════════════════════════════════════════ */
+.mobile-menu-btn {
+  display: none !important;
+  background: none; border: none;
+  color: var(--dark-text); cursor: pointer;
+  padding: 4px; border-radius: var(--r-sm);
+  transition: color 0.15s;
+}
+.mobile-menu-btn:hover { color: var(--fire); }
+
+/* Sidebar overlay backdrop for mobile */
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0; z-index: 49;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+}
+
+@media (max-width: 640px) {
+  .mobile-menu-btn { display: flex !important; }
+
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 60 !important;
+  }
+  .sidebar-open .sidebar {
+    transform: translateX(0) !important;
+  }
+  .sidebar-open .sidebar-overlay { display: block; }
+
+  .admin-body { margin-left: 0 !important; }
+  .topbar { padding: 0 1rem; }
+  .admin-content { padding: 0.75rem !important; }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   ADMIN — WIDTH RESPONSIVE (monitor/laptop)
+   Compacts table cells and controls as width shrinks.
+═══════════════════════════════════════════════════ */
+@media (max-width: 1400px) {
+  .table-dark tbody td { padding: 0.6rem 0.75rem; font-size: 0.82rem; }
+  .table-dark thead th { padding: 0.6rem 0.75rem; font-size: 0.68rem; }
+  .admin-content { padding: 1.25rem; }
+}
+
+@media (max-width: 1100px) {
+  .table-dark tbody td { padding: 0.45rem 0.55rem; font-size: 0.78rem; }
+  .table-dark thead th { padding: 0.45rem 0.55rem; font-size: 0.64rem; }
+  .admin-content { padding: 1rem; }
+  .btn-sm { padding: 0.32rem 0.65rem; font-size: 0.72rem; }
+
+  /* page-hd: stack title and button vertically */
+  .page-hd { flex-direction: column; align-items: flex-start !important; gap: 0.5rem !important; }
+
+  /* fbar: let inputs shrink */
+  .fbar .input, .fbar .select { min-width: 120px !important; }
+}
+
+@media (max-width: 900px) {
+  .table-dark tbody td { padding: 0.35rem 0.45rem; font-size: 0.75rem; }
+  .table-dark thead th { padding: 0.35rem 0.45rem; font-size: 0.6rem; }
+
+  /* fbar: stack into rows */
+  .fbar { flex-wrap: wrap; gap: 0.5rem; padding: 0.65rem 0.85rem; }
+  .fbar .input, .fbar .select { min-width: 100px !important; flex: 1 1 auto; }
+
+  /* Grid sections compact */
+  .g3 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important; gap: 0.85rem !important; }
+  .g2 { grid-template-columns: 1fr !important; }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   ADMIN — HEIGHT RESPONSIVE (short screens / laptops)
+   Compacts vertical spacing so rows + pagination fit.
+═══════════════════════════════════════════════════ */
+@media (max-height: 850px) {
+  .table-dark tbody td { padding-top: 0.45rem !important; padding-bottom: 0.45rem !important; }
+  .table-dark thead th { padding-top: 0.45rem !important; padding-bottom: 0.45rem !important; }
+  .a-section .page-hd { margin-bottom: 0.75rem !important; }
+  .admin-content { padding: 0.85rem !important; }
+  .fbar { margin-bottom: 0.75rem !important; padding-top: 0.65rem !important; padding-bottom: 0.65rem !important; }
+  .topbar { height: 48px !important; }
+  .admin-footer { padding: 0.5rem 1.25rem !important; }
+}
+
+@media (max-height: 700px) {
+  .table-dark tbody td { padding-top: 0.3rem !important; padding-bottom: 0.3rem !important; font-size: 0.75rem; }
+  .table-dark thead th { padding-top: 0.3rem !important; padding-bottom: 0.3rem !important; font-size: 0.6rem; }
+  .a-section .page-hd { margin-bottom: 0.5rem !important; }
+  .a-section .page-hd h2 { font-size: 1.15rem; }
+  .a-section .page-hd p { font-size: 0.72rem; }
+  .fbar { margin-bottom: 0.5rem !important; padding: 0.45rem 0.75rem !important; }
+  .admin-content { padding: 0.5rem !important; }
+  .topbar { height: 42px !important; }
+  .btn-sm { padding: 0.22rem 0.5rem !important; font-size: 0.68rem; }
+  .admin-footer { padding: 0.35rem 1rem !important; font-size: 0.65rem; }
+}
+
+@media (max-height: 600px) {
+  .a-section .page-hd p { display: none; }
+  .a-section .page-hd h2 { font-size: 1rem; }
+  .a-section .page-hd { margin-bottom: 0.35rem !important; }
+  .topbar { height: 38px !important; }
+  .admin-footer { display: none; }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   ADMIN — DASHBOARD CARDS RESPONSIVE
+═══════════════════════════════════════════════════ */
+@media (max-width: 1100px) {
+  .ov-card-compact { padding: 0.85rem; }
+  .ov-card-compact .ov-val { font-size: 1.15rem; }
+  .stat-box { padding: 0.85rem 1rem; }
+  .stat-val { font-size: 1.6rem !important; }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   CLIENTE — RESPONSIVE
+   Steps bar, wizard layout, cabin grids, price sidebar
+═══════════════════════════════════════════════════ */
+
+/* Steps bar: horizontal scroll on narrow screens */
+@media (max-width: 768px) {
+  .steps {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0.75rem 1rem !important;
+    gap: 0;
+  }
+  .steps::-webkit-scrollbar { display: none; }
+  .step { flex-shrink: 0; min-width: max-content; padding: 0.4rem 0.5rem; }
+  .step-sub { display: none; }
+  .step-line { min-width: 20px; }
+
+  /* Wizard layout: single column */
+  .wizard-layout { grid-template-columns: 1fr !important; }
+  .avail-layout  { grid-template-columns: 1fr !important; }
+
+  /* Price sidebar: full width below */
+  .price-sidebar { position: static !important; }
+
+  /* Cabana grid: 2 columns on tablet */
+  .cabana-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .paquete-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Wrap */
+  .wrap { padding: 0 1rem 2rem !important; }
+}
+
+@media (max-width: 480px) {
+  .cabana-grid { grid-template-columns: 1fr !important; }
+  .paquete-grid { grid-template-columns: 1fr !important; }
+
+  .header-cliente { padding: 0 0.75rem; height: 52px; }
+  .hc-name { font-size: 0.85rem; }
+
+  .step-num { width: 28px; height: 28px; font-size: 0.75rem; }
+  .step-label { font-size: 0.72rem; }
+
+  /* Info cards */
+  .info-cards { gap: 0.5rem; }
+  .info-card { padding: 0.85rem 1rem; }
+
+  /* Room gallery */
+  .room-gallery { grid-template-columns: 1fr !important; }
+}
+
+/* Cliente header responsive */
+@media (max-width: 600px) {
+  .hc-right { gap: 0.35rem; }
+  .hc-right .btn { font-size: 0.72rem; padding: 0.3rem 0.6rem; }
+  .hc-right .user-pill { font-size: 0.72rem; padding: 0.2rem 0.55rem; }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   LOGIN PAGE — RESPONSIVE
+   login-shell adapts to smaller viewports gracefully
+═══════════════════════════════════════════════════ */
+@media (max-width: 680px) {
+  .login-shell { grid-template-columns: 1fr !important; }
+  .login-deco  { display: none !important; }
+  .login-form-panel { padding: 1.5rem 1.25rem !important; }
+}
+
+@media (max-height: 700px) {
+  .login-form-panel {
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 1.5rem 1.5rem !important;
+  }
+  .pane-head h2 { font-size: 1.2rem; }
+  .field { margin-bottom: 0.8rem; }
+}
+
+@media (max-width: 400px) {
+  .login-shell { border-radius: 0 !important; width: 100% !important; }
+  .login-form-panel { padding: 1.25rem 1rem !important; }
+  .lf-tab { font-size: 0.78rem; padding: 0.6rem 0.4rem; }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   LANDING PAGE — RESPONSIVE ENHANCEMENTS
+   Beyond what landing.css already handles
+═══════════════════════════════════════════════════ */
+
+/* Header actions: hide text on small screens, keep icons */
+@media (max-width: 768px) {
+  .header-actions .btn { font-size: 0.78rem; padding: 0.5rem 0.85rem; }
+  .hero { min-height: 500px; }
+  .hero-content { padding: 0 1rem; }
+  .hero-subtitle { font-size: 0.95rem; margin-bottom: 1.5rem; }
+  .hero-stats { margin-top: 1.5rem; padding-top: 1rem; }
+}
+
+@media (max-width: 480px) {
+  .hero { min-height: 420px; height: auto; padding: 4rem 0 3rem; }
+  .hero-badge { font-size: 0.68rem; padding: 0.35rem 0.8rem; margin-bottom: 1rem; }
+  .hero-cta { flex-direction: column; align-items: center; gap: 0.65rem; }
+  .hero-cta .btn, .hero-cta-primary, .btn-hero-outline { width: 100%; max-width: 280px; text-align: center; }
+  .hero-scroll { display: none; }
+
+  /* Sections vertical spacing */
+  .about, .cabanas, .experiencia, .paquetes, .testimonios, .gallery, .final-cta, .servicios {
+    padding: 3rem 0 !important;
+  }
+  .section-header { margin-bottom: 2rem; }
+  .section-header p { font-size: 0.9rem; }
+}
+
+/* Landing footer on small screens */
+@media (max-width: 600px) {
+  .footer-content { grid-template-columns: 1fr !important; gap: 1.5rem; }
+  .landing-footer { padding: 2.5rem 0 1.5rem; }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   GLOBAL — TOUCH & ACCESSIBILITY
+═══════════════════════════════════════════════════ */
+
+/* Better touch targets on all screens */
+@media (pointer: coarse) {
+  .btn { min-height: 40px; }
+  .btn-sm { min-height: 34px; }
+  .sb-item { padding: 0.85rem 1.25rem !important; }
+  .tab-btn { padding: 0.85rem 1.3rem; }
+}
+
+/* Ensure modals never overflow the viewport */
+.overlay, .modal-backdrop {
+  padding: 0.5rem;
+}
+.modal {
+  max-height: 95vh;
+  max-width: 95vw;
+}

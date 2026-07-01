@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pago Exitoso - Kafe Ancestral</title>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body style="display:flex; justify-content:center; align-items:center; height:100vh; background:var(--bg-color);">
+  <div style="text-align:center; padding:3rem; background:var(--card-bg); border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); max-width:500px; width:90%;">
+    <div style="font-size:4rem; color:var(--success); margin-bottom:1rem;">✅</div>
+    <h1 style="color:var(--text-color); font-family:var(--font-display); margin-bottom:1rem;">¡Pago Exitoso!</h1>
+    <p style="color:var(--text-muted); margin-bottom:2rem;">Tu reserva ha sido confirmada. En breve recibirás un correo con los detalles.</p>
+    <a href="cliente.html" class="btn btn-fire" id="btn-volver" style="display:inline-block; text-decoration:none;">Volver a mi panel</a>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('source') === 'admin') {
+      const btn = document.getElementById('btn-volver');
+      btn.href = 'admin.html';
+      btn.textContent = 'Volver al panel de control';
+    }
+  </script>
+</body>
+</html>

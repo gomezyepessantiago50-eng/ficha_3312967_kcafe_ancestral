@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Admin — Kafe Ancestral</title>
+  <link rel="stylesheet" href="css/variables.css"/>
+  <link rel="stylesheet" href="css/reset.css"/>
+  <link rel="stylesheet" href="css/styles.css?v=2"/>
+  <link rel="stylesheet" href="css/fixes.css"/>
+  <!-- Flatpickr CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+  <style>
+    :root { color-scheme: dark; }
+    body { background: var(--dark-bg); }
+
+    .ov-card {
+      background: var(--dark-card2); border: 1px solid var(--dark-border);
+      border-radius: var(--r-xl); padding: 1.25rem 1.5rem;
+      display: flex; gap: 1rem; align-items: center; position: relative; overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .ov-card:hover { box-shadow: var(--sh-md); }
+    .ov-accent { position: absolute; top:0; left:0; width:3px; height:100%; border-radius:0 2px 2px 0; }
+    .ov-ico  { font-size: 1.8rem; }
+    .ov-val  { font-family: var(--font-display); font-size: 1.45rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-weight: 800; color: #fff; line-height: 1; }
+    .ov-lbl  { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dark-muted); margin-top: 0.2rem; }
+
+    .r-row {
+      display: flex; align-items: center; gap: 1rem; padding: 0.8rem 0;
+      border-bottom: 1px solid var(--dark-border);
+    }
+    .r-row:last-child { border-bottom: none; }
+    .r-num  { width: 38px; height: 38px; border-radius: var(--r-md); flex-shrink: 0; background: rgba(232,93,4,0.12); color: var(--fire); font-family: var(--font-display); font-size: 0.78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; text-align: center; }
+    .r-info h4 { font-size: 0.86rem; color: #fff; margin-bottom: 0.15rem; }
+    .r-info p  { font-size: 0.77rem; color: var(--dark-muted); }
+    .r-right { margin-left: auto; text-align: right; }
+
+    .fbar {
+      display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+      background: var(--dark-card2); border: 1px solid var(--dark-border);
+      border-radius: var(--r-lg); padding: 0.9rem 1.25rem; margin-bottom: 1.25rem;
+    }
+    .fbar .select, .fbar .input {
+      background: rgba(255, 255, 255,0.08);
+      border-color: var(--dark-border);
+      color: #fff;
+      width: auto;
+      min-width: 160px;
+    }
+    .fbar .select option {
+      color: #fff;
+      background: #1a0f0a;
+    }
+    .fbar .select:focus, .fbar .input:focus { border-color: var(--fire); }
+
+    .blq-item {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0.85rem 1rem; background: rgba(255, 255, 255,0.03);
+      border: 1px solid var(--dark-border); border-radius: var(--r-lg);
+      transition: border-color 0.15s;
+    }
+    .blq-item:hover { border-color: rgba(255, 255, 255,0.12); }
+    .blq-ico { width: 38px; height: 38px; border-radius: var(--r-md); background: rgba(192,57,43,0.12); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .blq-txt h4 { font-size: 0.88rem; color: #fff; margin-bottom: 0.15rem; }
+    .blq-txt p  { font-size: 0.76rem; color: var(--dark-muted); }
+
+    .cab-card {
+      background: var(--dark-card2); border: 1px solid var(--dark-border);
+      border-radius: var(--r-xl); overflow: hidden; transition: all 0.2s;
+    }
+    .cab-card:hover { box-shadow: var(--sh-lg); transform: translateY(-2px); border-color: rgba(232,93,4,0.2); }
+    .cab-img { height: 130px; display: flex; align-items: center; justify-content: center; font-size: 2.8rem; }
+    .cab-body { padding: 1.1rem; }
+    .cab-body h3 { color: #fff; font-size: 0.95rem; margin-bottom: 0.25rem; }
+    .cab-body p  { font-size: 0.78rem; color: var(--dark-muted); margin-bottom: 0.75rem; }
+    .cab-foot { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+
+    /* Estilos para el modal de nueva reserva */
+    .paq-opt {
+      display: block; width: 100%; text-align: center; padding: 1rem;
+      background: rgba(255, 255, 255, 0.03); border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--r-lg); cursor: pointer; transition: all 0.2s;
+      color: #fff; font-family: inherit; font-size: inherit; position: relative;
+    }
+    .paq-opt:hover { border-color: rgba(232, 93, 4, 0.4); }
+    .paq-opt.selected { background: rgba(232, 93, 4, 0.2); border-color: var(--fire); }
+    .paq-opt.selected::after { 
+      content: '✓'; position: absolute; top: 0.5rem; right: 0.5rem; 
+      width: 20px; height: 20px; border-radius: 50%; background: var(--fire); 
+      color: #fff; display: flex; align-items: center; justify-content: center; 
+      font-size: 0.7rem; font-weight: 700;
+    }
+    .paq-ico { font-size: 1.8rem; margin-bottom: 0.3rem; }
+    .paq-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.2rem; color: #fff; }
+    .paq-desc { font-size: 0.75rem; color: var(--dark-muted); margin-bottom: 0.3rem; }
+    .paq-price { display: block; margin-top: 0.35rem; font-size: 0.8rem; color: var(--fire) !important; font-weight: 600; }
+
+    .srv-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    .srv-chip {
+      background: #fff;
+      border: 2px solid transparent;
+      border-radius: var(--r-xl);
+      padding: 1.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #000;
+      font-weight: 700;
+      font-size: 1rem;
+      position: relative;
+      width: 100%;
+      font-family: inherit;
+      text-align: center;
+    }
+    .srv-chip:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,0.15); }
+    .srv-chip.selected { background: var(--fire) !important; border-color: var(--fire) !important; color: #fff !important; }
+    .srv-chip.selected .srv-price { color: #fff !important; opacity: 1; }
+    .srv-price { font-size: 0.9rem; opacity: 0.85; font-weight: 500; }
+    .srv-chip.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+    .srv-counter-btn { cursor: pointer; background: rgba(255,255,255,0.2); padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: bold; }
+    .srv-chip:not(.selected) .srv-counter-btn { background: rgba(0,0,0,0.1); color: #000; }
+
+    .price-card { background: var(--dark-card2); border: 1px solid var(--dark-border); border-radius: var(--r-xl); }
+    .price-header { background: linear-gradient(135deg, rgba(232, 93, 4, 0.2), rgba(192, 57, 43, 0.1)); padding: 1rem; border-bottom: 1px solid var(--dark-border); }
+    .price-header h3 { color: #fff; font-size: 0.95rem; margin: 0 0 0.1rem 0; }
+    .price-header p { color: var(--dark-muted); font-size: 0.75rem; margin: 0; }
+    .price-body { padding: 1rem; font-size: 0.85rem; }
+    .price-row { 
+      display: flex; justify-content: space-between; padding: 0.4rem 0;
+      border-bottom: 1px solid var(--dark-border); color: #fff;
+    }
+    .price-row:last-child { border-bottom: none; }
+    .price-row .pk { color: var(--dark-muted); }
+    .price-row .pv { font-weight: 600; color: #fff; }
+    .price-total-row { 
+      display: flex; justify-content: space-between; padding: 1rem;
+      background: rgba(232, 93, 4, 0.1); border-top: 2px solid rgba(232, 93, 4, 0.3);
+    }
+    .pt-l { color: #fff; font-size: 0.88rem; font-weight: 700; }
+    .pt-v { color: var(--fire); font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; }
+
+    /* ── Fix calendario oscuro: estados visibles ─────── */
+    .cal-dark .cal-day.cal-reserved {
+      background: rgba(45,122,79,0.25) !important;
+      color: #6fcf97 !important;
+      font-weight: 600;
+    }
+    .cal-dark .cal-day.cal-blocked {
+      background: rgba(192,57,43,0.25) !important;
+      color: #e57373 !important;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    .cal-dark .cal-day.cal-today {
+      background: var(--fire) !important;
+      color: #fff !important;
+      font-weight: 700;
+      border-radius: 50%;
+    }
+
+    /* ── Fix bloqueos: fechas pasadas no clickeables ──── */
+    .cal-dark .cal-day.cal-past {
+      opacity: 0.25;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* ── Sidebar SVG icons ───────────────────── */
+    .sb-item svg { width:18px; height:18px; flex-shrink:0; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+    /* ── Campanita ───────────────────────────── */
+    .notif-btn {
+      position: relative;
+      width: 36px; height: 36px;
+      border-radius: var(--r-md);
+      border: 1px solid var(--dark-border);
+      background: rgba(255, 255, 255,0.04);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; color: var(--dark-muted);
+    }
+    .notif-btn:hover { border-color: var(--fire); color: var(--fire); background: rgba(232,93,4,0.08); }
+    .notif-btn svg   { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+    .notif-btn.has-new { color: var(--fire); border-color: rgba(232,93,4,0.4); animation: bellPulse 1s ease 3; }
+    .notif-btn.has-new::after {
+      content: '';
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 8px;
+      height: 8px;
+      background-color: var(--fire);
+      border-radius: 50%;
+    }
+    @keyframes bellPulse {
+      0%,100% { transform: rotate(0deg); }
+      20%     { transform: rotate(-12deg); }
+      40%     { transform: rotate(12deg); }
+      60%     { transform: rotate(-8deg); }
+      80%     { transform: rotate(8deg); }
+    }
+
+    /* ── Tarjetas de Reserva (res-item) ─────────────── */
+    .res-list { margin-top: 1rem; }
+    .res-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1.25rem;
+      background: var(--dark-card2);
+      border-radius: var(--r-lg);
+      border: 1px solid var(--dark-border);
+      box-shadow: var(--sh-sm);
+      margin-bottom: 0.75rem;
+      transition: box-shadow 0.2s;
+    }
+    .res-item:hover {
+      box-shadow: var(--sh-md);
+    }
+    .res-info {
+      flex: 1;
+    }
+    .res-info h4 {
+      font-size: 0.95rem;
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .res-info p {
+      font-size: 0.82rem;
+      color: var(--dark-muted);
+      margin: 0;
+    }
+    .res-actions {
+      flex-shrink: 0;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    /* ── Panel de notificaciones ─────────────── */
+    .notif-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      width: 320px;
+      background: var(--dark-card2);
+      border: 1px solid var(--dark-border);
+      border-radius: var(--r-xl);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+      z-index: 200;
+      overflow: hidden;
+      animation: modalIn 0.2s var(--ease-spring);
+    }
+    .notif-panel.open { display: block; }
+    .notif-panel-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem 0.75rem;
+      border-bottom: 1px solid var(--dark-border);
+    }
+    .notif-panel-hd h4 { color: #fff; font-size: 0.88rem; margin: 0; }
+    .notif-mark-all {
+      font-size: 0.72rem; color: var(--fire); background: none; border: none;
+      cursor: pointer; font-family: inherit; padding: 0;
+    }
+    .notif-mark-all:hover { text-decoration: underline; }
+    .notif-list { max-height: 320px; overflow-y: auto; }
+    .notif-item {
+      display: flex; gap: 0.75rem; align-items: flex-start;
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255,0.04);
+      transition: background 0.15s;
+    }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-item:hover { background: rgba(255, 255, 255,0.03); }
+    .notif-item.unread { background: rgba(232,93,4,0.06); }
+    .notif-ico {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(232,93,4,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+    }
+    .notif-txt { flex: 1; }
+    .notif-txt p { font-size: 0.82rem; color: #fff; margin: 0 0 0.2rem; line-height: 1.45; }
+    .notif-txt span { font-size: 0.72rem; color: var(--dark-muted); }
+    .notif-empty { padding: 2rem; text-align: center; color: var(--dark-muted); font-size: 0.85rem; }
+    .notif-wrap { position: relative; }
+    
+    /* Fix for select options text color */
+    select option { background-color: var(--dark-card2); color: #fff; }
+  </style>
+</head>
+<body>
+
+<div class="admin-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo" style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%;">
+      <div style="display: flex; align-items: center; gap: 0.8rem; overflow: hidden;">
+        <div class="sb-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 20 2 20 2s-1.7 5.5-3 9.4c-.7 2.1-1.6 3.9-2.8 5.4"/><path d="M10.7 13.7c-2.3-1-4.7-1.7-7.4-2.4"/></svg></div>
+        <div class="sb-logo-text">
+          <div class="sb-name">Kafe Ancestral</div>
+          <div class="sb-role">Panel Admin</div>
+        </div>
+      </div>
+      <button class="sb-toggle-btn" onclick="toggleSidebar()" title="Minimizar menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; pointer-events: none;"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Principal</div>
+      <button class="sb-item active" onclick="showSec('dashboard',this)" data-tooltip="Panel General">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="sb-text">Panel General</span>
+      </button>
+      <button class="sb-item" onclick="showSec('usuarios',this)" data-tooltip="Usuarios">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span class="sb-text">Usuarios</span>
+      </button>
+      <button class="sb-item" onclick="showSec('clientes',this)" data-tooltip="Clientes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <span class="sb-text">Clientes</span>
+      </button>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Gestión</div>
+      <button class="sb-item" onclick="showSec('cabanas',this)" data-tooltip="Cabañas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="sb-text">Cabañas</span>
+      </button>
+
+      <button class="sb-item" onclick="showSec('paquetes',this)" data-tooltip="Paquetes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span class="sb-text">Paquetes</span>
+      </button>
+      <button class="sb-item" onclick="showSec('servicios',this)" data-tooltip="Servicios">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="sb-text">Servicios</span>
+      </button>
+      <button class="sb-item" onclick="showSec('reservas',this)" data-tooltip="Reservas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+        <span class="sb-text">Reservas</span>
+        <span class="sb-badge" id="nb-pend"></span>
+      </button>
+    </div>
+    <div class="sb-footer">
+      <div class="sb-version">v1.0.0 · Kafe Ancestral © 2025</div>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" onclick="document.body.classList.remove('sidebar-open')"></div>
+
+  <div class="admin-body">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <button class="mobile-menu-btn" onclick="document.body.classList.toggle('sidebar-open')" title="Abrir menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span class="topbar-title" id="topbar-crumb">Panel General</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <div class="notif-wrap">
+          <button class="notif-btn" id="notif-btn" onclick="toggleNotifPanel()" title="Notificaciones">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </button>
+          <div class="notif-panel" id="notif-panel">
+            <div class="notif-panel-hd">
+              <h4>Notificaciones</h4>
+              <div style="display:flex;gap:0.5rem;">
+                <button class="notif-mark-all" onclick="marcarTodasLeidas()">Marcar como leídas</button>
+                <button class="notif-mark-all" onclick="limpiarNotificaciones()">Limpiar</button>
+              </div>
+            </div>
+            <div class="notif-list" id="notif-list">
+              <div class="notif-empty">Sin notificaciones nuevas</div>
+            </div>
+          </div>
+        </div>
+        <div class="user-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <span id="admin-username">Admin</span></div>
+        <button class="btn btn-sm btn-dark-outline" onclick="doLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Salir</button>
+      </div>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- DASHBOARD -->
+      <div class="a-section active" id="sec-dashboard">
+        <div class="page-hd" style="display:flex;justify-content:space-between;align-items:center;">
+          <div><h2>Panel General</h2><p>Resumen general de operaciones</p></div>
+          <div class="dashboard-controls" style="display:flex; gap:1rem; align-items:center; margin-right:1.5rem;">
+            <div class="time-filters" style="display:flex; background:var(--dark-card2); border-radius:8px; overflow:hidden; border:1px solid rgba(255, 255, 255,0.05);">
+              <button class="t-filter active" data-range="todo" onclick="loadDashboard(this.dataset.range)">Todo</button>
+              <button class="t-filter" data-range="hoy" onclick="loadDashboard(this.dataset.range)">Hoy</button>
+              <button class="t-filter" data-range="semana" onclick="loadDashboard(this.dataset.range)">1 Sem</button>
+              <button class="t-filter" data-range="mes" onclick="loadDashboard(this.dataset.range)">1 Mes</button>
+              <button class="t-filter" data-range="3meses" onclick="loadDashboard(this.dataset.range)">3 Meses</button>
+            </div>
+            <button class="btn btn-sm" onclick="exportarExcelReservas()" style="background:var(--success-bg); color:var(--success); border:1px solid var(--success); display:flex; align-items:center; gap:0.5rem; height:100%; padding:0.5rem 1rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Excel
+            </button>
+          </div>
+        </div>
+        <style>
+          .t-filter {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            color: var(--dark-muted);
+            cursor: pointer;
+            transition: color 0.2s ease;
+          }
+          .t-filter:not(:first-child) {
+            border-left: 1px solid rgba(255, 255, 255,0.05);
+          }
+          .t-filter:hover { color: #fff; }
+          .t-filter.active {
+            color: var(--fire);
+            font-weight: 600;
+          }
+          .ov-card-compact {
+            background: var(--dark-card2);
+            border: 1px solid rgba(232,93,4,0.15);
+            border-radius: 16px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+          }
+          .ov-card-compact:hover { box-shadow: var(--sh-md); transform: translateY(-2px); }
+          .ov-card-compact .ov-accent {
+            position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+          }
+          .ov-card-compact .ov-ico {
+            display: flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px; border-radius: 8px;
+            background: rgba(255, 255, 255,0.05);
+          }
+          .ov-card-compact .ov-val { font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1; }
+          .ov-card-compact .ov-lbl { font-size: 0.7rem; color: var(--dark-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        </style>
+
+        <!-- FILA 1: Top Doughnuts -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+          <div class="card-dark card-dark-pad" style="border-radius: 16px;">
+            <h3 style="color: #fff;font-size:0.9rem;margin-bottom:1rem;text-transform:uppercase;letter-spacing:1px;"><span style="color:var(--fire); margin-right:6px;">●</span> Top Cabañas</h3>
+            <div style="position: relative; height: 120px; width: 100%;">
+              <canvas id="cabanasChart"></canvas>
+            </div>
+          </div>
+          <div class="card-dark card-dark-pad" style="border-radius: 16px;">
+            <h3 style="color: #fff;font-size:0.9rem;margin-bottom:1rem;text-transform:uppercase;letter-spacing:1px;"><span style="color:var(--amber); margin-right:6px;">●</span> Top Paquetes</h3>
+            <div style="position: relative; height: 120px; width: 100%;">
+              <canvas id="paquetesChart"></canvas>
+            </div>
+          </div>
+          <div class="card-dark card-dark-pad" style="border-radius: 16px;">
+            <h3 style="color: #fff;font-size:0.9rem;margin-bottom:1rem;text-transform:uppercase;letter-spacing:1px;"><span style="color:#52c686; margin-right:6px;">●</span> Top Servicios</h3>
+            <div style="position: relative; height: 120px; width: 100%;">
+              <canvas id="serviciosChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- FILA 2: KPIs & Barras -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+          <!-- Left: KPIs en grid 2x2 -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="ov-card-compact">
+              <div class="ov-accent" style="background:var(--fire)"></div>
+              <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                <span class="ov-ico" style="color:var(--fire);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14h6M9 18h4"/></svg>
+                </span>
+                <div class="ov-lbl">Reservas</div>
+              </div>
+              <div class="ov-val" id="ov-total">—</div>
+            </div>
+            <div class="ov-card-compact">
+              <div class="ov-accent" style="background:var(--success)"></div>
+              <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                <span class="ov-ico" style="color:var(--success);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </span>
+                <div class="ov-lbl">Ventas</div>
+              </div>
+              <div class="ov-val" id="ov-ventas" style="font-size:1.15rem;">—</div>
+            </div>
+
+            <div class="ov-card-compact">
+              <div class="ov-accent" style="background:var(--mist-light)"></div>
+              <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                <span class="ov-ico" style="color:var(--mist-light);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </span>
+                <div class="ov-lbl">Bloqueos</div>
+              </div>
+              <div class="ov-val" id="ov-bloq">—</div>
+            </div>
+          </div>
+          <!-- Right: Bar Chart -->
+          <div class="card-dark card-dark-pad" style="border-radius: 16px; display:flex; flex-direction:column; grid-column: span 2;">
+            <h3 style="color: #fff;font-size:0.9rem;margin-bottom:1rem;text-transform:uppercase;letter-spacing:1px;"><span style="color:#e85d04; margin-right:6px;">●</span> Reservas Mensuales</h3>
+            <div style="position: relative; flex-grow: 1; min-height: 160px; width: 100%;">
+              <canvas id="reservasChart"></canvas>
+            </div>
+          </div>
+        </div>
+        <!-- FILA 3: Área Chart & Calendario -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; align-items: start;">
+          <!-- Left: Area Chart (Ingresos) y Llegadas -->
+          <div class="stack">
+            <div class="card-dark card-dark-pad" style="border-radius: 16px; display:flex; flex-direction:column;">
+              <h3 style="color: #fff;font-size:0.9rem;margin-bottom:1rem;text-transform:uppercase;letter-spacing:1px;"><span style="color:var(--sand); margin-right:6px;">●</span> Ingresos Mensuales</h3>
+              <div style="position: relative; height: 350px; width: 100%;">
+                <canvas id="ingresosChart"></canvas>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="card-dark card-dark-pad">
+                <h3 style="color: #fff;font-size:1rem;margin-bottom:1rem;" id="cal-day-title">Selecciona un día</h3>
+                <div id="cal-day-body"><p style="color:var(--dark-muted);font-size:0.85rem;">Haz clic en un día del calendario para ver las reservas de esa fecha.</p></div>
+              </div>
+
+              <div class="card-dark card-dark-pad">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+                  <h3 style="color: #fff;font-size:1rem;">Próximas Llegadas</h3>
+                  <span class="badge badge-fire" id="prox-count">0</span>
+                </div>
+                <div id="prox-list"><p style="color:var(--dark-muted);font-size:0.85rem;">Cargando…</p></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Calendario -->
+          <div class="card-dark card-dark-pad" style="border-radius: 16px; height: 100%;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:1rem;">
+              <h3 style="color: #fff;font-size:0.9rem;margin:0;text-transform:uppercase;letter-spacing:1px;"><span style="color:var(--mist); margin-right:6px;">●</span> Calendario</h3>
+              <div style="display:flex;gap:0.5rem;align-items:center;">
+                <select class="select" id="cal-cab-filter" onchange="onCalCabChange()" style="min-width:140px;background:var(--dark-card2);color: #fff;border:1px solid var(--dark-border);font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:var(--r-md);">
+                  <option value="">Todas las cabañas</option>
+                </select>
+                <button class="btn btn-sm btn-dark-outline" onclick="prevMonth()">←</button>
+                <button class="btn btn-sm btn-dark-outline" onclick="nextMonth()">→</button>
+              </div>
+            </div>
+            <div class="cal-dark" id="admin-cal" style="font-size: 0.85rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESERVAS -->
+      <div class="a-section" id="sec-reservas">
+        <div class="page-hd">
+          <div><h2>Reservas</h2><p>Gestiona todas las reservas</p></div>
+          <button class="btn btn-fire" onclick="adminAbrirNuevaReserva()">+ Nueva Reserva</button>
+        </div>
+        <div class="fbar">
+          <input type="text" class="input input-dark" id="fil-res-q" placeholder="Buscar por documento o nombre..." oninput="resLiveSearch()" style="min-width: 250px;" />
+          <select class="select" id="fil-estado" onchange="loadReservas(1)">
+            <option value="">Todos los estados</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="cancelada">Cancelada</option>
+            <option value="completada">Completada</option>
+          </select>
+          <input type="date" class="input input-dark" id="fil-fecha" onchange="loadReservas(1)"/>
+          <button class="btn btn-sm btn-dark-outline" onclick="clearFil()">Limpiar</button>
+          <button class="btn btn-sm btn-fire" onclick="verTodasReservas()">Ver todas</button>
+          <span class="badge" id="res-count" style="margin-left:auto;"></span>
+        </div>
+        <div id="res-list-container" class="res-list">
+          <div class="price-empty"><p>Cargando…</p></div>
+        </div>
+        <div id="pagination-controls"></div>
+      </div>
+
+
+      <!-- CABAÑAS -->
+      <div class="a-section" id="sec-cabanas">
+        <div class="page-hd">
+          <div><h2>Cabañas</h2><p>Gestión de alojamientos</p></div>
+          <button class="btn btn-fire" onclick="adminNuevaCabana()">+ Nueva Cabaña</button>
+        </div>
+        <div class="g3" id="cab-grid">
+          <div style="grid-column: 1 / -1; text-align:center;color:var(--dark-muted);padding:3rem;">Cargando cabañas...</div>
+        </div>
+        <div id="cab-pagination"></div>
+      </div>
+
+      <!-- PAQUETES -->
+      <div class="a-section" id="sec-paquetes">
+        <div class="page-hd">
+          <div><h2>Paquetes</h2><p>Servicios y experiencias disponibles</p></div>
+          <button class="btn btn-fire" onclick="adminNuevoPaquete()">+ Nuevo Paquete</button>
+        </div>
+        <div class="g3" id="paq-grid">
+          <div style="grid-column: 1 / -1; text-align:center;color:var(--dark-muted);padding:3rem;">Cargando paquetes...</div>
+        </div>
+        <div id="paq-pagination"></div>
+      </div>
+
+
+      <!-- SERVICIOS -->
+      <div class="a-section" id="sec-servicios">
+        <div class="page-hd">
+          <div><h2>Servicios Adicionales</h2><p>Gestión de servicios extra para reservas</p></div>
+          <button class="btn btn-fire" onclick="adminNuevoServicio()">+ Nuevo Servicio</button>
+        </div>
+        <div class="table-wrap">
+          <table class="table-dark">
+            <thead><tr>
+              <th>Nombre</th><th>Precio</th><th>Estado</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="srv-tbody">
+              <tr><td colspan="4" style="text-align:center;padding:3rem;color:var(--dark-muted);">Cargando servicios...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="srv-pagination"></div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="a-section" id="sec-clientes">
+        <div class="page-hd"><div><h2>Clientes</h2><p>Directorio de clientes registrados</p></div><button class="btn btn-fire" onclick="abrirModalNuevoUsuario('cliente')">+ Nuevo Cliente</button></div>
+        <div class="fbar">
+          <input type="text" class="input input-dark" id="fil-cliente-q" placeholder="Buscar por nombre, correo o documento..." oninput="cliLiveSearch()" onkeyup="if(event.key==='Enter') cliSearch()" style="flex:1;"/>
+          <button class="btn btn-fire" onclick="cliSearch()">Buscar</button>
+          <button class="btn btn-sm btn-dark-outline" onclick="cliClearSearch()">Limpiar</button>
+          <span class="badge" id="cli-count" style="margin-left:auto;"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="table-dark">
+            <thead><tr>
+              <th>Documento</th><th>Nombre</th><th>Apellido</th><th>Correo</th><th>Teléfono</th><th>Estado</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="cli-tbody">
+              <tr><td colspan="7" style="text-align:center;padding:3rem;color:var(--dark-muted);">Cargando clientes...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="cli-pagination"></div>
+      </div>
+
+      <!-- USUARIOS -->
+      <div class="a-section" id="sec-usuarios">
+        <div class="page-hd"><div><h2>Usuarios</h2><p>Gestión de cuentas registradas</p></div></div>
+
+        <!-- Buscador -->
+        <div class="fbar">
+          <input type="text" class="input input-dark" id="fil-usuario-q" placeholder="Buscar por nombre, correo o documento..." oninput="usrLiveSearch()" onkeyup="if(event.key==='Enter') usrSearch()" style="flex:1;"/>
+          <button class="btn btn-fire" onclick="usrSearch()">Buscar</button>
+          <button class="btn btn-sm btn-dark-outline" onclick="usrClearSearch()">Limpiar</button>
+          <span class="badge" id="usr-count" style="margin-left:auto;"></span>
+        </div>
+
+        <!-- Tabla de usuarios -->
+        <div id="usr-list-container">
+          <!-- Admins -->
+          <div id="usr-admins-section" style="margin-bottom:1.5rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(232,93,4,0.15);flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--fire)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                </span>
+                <h3 style="color:var(--fire);font-size:1rem;margin:0;">Administradores</h3>
+                <span class="badge badge-fire" id="usr-admin-count">0</span>
+              </div>
+              <button class="btn btn-sm btn-fire" onclick="abrirModalNuevoUsuario('admin')">+ Nuevo Usuario</button>
+            </div>
+            <div class="table-wrap">
+              <table class="table-dark">
+                <thead><tr>
+                  <th>Documento</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Acciones</th>
+                </tr></thead>
+                <tbody id="usr-admin-tbody">
+                  <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dark-muted);">Cargando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Clientes -->
+          <div id="usr-clientes-section">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(45,122,79,0.15);flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <h3 style="color:#4caf50;font-size:1rem;margin:0;">Clientes</h3>
+                <span class="badge" style="background:rgba(45,122,79,0.15);color:#4caf50;border:1px solid rgba(45,122,79,0.3);" id="usr-cli-count">0</span>
+              </div>
+
+            </div>
+            <div class="table-wrap">
+              <table class="table-dark">
+                <thead><tr>
+                  <th>Documento</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Acciones</th>
+                </tr></thead>
+                <tbody id="usr-cli-tbody">
+                  <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dark-muted);">Cargando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- Paginación -->
+        <div id="usr-pagination"></div>
+      </div>
+
+    </div><!-- admin-content -->
+
+    <!-- FOOTER -->
+    <div class="admin-footer">
+      <span>Kafe Ancestral © 2025</span>
+      <span id="footer-clock"></span>
+    </div>
+
+  </div><!-- admin-body -->
+</div><!-- admin-shell -->
+
+<!-- MODAL: Motivo de Bloqueo Custom Prompt -->
+<div class="modal-backdrop" id="m-motivo-bloqueo" style="display:none; align-items:center; justify-content:center; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:9999;" onclick="if(event.target===this) window.cancelarBloqueo()">
+  <div class="modal modal-dark" style="max-width:400px; width:90%; padding:2rem; border-radius:12px;">
+    <h3 style="color: #fff; margin-bottom:1rem; font-size:1.1rem;">Motivo del Bloqueo</h3>
+    <p style="color:var(--dark-muted); font-size:0.9rem; margin-bottom:1.5rem;">Ingrese el motivo del bloqueo (opcional):</p>
+    <input type="text" id="mb-motivo-input" class="input input-dark" placeholder="Ej: Mantenimiento" style="width:100%; margin-bottom:1.5rem;" onkeydown="if(event.key==='Enter') window.confirmarBloqueo()">
+    <div style="display:flex; justify-content:flex-end; gap:1rem;">
+      <button class="btn btn-dark-outline" onclick="window.cancelarBloqueo()">Cancelar</button>
+      <button class="btn btn-fire" onclick="window.confirmarBloqueo()">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Nueva Reserva -->
+<div class="modal-backdrop" id="m-nueva" onclick="if(event.target===this)closeM('m-nueva')">
+  <div class="modal modal-dark" style="max-width:1400px;width:calc(100vw - 3rem);max-height:90vh;overflow:hidden;display:flex;flex-direction:column;">
+    <div class="modal-hd"><h3 style="color:var(--fire);">Nueva Reserva</h3></div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 380px;gap:1.5rem;align-items:start;">
+        <div>
+          <!-- CLIENTE -->
+          <div style="margin-bottom:1.5rem;border-top:1px solid var(--dark-border);padding-top:1rem;">
+            <h4 style="margin-bottom:0.75rem;color: #fff;font-size:0.95rem;">1. Selecciona el cliente</h4>
+            
+            <!-- Autocompletado unificado -->
+            <div style="position:relative;">
+              <label style="color:var(--dark-muted);font-size:0.85rem;font-weight:600;display:block;margin-bottom:0.4rem;">Buscar cliente por nombre, correo o documento <span style="color:var(--fire);font-weight:800;">*</span></label>
+              <input type="text" class="input input-dark" id="mn-cli-search"
+                placeholder="Escribe para buscar un cliente..."
+                autocomplete="off"
+                style="width:100%;font-size:0.9rem;"
+                oninput="onCliAutocomplete(this.value)"
+                onfocus="onCliAutocomplete(this.value)"/>
+              <!-- Dropdown de resultados -->
+              <div id="mn-cli-results" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:100;background:var(--dark-card2);border:1px solid var(--dark-border);border-top:none;border-radius:0 0 8px 8px;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4);"></div>
+              <!-- Valor oculto del documento seleccionado -->
+              <input type="hidden" id="mn-doc" value=""/>
+            </div>
+            <!-- Cliente seleccionado -->
+            <div id="mn-cli-selected" style="display:none;margin-top:0.6rem;padding:0.65rem 0.85rem;background:rgba(45,122,79,0.08);border:1px solid rgba(45,122,79,0.25);border-radius:8px;"></div>
+          </div>
+
+          <!-- FECHAS Y CABAÑA -->
+          <div style="margin-bottom:1.5rem;">
+            <h4 style="margin-bottom:0.75rem;color: #fff;font-size:0.95rem;">2. Fechas y Cabaña</h4>
+            
+            <div class="row-2" style="margin-bottom:1rem;">
+              <div class="field"><label class="label label-dark">Fecha inicio <span style="color:var(--fire);font-weight:800;">*</span></label><input type="text" class="input input-dark" id="mn-ini" placeholder="Seleccionar" required/></div>
+              <div class="field"><label class="label label-dark">Fecha fin <span style="color:var(--fire);font-weight:800;">*</span></label><input type="text" class="input input-dark" id="mn-fin" placeholder="Seleccionar" required/></div>
+            </div>
+            <div style="margin-bottom:1rem;padding:0.75rem;background:rgba(232,93,4,0.15);border-radius:8px;text-align:center;font-size:0.9rem;color:var(--fire);border:1px solid rgba(232,93,4,0.3);">
+              <span style="font-weight:800;color:var(--fire);">🕒 Check-in:</span> <span style="font-weight:600;color:var(--fire);">1:00 PM</span> <span style="opacity:0.5;margin:0 0.5rem;color:var(--fire);">|</span> <span style="font-weight:800;color:var(--fire);">Check-out:</span> <span style="font-weight:600;color:var(--fire);">12:00 PM</span>
+            </div>
+
+            <div class="field">
+              <label class="label label-dark">Cabaña <span style="color:var(--fire);font-weight:800;">*</span> <span id="mn-cab-prompt" style="font-weight:400;color:var(--dark-muted);font-size:0.75rem;">(Selecciona fechas primero)</span></label>
+              <select class="select input-dark" id="mn-cab" onchange="adminCabanaChange()" disabled>
+                <option value="">Selecciona fechas...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- PAQUETE -->
+          <div style="margin-bottom:1.5rem;border-top:1px solid var(--dark-border);padding-top:1rem;">
+            <h4 style="margin-bottom:0.75rem;color: #fff;font-size:0.95rem;">3. Selecciona el paquete <span style="font-size:0.73rem;font-weight:400;opacity:0.6;">(opcional)</span></h4>
+            <div id="adm-paq-grid" class="paquete-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;">
+              <div style="grid-column:1/-1;text-align:center;padding:1.5rem;color:var(--dark-muted);">Cargando paquetes...</div>
+            </div>
+          </div>
+
+          <!-- SERVICIOS -->
+          <div style="margin-bottom:1rem;border-top:1px solid var(--dark-border);padding-top:1rem;">
+            <h4 style="margin-bottom:0.75rem;color: #fff;font-size:0.95rem;">4. Servicios adicionales</h4>
+            <div class="srv-grid">
+              <button type="button" class="srv-chip" id="adm-srv-spa" onclick="adminToggleSrv('spa')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg> Spa <span class="srv-price" style="margin-left:0.3rem;">+$90K</span>
+              </button>
+              <button type="button" class="srv-chip" id="adm-srv-fogata" onclick="adminToggleSrv('fogata')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Fogata <span class="srv-price" style="margin-left:0.3rem;">+$45K</span>
+              </button>
+              <button type="button" class="srv-chip" id="adm-srv-transporte" onclick="adminToggleSrv('transporte')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M22 16v-5l-4-5h-3v12"/></svg> Transporte <span class="srv-price" style="margin-left:0.3rem;">+$60K</span>
+              </button>
+              <button type="button" class="srv-chip" id="adm-srv-fotografia" onclick="adminToggleSrv('fotografia')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Fotografía <span class="srv-price" style="margin-left:0.3rem;">+$120K</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- PAGOS -->
+          <div style="margin-bottom:1.5rem;border-top:1px solid var(--dark-border);padding-top:1rem;">
+            <h4 style="margin-bottom:0.75rem;color: #fff;font-size:0.95rem;">5. Método de Pago</h4>
+            <button type="button" class="btn btn-fire btn-block btn-lg" id="btn-continuar-pago-admin" onclick="doNuevaAdmin()" style="padding:1rem 2rem; font-size:1rem; border-radius:10px;">
+              Continuar con el pago
+            </button>
+          </div>
+
+          <div id="mn-alert"></div>
+        </div>
+
+        <!-- RESUMEN DE PRECIO (SIDEBAR) -->
+        <div style="position:sticky;top:0;">
+          <div class="price-card">
+            <div class="price-header">
+              <h3>Resumen</h3>
+              <p>Monto total a pagar</p>
+            </div>
+            <div class="price-body" id="admin-price-body">
+              <p style="color:var(--dark-muted);text-align:center;">Selecciona fechas para calcular</p>
+            </div>
+            <div class="price-total-row" id="admin-price-total" style="display:none;">
+              <span class="pt-l">Total</span>
+              <span class="pt-v" id="admin-pt-val">$0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-nueva')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Cambiar Estado -->
+<div class="modal-backdrop" id="m-estado" onclick="if(event.target===this)closeM('m-estado')">
+  <div class="modal modal-dark">
+    <div class="modal-hd"><h3>Cambiar Estado — Reserva #<span id="m-est-id"></span></h3></div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="label">Nuevo estado</label>
+        <select class="select" id="m-est-val">
+          <option value="confirmada">Confirmada</option>
+          <option value="cancelada">Cancelada</option>
+          <option value="completada">Completada</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-estado')">Cancelar</button>
+      <button class="btn btn-fire" onclick="guardarEstado()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar Eliminar -->
+<div class="modal-backdrop" id="m-del" onclick="if(event.target===this)closeM('m-del')">
+  <div class="modal modal-dark modal-sm">
+    <div class="modal-hd"><h3>Eliminar Reserva #<span id="m-del-id"></span></h3></div>
+    <div class="modal-body"><p style="color: #fff; font-weight: 500;">¿Estás seguro? Esta acción no se puede deshacer.</p></div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-del')">Cancelar</button>
+      <button class="btn btn-danger" onclick="doEliminar()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Reserva Completada (Success) -->
+<div class="modal-backdrop" id="m-success" onclick="if(event.target===this)closeM('m-success')">
+  <div class="modal modal-dark modal-sm" style="text-align:center; padding:3rem 2rem;">
+    <div style="width:60px; height:60px; border-radius:50%; background:rgba(45,122,79,0.1); color:var(--success); display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <h2 style="color: #fff; margin-bottom:0.5rem;">¡Reserva Creada Exitosamente!</h2>
+    <p style="color:var(--dark-muted); font-size:0.95rem; margin-bottom:2rem;" id="success-txt">La reserva ha sido guardada y procesada correctamente.</p>
+    <button class="btn btn-fire" style="width:100%;" onclick="closeM('m-success')">Continuar</button>
+  </div>
+</div>
+
+<!-- MODAL: Ver y editar reserva -->
+<div class="modal-backdrop" id="m-detalle-admin" onclick="if(event.target===this)closeM('m-detalle-admin')">
+  <div class="modal modal-dark">
+    <div class="modal-hd"><h3>Detalle de Reserva #<span id="m-det-id"></span></h3></div>
+    <div class="modal-body">
+      <div id="m-det-alert"></div>
+      <div class="field"><label class="label">Cliente</label><input class="input input-dark" id="m-det-doc" readonly /></div>
+      <div class="field"><label class="label">Cabaña</label><select class="select" id="m-det-cabana"><option value="roble">El Roble</option><option value="ceiba">La Ceiba</option><option value="ancestral">Ancestral</option></select></div>
+      <div class="field"><label class="label">Fecha inicio</label><input class="input input-dark" id="m-det-ini" type="date" onchange="mDetRangeCheck()" /></div>
+      <div class="field"><label class="label">Fecha fin</label><input class="input input-dark" id="m-det-fin" type="date" onchange="mDetRangeCheck()" /></div>
+      <div class="field"><label class="label">Paquete Inicial</label><select class="select" id="m-det-paquete"><option value="basico">Básico</option><option value="cafetero">Cafetero</option><option value="premium">Premium</option></select></div>
+      <div class="field"><label class="label">Personas</label><input class="input input-dark" id="m-det-personas" type="number" min="1" /></div>
+      
+      <p style="color:var(--dark-muted); margin:1.5rem 0 1rem; font-size:0.9rem; line-height:1.4;">
+        Personaliza tu experiencia. Selecciona paquetes extra o servicios adicionales para disfrutar durante tu estadía. Los servicios que ya habías reservado anteriormente aparecerán marcados y no se pueden quitar desde aquí.
+      </p>
+
+      <h4 style="margin-bottom:1rem; font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.5rem; color:#fff;">Paquete Extra Adicional</h4>
+      <div class="field" style="margin-bottom:2rem;">
+        <select class="input input-dark" id="m-det-paquete-extra" onchange="if(typeof window.evaluarNuevosServicios === 'function') window.evaluarNuevosServicios()" style="max-width:400px;background:rgba(255, 255, 255, 0.08);border:1px solid var(--dark-border);">
+          <option value="">Ninguno</option><option value="basico">Básico</option><option value="cafetero">Cafetero</option><option value="premium">Premium</option>
+        </select>
+      </div>
+      
+      <h4 style="margin-bottom:1rem; font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.5rem; color:#fff;">Servicios Adicionales</h4>
+      <div id="m-det-srv-grid" class="srv-grid" style="margin-bottom:2rem;"></div>
+      <!-- Sección de pago para nuevos servicios (se muestra dinámicamente si se agregan servicios nuevos) -->
+      <div id="m-det-pago-nuevos" style="display:none; margin-top:1.5rem; padding-top:1.5rem; border-top:1px dashed var(--dark-border);">
+        <h4 style="margin-bottom:0.75rem; color:var(--fire); font-size:1rem;">Nuevos Servicios Agregados</h4>
+        <div id="m-det-resumen-nuevos" style="margin-bottom:1rem; font-size:0.85rem; color:#fff;">
+          <!-- Resumen se llena desde JS -->
+        </div>
+      </div>
+
+      <div class="field"><label class="label">Notas</label><textarea class="textarea input-dark" id="m-det-notas" rows="3"></textarea></div>
+      
+      <div id="m-det-alert-footer" style="margin-top: 1rem;"></div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-detalle-admin')">Cerrar</button>
+      <button class="btn btn-fire" id="m-det-btn-pago" onclick="guardarDetalleReserva()" style="display:none; background-color: var(--success); border-color: var(--success);">Continuar con el pago</button>
+      <button class="btn btn-fire" id="m-det-btn-guardar" onclick="guardarDetalleReserva()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Ver reserva -->
+<div class="modal-backdrop" id="m-view-reserva" onclick="if(event.target===this)closeM('m-view-reserva')">
+  <div class="modal modal-dark">
+    <div class="modal-hd"><h3>Ver Reserva #<span id="m-view-id"></span></h3></div>
+    <div class="modal-body">
+      <div id="m-view-body"></div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-view-reserva')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js?v=3"></script>
+<script src="js/app.js?v=5"></script>
+
+
+
+<!-- MODAL: Cambiar Rol Usuario -->
+<div class="modal-backdrop" id="m-rol" onclick="if(event.target===this)closeM('m-rol')">
+  <div class="modal modal-dark modal-sm">
+    <div class="modal-hd">
+      <h3>Cambiar Rol — <span id="m-rol-email" style="color:var(--fire);font-size:0.9rem;"></span></h3>
+      
+    </div>
+    <div class="modal-body">
+      <p style="color: #fff;margin-bottom:1rem;font-size:0.9rem;">Selecciona el nuevo rol para este usuario:</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <button id="m-rol-btn-cliente" onclick="setRolSeleccion('cliente')"
+          style="padding:1rem;border-radius:var(--r-lg);border:2px solid var(--fire);background:rgba(232,93,4,0.08);cursor:pointer;font-family:inherit;transition:all 0.15s;">
+          <div style="font-size:1.5rem;margin-bottom:0.3rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div style="font-weight:700;font-size:0.88rem;color: #fff;">Cliente</div>
+          <div style="font-size:0.72rem;color:var(--dark-muted);">Acceso al portal de reservas</div>
+        </button>
+        <button id="m-rol-btn-admin" onclick="setRolSeleccion('admin')"
+          style="padding:1rem;border-radius:var(--r-lg);border: 1px solid var(--dark-border);background:rgba(255, 255, 255,0.03);cursor:pointer;font-family:inherit;transition:all 0.15s;">
+          <div style="font-size:1.5rem;margin-bottom:0.3rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>
+          <div style="font-weight:700;font-size:0.88rem;color: #fff;">Administrador</div>
+          <div style="font-size:0.72rem;color:var(--dark-muted);">Acceso al panel admin</div>
+        </button>
+      </div>
+      <div id="m-rol-alert" style="margin-top:1rem;"></div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-rol')">Cancelar</button>
+      <button class="btn btn-fire" onclick="confirmarCambioRol()">Guardar cambio</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Eliminar Usuario -->
+<div class="modal-backdrop" id="m-del-usuario" onclick="if(event.target===this)closeM('m-del-usuario')">
+  <div class="modal modal-dark modal-sm">
+    <div class="modal-hd">
+      <h3>Eliminar Usuario</h3>
+      
+    </div>
+    <div class="modal-body">
+      <p style="color: #fff;font-weight:500;">¿Estás seguro de eliminar la cuenta de <strong id="m-del-usuario-email" style="color:var(--fire);"></strong>?</p>
+      <p style="color:var(--dark-muted);font-size:0.85rem;margin-top:0.5rem;">Esta acción es irreversible. Se eliminarán todos los datos de la cuenta.</p>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-del-usuario')">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmarEliminarUsuario()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Nuevo Usuario / Cliente -->
+<div class="modal-backdrop" id="m-nuevo-usuario" onclick="if(event.target===this)closeM('m-nuevo-usuario')">
+  <div class="modal modal-dark" style="max-width:680px;width:95%;">
+    <div class="modal-hd">
+      <h3 id="m-nuevo-usr-title" style="color:var(--fire);font-weight:800;font-size:1.4rem;text-shadow:0 1px 3px rgba(0,0,0,0.3);">Nuevo Cliente</h3>
+    </div>
+    <form class="modal-body" id="f-nuevo-usuario" autocomplete="off" onsubmit="guardarNuevoUsuario(event)" style="max-height: 60vh; overflow-y: auto; padding-right: 0.5rem;">
+      <div class="row-2">
+        <div class="field">
+          <label class="label" for="nu-tipo-doc" style="color:rgba(255, 255, 255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Tipo de documento <span style="color:var(--danger);">*</span></label>
+          <select class="select input-dark" id="nu-tipo-doc" onchange="nuOnTipoDocChange(); nuValReq('nu-tipo-doc')" onfocus="nuShowReq('nu-tipo-doc')" onblur="nuValReq('nu-tipo-doc')" style="margin-top:0.4rem;background:rgba(0,0,0,0.2);border:1px solid var(--dark-border);color: #fff;">
+            <option value="">— Seleccionar —</option>
+            <option value="CC">Cédula de Ciudadanía (CC)</option>
+            <option value="CE">Cédula de Extranjería (CE)</option>
+            <option value="PA">Pasaporte (PA)</option>
+            <option value="TI">Tarjeta de Identidad (TI)</option>
+            <option value="NIT">NIT</option>
+          </select>
+          <div class="req-helper" id="req-nu-tipo-doc" style="display:none;font-size:0.75rem;color:rgba(255, 255, 255,0.5);margin-top:0.4rem;">Selecciona el tipo de documento de identidad.</div>
+          <div class="err-msg" id="err-nu-tipo-doc" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">Debes seleccionar un tipo de documento.</div>
+        </div>
+        <div class="field">
+          <label class="label" for="nu-num-doc" style="color:rgba(255, 255, 255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Número de documento <span style="color:var(--danger);">*</span></label>
+          <input class="input input-dark" type="text" id="nu-num-doc" placeholder="Ej: 1234567890" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onfocus="nuShowReq('nu-num-doc')" onblur="nuValReq('nu-num-doc')" style="margin-top:0.4rem;"/>
+          <div class="req-helper" id="req-nu-num-doc" style="display:none;font-size:0.75rem;color:rgba(255, 255, 255,0.5);margin-top:0.4rem;">Ingresa número de documento sin puntos.</div>
+          <div class="err-msg" id="err-nu-num-doc" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">El número es obligatorio.</div>
+        </div>
+      </div>
+
+      <div class="field" id="nu-pais-wrap" style="display:none; margin-top: 1rem;">
+        <label class="label" for="nu-pais" style="color:rgba(255, 255, 255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">País <span style="color:var(--danger);">*</span></label>
+        <input class="input input-dark" type="text" id="nu-pais" placeholder="Escribe el país" autocomplete="country-name" onfocus="nuShowReq('nu-pais')" onblur="nuValReq('nu-pais')" style="margin-top:0.4rem;"/>
+        <div class="req-helper" id="req-nu-pais" style="display:none;font-size:0.75rem;color:rgba(255, 255, 255,0.5);margin-top:0.4rem;">Escribe país de residencia.</div>
+        <div class="err-msg" id="err-nu-pais" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">El país es obligatorio.</div>
+      </div>
+
+      <div class="row-2" style="margin-top: 1rem;">
+        <div class="field">
+          <label class="label" for="nu-nombre" style="color:rgba(255, 255, 255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Nombre <span style="color:var(--danger);">*</span></label>
+          <input class="input input-dark" type="text" id="nu-nombre" placeholder="Nombre" autocomplete="given-name" oninput="this.value = this.value.replace(/[0-9]/g, '')" onfocus="nuShowReq('nu-nombre')" onblur="nuValReq('nu-nombre')" style="margin-top:0.4rem;"/>
+          <div class="req-helper" id="req-nu-nombre" style="display:none;font-size:0.75rem;color:rgba(255, 255, 255,0.5);margin-top:0.4rem;">Primer y segundos nombres.</div>
+          <div class="err-msg" id="err-nu-nombre" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">El nombre es obligatorio.</div>
+        </div>
+        <div class="field">
+          <label class="label" for="nu-apellido" style="color:rgba(255, 255, 255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Apellido <span style="color:var(--danger);">*</span></label>
+          <input class="input input-dark" type="text" id="nu-apellido" placeholder="Apellido" autocomplete="family-name" oninput="this.value = this.value.replace(/[0-9]/g, '')" onfocus="nuShowReq('nu-apellido')" onblur="nuValReq('nu-apellido')" style="margin-top:0.4rem;"/>
+          <div class="req-helper" id="req-nu-apellido" style="display:none;font-size:0.75rem;color:rgba(255, 255, 255,0.5);margin-top:0.4rem;">Apellidos completos.</div>
+          <div class="err-msg" id="err-nu-apellido" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">El apellido es obligatorio.</div>
+        </div>
+      </div>
+
+      <div class="row-2" style="margin-top: 1rem;">
+        <div class="field">
+          <label class="label" for="nu-tel" style="color:rgba(255, 255, 255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Teléfono <span style="color:var(--danger);">*</span></label>
+          <input class="input input-dark" type="tel" id="nu-tel" placeholder="3001234567" autocomplete="tel" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onfocus="nuShowReq('nu-tel')" onblur="nuValReq('nu-tel')" style="margin-top:0.4rem;"/>
+          <div class="req-helper" id="req-nu-tel" style="display:none;font-size:0.75rem;color:rgba(255, 255, 255,0.5);margin-top:0.4rem;">Número a 10 dígitos.</div>
+          <div class="err-msg" id="err-nu-tel" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">El teléfono es obligatorio.</div>
+        </div>
+        <div class="field">
+          <label class="label" for="nu-email" style="color:rgba(255, 255, 255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Correo electrónico <span style="color:var(--danger);">*</span></label>
+          <input class="input input-dark" type="email" id="nu-email" placeholder="correo@gmail.com" autocomplete="email" onfocus="nuShowReq('nu-email')" onblur="nuValReq('nu-email')" style="margin-top:0.4rem;"/>
+          <div class="req-helper" id="req-nu-email" style="display:none;font-size:0.75rem;color:rgba(255, 255, 255,0.5);margin-top:0.4rem;">Solo Gmail (@gmail.com).</div>
+          <div class="err-msg" id="err-nu-email" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">El correo es obligatorio y debe ser @gmail.com.</div>
+        </div>
+      </div>
+
+      <div id="nu-password-section" class="row-2" style="margin-top: 1rem; display:none;">
+        <div class="field">
+          <label class="label" for="nu-password" style="color:rgba(255, 255, 255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Contraseña <span style="color:var(--danger);">*</span></label>
+          <div class="field-pw" style="margin-top:0.4rem;position:relative;">
+            <input class="input input-dark" type="password" id="nu-password" placeholder="Mínimo 6 caracteres" oninput="nuCheckPwStrength(this.value)" onfocus="nuShowReq('nu-password')" onblur="nuValReq('nu-password')" autocomplete="new-password" style="padding-right:2.8rem;"/>
+            <button class="pw-toggle" type="button" onclick="nuTogglePw('nu-password', this)" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255, 255, 255,0.6);font-size:1rem;cursor:pointer;padding:0.2rem;line-height:1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="pw-strength" style="margin-top: 0.5rem; display: flex; gap: 4px; align-items: center;">
+            <div class="pw-bar" id="nu-pw-b1" style="flex:1;height:3px;border-radius:99px;background:var(--dark-border);transition:background 0.3s;"></div>
+            <div class="pw-bar" id="nu-pw-b2" style="flex:1;height:3px;border-radius:99px;background:var(--dark-border);transition:background 0.3s;"></div>
+            <div class="pw-bar" id="nu-pw-b3" style="flex:1;height:3px;border-radius:99px;background:var(--dark-border);transition:background 0.3s;"></div>
+            <span class="pw-label" id="nu-pw-lbl" style="font-size:0.7rem;color:rgba(255, 255, 255,0.5);min-width:50px;text-align:right;"></span>
+          </div>
+          <div class="req-helper" id="req-nu-password" style="display:none;font-size:0.75rem;color:rgba(255, 255, 255,0.5);margin-top:0.4rem;">Mínimo 6 caracteres. Recomendado incluir letras y números.</div>
+          <div class="err-msg" id="err-nu-password" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">La contraseña debe tener al menos 6 caracteres.</div>
+        </div>
+        <div class="field">
+          <label class="label" for="nu-password-confirm" style="color:rgba(255, 255, 255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Confirmar contraseña <span style="color:var(--danger);">*</span></label>
+          <div class="field-pw" style="margin-top:0.4rem;position:relative;">
+            <input class="input input-dark" type="password" id="nu-password-confirm" placeholder="Repite la contraseña" onfocus="nuShowReq('nu-password-confirm')" onblur="nuValReq('nu-password-confirm')" autocomplete="new-password" style="padding-right:2.8rem;"/>
+            <button class="pw-toggle" type="button" onclick="nuTogglePw('nu-password-confirm', this)" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255, 255, 255,0.6);font-size:1rem;cursor:pointer;padding:0.2rem;line-height:1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="req-helper" id="req-nu-password-confirm" style="display:none;font-size:0.75rem;color:rgba(255, 255, 255,0.5);margin-top:0.4rem;">Vuelve a escribir la contraseña.</div>
+          <div class="err-msg" id="err-nu-password-confirm" style="display:none;font-size:0.75rem;color:#ef5350;margin-top:0.4rem;">Las contraseñas no coinciden.</div>
+        </div>
+      </div>
+
+      <!-- Info: el cliente recibirá un correo para establecer su contraseña -->
+      <div id="nu-email-info" style="margin-top:1rem;background:rgba(212,165,116,0.12);border:1px solid rgba(212,165,116,0.25);border-radius:10px;padding:0.85rem 1rem;display:flex;align-items:flex-start;gap:0.65rem;">
+        <span style="font-size:1.3rem;line-height:1;">📧</span>
+        <div>
+          <p style="margin:0;color: #fff;font-size:0.82rem;font-weight:600;">Se enviará un correo de invitación</p>
+          <p style="margin:0.3rem 0 0;color:var(--dark-muted);font-size:0.78rem;line-height:1.4;">El cliente recibirá un correo con un enlace para establecer su propia contraseña. El enlace será válido por <strong style="color:var(--fire);">10 minutos</strong>. De esta forma, el administrador nunca conocerá la contraseña del cliente.</p>
+        </div>
+      </div>
+
+      <div class="row-2" style="margin-top: 1rem; border-top: 1px solid var(--dark-border); padding-top: 1rem;">
+        <!-- Rol -->
+        <div class="field">
+          <label class="label" for="nu-rol" style="color:rgba(255, 255, 255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Rol</label>
+          <select class="select input-dark" id="nu-rol" style="margin-top:0.4rem;background:rgba(0,0,0,0.2);border:1px solid var(--dark-border);color: #fff;">
+            <option value="cliente">Cliente</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <!-- Estado -->
+        <div class="field" style="display:flex;flex-direction:column;justify-content:center;">
+          <label class="label" style="color:rgba(255, 255, 255,0.7);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.85rem;">Estado inicial</label>
+          <label class="ui-switch">
+            <input type="checkbox" id="nu-estado" checked>
+            <span class="ui-slider"></span>
+            <span class="ui-label" style="color:rgba(255, 255, 255,0.9) !important;font-weight:700;">Activo</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="m-nuevo-usr-alert" style="margin-top:1rem;"></div>
+    </form>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-nuevo-usuario')">Cancelar</button>
+      <button class="btn btn-fire" onclick="document.getElementById('f-nuevo-usuario').requestSubmit()" id="btn-guardar-usuario">
+        <span id="btn-guardar-usuario-txt">Crear cuenta</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Eliminar Usuario -->
+<div class="modal-backdrop" id="m-reset-usuario" onclick="if(event.target===this)closeM('m-reset-usuario')">
+  <div class="modal modal-dark modal-sm">
+    <div class="modal-hd">
+      <h3>Restablecer Contraseña</h3>
+      
+    </div>
+    <div class="modal-body">
+      <div id="m-reset-content">
+        <p style="color: #fff;font-size:0.9rem;">¿Generar un enlace de restablecimiento para <strong id="m-reset-email" style="color:var(--fire);"></strong>?</p>
+        <p style="color:var(--dark-muted);font-size:0.82rem;margin-top:0.5rem;">El enlace tendrá validez de 10 minutos.</p>
+      </div>
+      <div id="m-reset-result" style="display:none;">
+        <div style="background:var(--fire-soft);border:1px solid var(--fire-border);border-radius:var(--r-lg);padding:1rem;margin-top:0.5rem;">
+          <p style="font-size:0.82rem;color: #fff;margin-bottom:0.5rem;font-weight:600;">✓ Enlace generado:</p>
+          <code id="m-reset-url" style="font-size:0.78rem;color:var(--fire);word-break:break-all;"></code>
+        </div>
+        <p style="font-size:0.75rem;color:var(--dark-muted);margin-top:0.75rem;">Copia este enlace y compártelo con el usuario por un canal seguro.</p>
+      </div>
+    </div>
+    <div class="modal-ft" id="m-reset-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-reset-usuario')">Cancelar</button>
+      <button class="btn btn-fire" onclick="confirmarResetUsuario()">Generar enlace</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Crear/Editar Habitación -->
+<div class="modal-backdrop" id="m-hab" onclick="if(event.target===this)closeM('m-hab')">
+  <div class="modal modal-dark">
+    <div class="modal-hd"><h3 id="m-hab-title">Nueva Habitación</h3></div>
+    <div class="modal-body">
+      <input type="hidden" id="m-hab-id" />
+      <div class="field"><label class="label">Nombre Habitación <span style="color:var(--fire)">*</span></label><input type="text" class="input input-dark" id="m-hab-nombre" required /></div>
+      <div class="field"><label class="label">Pertenece a la Cabaña <span style="color:var(--fire)">*</span></label>
+        <select class="select" id="m-hab-cabana">
+          <option value="">Cargando...</option>
+        </select>
+      </div>
+      
+      <div class="field">
+        <label class="label">Foto de la Habitación <span style="font-weight:400;color:var(--dark-muted);">(Opcional)</span></label>
+        <input type="file" id="m-hab-foto" class="input input-dark" accept="image/*" style="padding:0.4rem; cursor:pointer; background:rgba(255, 255, 255,0.03); color: #fff;" onchange="adminPreviewHabFoto(this)" />
+        <div id="m-hab-foto-preview" style="margin-top:0.75rem; border-radius:var(--r-md); overflow:hidden; max-width: 100%; height: auto; display:none;"></div>
+      </div>
+      <input type="hidden" id="m-hab-est" value="true" />
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-hab')">Cancelar</button>
+      <button class="btn btn-fire" onclick="saveHabitacion()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Crear/Editar Cabaña -->
+<div class="modal-backdrop" id="m-cab" onclick="if(event.target===this)closeM('m-cab')">
+  <div class="modal modal-dark">
+    <div class="modal-hd"><h3 id="m-cab-title">Nueva Cabaña</h3></div>
+    <div class="modal-body">
+      <input type="hidden" id="m-cab-id" />
+      <div class="row-2">
+        <div class="field"><label class="label">Nombre <span style="color:var(--fire)">*</span></label><input type="text" class="input input-dark" id="m-cab-nombre" required /></div>
+        <div class="field"><label class="label">Ubicación</label><input type="text" class="input input-dark" id="m-cab-ubica" placeholder="Ej: Sector Norte" /></div>
+      </div>
+      <div class="field"><label class="label">Capacidad Máxima <span style="color:var(--fire)">*</span></label><input type="number" class="input input-dark" id="m-cab-cap" min="1" required /></div>
+      <div class="field"><label class="label">Descripción</label><textarea class="textarea input-dark" id="m-cab-desc" rows="3"></textarea></div>
+      <input type="hidden" id="m-cab-est" value="true" />
+      <div class="row-2">
+        <div class="field"><label class="label">Costo por Noche <span style="color:var(--fire)">*</span></label><input type="number" class="input input-dark" id="m-cab-costo" required /></div>
+        <div class="field"><label class="label">Número de Habitaciones <span style="color:var(--fire)">*</span></label><input type="number" class="input input-dark" id="m-cab-numhab" min="1" value="1" required /></div>
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label class="label">Foto de la Cabaña (Máx 5)</label>
+          <input type="file" multiple class="input input-dark" id="m-cab-img-cabana" accept="image/*" onchange="previewImage(this, 'preview-cabana')" />
+          <div id="preview-cabana" style="margin-top:0.5rem; display:grid; grid-template-columns:repeat(auto-fill, minmax(80px, 1fr)); gap:0.5rem; max-height:200px; overflow-y:auto;"></div>
+          <button type="button" id="btn-del-cab-img-cabana" class="btn btn-danger btn-sm" style="margin-top:0.5rem; display:none;" onclick="eliminarFotoCabana('cabana')">Eliminar Todas</button>
+        </div>
+        <div class="field">
+          <label class="label">Foto de las Habitaciones (Máx 5)</label>
+          <input type="file" multiple class="input input-dark" id="m-cab-img-hab" accept="image/*" onchange="previewImage(this, 'preview-hab')" />
+          <div id="preview-hab" style="margin-top:0.5rem; display:grid; grid-template-columns:repeat(auto-fill, minmax(80px, 1fr)); gap:0.5rem; max-height:200px; overflow-y:auto;"></div>
+          <button type="button" id="btn-del-cab-img-hab" class="btn btn-danger btn-sm" style="margin-top:0.5rem; display:none;" onclick="eliminarFotoCabana('hab')">Eliminar Todas</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-cab')">Cancelar</button>
+      <button class="btn btn-fire" onclick="saveCabana()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Ver Cabaña -->
+<div class="modal-backdrop" id="m-view-cab" onclick="if(event.target===this)closeM('m-view-cab')">
+  <div class="modal modal-dark" style="max-width:600px;">
+    <div class="modal-hd"><h3>Detalle de Cabaña</h3></div>
+    <div class="modal-body" id="m-vc-body">
+      <div style="text-align:center;padding:2rem;color:var(--dark-muted);">Cargando...</div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-view-cab')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Ver Paquete -->
+<div class="modal-backdrop" id="m-view-paq" onclick="if(event.target===this)closeM('m-view-paq')">
+  <div class="modal modal-dark">
+    <div class="modal-hd"><h3>Detalle de Paquete</h3></div>
+    <div class="modal-body" id="m-vp-body">
+      <div style="text-align:center;padding:2rem;color:var(--dark-muted);">Cargando...</div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-view-paq')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Crear/Editar Paquete -->
+<div class="modal-backdrop" id="m-paq" onclick="if(event.target===this)closeM('m-paq')">
+  <div class="modal modal-dark">
+    <div class="modal-hd"><h3 id="m-paq-title">Nuevo Paquete</h3></div>
+    <div class="modal-body">
+      <input type="hidden" id="m-paq-id" />
+      <div class="field"><label class="label">Nombre <span style="color:var(--fire)">*</span></label><input type="text" class="input input-dark" id="m-paq-nombre" required /></div>
+      <div class="field"><label class="label">Descripción</label><textarea class="textarea input-dark" id="m-paq-desc" rows="3"></textarea></div>
+      <div class="row-2">
+        <div class="field"><label class="label">Precio Base <span style="color:var(--fire)">*</span></label><input type="number" class="input input-dark" id="m-paq-precio" required /></div>
+        <div class="field"><label class="label">Servicio Asociado</label>
+          <div id="m-paq-servicio" class="input input-dark" style="height:auto; max-height:150px; overflow-y:auto; padding:0.5rem; display:flex; flex-direction:column; gap:0.5rem; background:#000000; border:1px solid var(--dark-border); border-radius:8px;"><div style="text-align:center; padding:1rem;">Cargando...</div></div>
+        </div>
+      </div>
+      <input type="hidden" id="m-paq-est" value="true" />
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-paq')">Cancelar</button>
+      <button class="btn btn-fire" onclick="savePaquete()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Crear/Editar Servicio -->
+<div class="modal-backdrop" id="m-srv" onclick="if(event.target===this)closeM('m-srv')">
+  <div class="modal modal-dark">
+    <div class="modal-hd"><h3 id="m-srv-title">Nuevo Servicio</h3></div>
+    <div class="modal-body">
+      <input type="hidden" id="m-srv-id" />
+      <div class="field"><label class="label">Nombre <span style="color:var(--fire)">*</span></label><input type="text" class="input input-dark" id="m-srv-nombre" required /></div>
+      <div class="field"><label class="label">Descripción</label><textarea class="textarea input-dark" id="m-srv-desc" rows="3"></textarea></div>
+      <div class="row-2">
+        <div class="field"><label class="label">Capacidad Máxima <span style="color:var(--fire)">*</span></label><input type="number" class="input input-dark" id="m-srv-cap" value="1" min="1" required /></div>
+        <div class="field"><label class="label">Precio Fijo <span style="color:var(--fire)">*</span></label><input type="number" class="input input-dark" id="m-srv-precio" required /></div>
+      </div>
+      <div class="field">
+        <label class="label">Foto del Servicio <span style="font-weight:400;color:var(--dark-muted);">(Opcional)</span></label>
+        <input type="file" id="m-srv-foto" class="input input-dark" accept="image/*" style="padding:0.4rem; cursor:pointer; background:rgba(255, 255, 255,0.03); color: #fff;" onchange="previewImage(this, 'preview-srv')" />
+        <div id="preview-srv" style="margin-top:0.75rem; border-radius:var(--r-md); overflow:hidden; max-width: 100%; height: auto; display:none;"></div>
+        <button type="button" id="btn-del-srv-foto" class="btn btn-danger btn-sm" style="margin-top:0.5rem; display:none;" onclick="eliminarFotoServicio()">Eliminar Foto</button>
+      </div>
+
+      <input type="hidden" id="m-srv-est" value="true" />
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-srv')">Cancelar</button>
+      <button class="btn btn-fire" onclick="saveServicio()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Ver/Editar Cliente -->
+<div class="modal-backdrop" id="m-cli" onclick="if(event.target===this)closeM('m-cli')">
+  <div class="modal modal-dark">
+    <div class="modal-hd"><h3 id="m-cli-title">Detalle de Cliente</h3></div>
+    <div class="modal-body">
+      <input type="hidden" id="m-cli-doc" />
+      <div class="row-2">
+        <div class="field"><label class="label">Documento</label><input type="text" class="input input-dark" id="m-cli-doc-display" readonly /></div>
+        <div class="field"><label class="label">Correo Electrónico</label><input type="text" class="input input-dark" id="m-cli-email" readonly /></div>
+      </div>
+      <div class="row-2">
+        <div class="field"><label class="label">Nombre</label><input type="text" class="input input-dark" id="m-cli-nombre" /></div>
+        <div class="field"><label class="label">Apellido</label><input type="text" class="input input-dark" id="m-cli-apellido" /></div>
+      </div>
+      <div class="row-2">
+        <div class="field"><label class="label">Teléfono</label><input type="text" class="input input-dark" id="m-cli-tel" /></div>
+        <div class="field"><label class="label">Nacionalidad</label><input type="text" class="input input-dark" id="m-cli-nac" /></div>
+      </div>
+      <div class="row-2">
+        <div class="field"><label class="label">Rol</label><input type="text" class="input input-dark" id="m-cli-rol" readonly style="opacity: 0.8;" /></div>
+        <div class="field"><label class="label">Estado</label><input type="text" class="input input-dark" id="m-cli-estado" readonly style="opacity: 0.8;" /></div>
+      </div>
+      <div class="field"><label class="label">Historial de Reservas</label>
+        <div id="m-cli-historial" style="background:rgba(0,0,0,0.1);padding:0.75rem;border-radius:var(--r-md);max-height:150px;overflow-y:auto;font-size:0.85rem;color:var(--dark-muted);">Cargando...</div>
+      </div>
+    </div>
+    <div class="modal-ft" id="m-cli-footer">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-cli')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+<!-- SheetJS para exportar Excel -->
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="js/admin.js?v=22"></script>
+
+<!-- MODAL: Ver Habitación -->
+<div class="modal-backdrop" id="m-view-hab" onclick="if(event.target===this)closeM('m-view-hab')">
+  <div class="modal modal-dark">
+    <div class="modal-hd"><h3 id="m-vh-title">Detalle de Habitación</h3></div>
+    <div class="modal-body" style="text-align:center;">
+      <div id="m-vh-foto" style="margin-bottom:1rem; border-radius:8px; overflow:hidden; background:#eee;"></div>
+      <h4 id="m-vh-nombre" style="margin-bottom:0.5rem; color:var(--fire); font-size:1.2rem;"></h4>
+      <p id="m-vh-desc" style="color:var(--dark-muted); margin-bottom:1rem;"></p>
+      <div style="display:flex; justify-content:center; gap:1rem; margin-bottom:1rem;">
+        <span class="badge badge-primary" id="m-vh-precio"></span>
+        <span class="badge" id="m-vh-est"></span>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-dark-outline" onclick="closeM('m-view-hab')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Custom Confirm -->
+<div class="modal-backdrop" id="m-confirm" onclick="if(event.target===this) { document.getElementById('m-confirm-cancel').click(); }">
+  <div class="modal modal-dark" style="max-width: 400px; text-align:center;">
+    <div class="modal-body" style="padding-top:2rem;">
+      <h4 style="color:var(--fire); margin-bottom:1rem;">Confirmación</h4>
+      <p id="m-confirm-msg" style="color: #fff; margin-bottom:1.5rem; font-size:1.1rem; line-height:1.4;"></p>
+      <div style="display:flex; justify-content:center; gap:1rem;">
+        <button type="button" class="btn btn-dark-outline" id="m-confirm-cancel">Cancelar</button>
+        <button type="button" class="btn btn-fire" id="m-confirm-ok">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Cancelar Reserva Admin -->
+<div class="modal-backdrop" id="m-admin-cancel" onclick="if(event.target===this) closeM('m-admin-cancel')">
+  <div class="modal modal-dark" style="max-width: 450px;">
+    <div class="modal-header">
+      <h4 style="color:var(--danger);">Cancelar Reserva</h4>
+      <button class="modal-close" onclick="closeM('m-admin-cancel')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--dark-muted); font-size:0.95rem; margin-bottom:1.5rem; line-height:1.5;">Por favor, ingresa el motivo de la cancelación. Este motivo quedará registrado en el historial.</p>
+      <div class="form-group">
+        <label style="color:var(--mist); font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Motivo de cancelación</label>
+        <textarea id="m-admin-cancel-motivo" class="input" rows="3" placeholder="Ej: Falta de pago, solicitud del cliente, etc..." style="margin-top:0.5rem;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:1rem; padding-top:0.5rem;">
+      <button class="btn btn-dark-outline" onclick="closeM('m-admin-cancel')">Volver</button>
+      <button class="btn btn-danger" onclick="doAdminCancelReserva()" id="btn-admin-cancel-confirm">Confirmar Cancelación</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
